@@ -31,9 +31,7 @@ const CLIFF_OCHRE = '#c76538'
 // Strict dev/prod barrier: Vite replaces import.meta.env.DEV with false in production builds,
 // so DevVisualInspector is neither rendered nor bundled into the production Scene chunk.
 const DevVisualInspector =
-  import.meta.env.DEV && !import.meta.env.VITEST
-    ? lazy(() => import('./DevVisualInspector'))
-    : null
+  import.meta.env.DEV && !import.meta.env.VITEST ? lazy(() => import('./DevVisualInspector')) : null
 
 const INITIAL_DEV_OVERRIDES: DevVisualOverrides = {
   weather: 'auto',
@@ -297,4 +295,3 @@ function DustHazeClouds({ intensity }: { intensity: number }) {
     </group>
   )
 }
-
