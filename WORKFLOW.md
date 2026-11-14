@@ -151,6 +151,10 @@ Sempre passe o `SPECIFY_FEATURE_DIRECTORY` na primeira chamada: o Spec Kit acha 
    aprova).
 3. **Na revisão:** aceitar ou recusar cada US pelos cenários de aceite e abrir uma issue para
    cada problema.
+4. **Planilha × jogo:** a decisão final dos POs (revisada pelo negócio) é a que está nos JSON de
+   `src/config`; a planilha `docs/planejamento_viavel_32_colonos_mars_outpost.xlsx` acompanha.
+   Mudou um número no JSON? Atualize a mesma célula na aba Premissas. Para conferir:
+   `python docs/check_po_sheet.py` (lista o que não bate; `--tudo` mostra todos os valores).
 
 ### Tech lead (Breno), além da própria story
 
@@ -189,6 +193,7 @@ Checklist para colar no PR da sprint:
 - [ ] interface US<N>: aceita por \_\_\_
 - [ ] cena US<N>: aceita por \_\_\_
 - [ ] `npm run check` verde na develop
+- [ ] `python docs/check_po_sheet.py` sem erros (planilha dos POs = JSON)
 - [ ] Missão jogada até \_\_\_ sem travar
 - [ ] Issues abertas: #…
 
