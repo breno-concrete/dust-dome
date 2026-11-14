@@ -1,6 +1,6 @@
-# DONKI Data Contract
+# Contrato de dados DONKI
 
-## Types
+## Tipos
 
 ```ts
 interface SepEvent {
@@ -12,17 +12,17 @@ function sepEvents(): SepEvent[]
 function pickSepEvent(events: SepEvent[], index: number): SepEvent | null
 ```
 
-Defined in `src/data/donki.ts`.
+Definidos em `src/data/donki.ts`.
 
-## Behavior
+## Comportamento
 
-- `sepEvents()` reads only committed snapshot data under `src/data/snapshots/`.
-- Returned entries contain a usable date and DONKI URL.
-- No runtime network access is performed.
-- `pickSepEvent([], index)` returns `null`.
-- For non-empty input, the same index selects the same event, including for indices larger than
-  the list length through stable wraparound.
-- Invalid snapshot records are rejected or reported explicitly; they are not converted into a
-  made-up source.
+- `sepEvents()` lê somente dados de snapshots versionados em `src/data/snapshots/`.
+- As entradas retornadas contêm uma data utilizável e uma URL do DONKI.
+- Nenhum acesso à rede em runtime é realizado.
+- `pickSepEvent([], index)` retorna `null`.
+- Para uma entrada não vazia, o mesmo índice seleciona o mesmo evento, inclusive para índices
+  maiores que o tamanho da lista, por meio de um ciclo estável.
+- Registros inválidos do snapshot são rejeitados ou informados explicitamente; não são convertidos
+  em uma fonte inventada.
 
-The engine receives plain `SepEvent` data and does not know the snapshot file format.
+O engine recebe dados `SepEvent` simples e não conhece o formato do arquivo de snapshot.

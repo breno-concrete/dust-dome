@@ -1,35 +1,35 @@
-# Debrief and Sources Contract
+# Contrato do debrief e das fontes
 
-## Debrief input
+## Entrada do debrief
 
-The end-of-mission feature consumes:
+A feature de fim de missão consome:
 
-- the final `GameState.status` and `lostReason`;
-- the complete `GameState.log`;
-- validated configuration explanations and sources;
-- the archived DONKI citation associated with a radiation storm.
+- o `GameState.status` e `lostReason` finais;
+- o `GameState.log` completo;
+- explicações e fontes da configuração validada;
+- a citação DONKI arquivada associada a uma tempestade de radiação.
 
-## Debrief output
+## Saída do debrief
 
-The screen presents:
+A tela apresenta:
 
-- a success or failure summary;
-- entries grouped by cycle and season or by event;
-- one plain-English cause for every recorded crew, structure, or resource loss;
-- the science explanation or explicit gameplay-simplification label;
-- a restart action using the existing store navigation.
+- um resumo de sucesso ou falha;
+- entradas agrupadas por ciclo e estação ou por evento;
+- uma causa em inglês simples para cada perda registrada de tripulação, estrutura ou recurso;
+- a explicação científica ou um rótulo explícito de simplificação de gameplay;
+- uma ação de reinício usando a navegação existente da store.
 
-No historical outcome may be invented from the final stock or structure list.
+Nenhum resultado histórico pode ser inventado a partir do estoque ou da lista final de estruturas.
 
-## Sources output
+## Saída das fontes
 
-The sources screen presents deduplicated `DataSource` entries with:
+A tela de fontes apresenta entradas `DataSource` sem duplicatas, com:
 
-- source label;
+- rótulo da fonte;
 - link;
-- classification: real value, scaled value, game simplification, or game value;
-- an archived-data label for DONKI snapshots.
+- classificação: valor real, valor escalado, simplificação do jogo ou valor do jogo;
+- rótulo de dados arquivados para snapshots DONKI.
 
-Sources remain English-first and use short words suitable for ages 7-12. Components read
-application state through the existing store boundary; any missing store exposure is a contract
-change request.
+As fontes priorizam o inglês e usam palavras curtas adequadas para idades de 7 a 12 anos. Os
+componentes leem o estado da aplicação pelo limite existente da store; qualquer exposição ausente
+na store exige uma solicitação de alteração de contrato.

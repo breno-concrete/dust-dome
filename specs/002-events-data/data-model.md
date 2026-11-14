@@ -1,84 +1,138 @@
-# Data Model: Events and NASA Data
+# Modelo de dados: Eventos e dados da NASA
 
-## Season event rule
+## Regra de evento sazonal
 
-Configured in `GameConfig.events` and `src/config/events.json`.
+Configurada em `GameConfig.events` e `src/config/events.json`.
 
-| Field | Type | Rules |
+| Campo | Tipo | Regras |
 |---|---|---|
-| `id` | string | Unique rule identifier |
-| `kind` | event kind | `dust_devil`, `dust_storm`, `global_dust_storm`, `cold`, or `darkness` |
-| `cycles` | positive integer array | Rule applies only to listed cycles |
-| `season` | season ID | One of spring, summer, autumn, winter |
-| `intervalSeconds` | optional `[min, max]` | Positive interval for repeating events |
-| `durationSeconds` | optional positive number | Active duration; absent means instantaneous or season-long |
-| `effects` | event effects | Damage, solar factor, clogging, short-circuit, and job blocking |
-| `name`, `explain` | localized text | English required; Portuguese optional |
-| `source` | data source | Label, valid URL, and science classification required |
+| `id` | string | Identificador único da regra |
+| `kind` | tipo de evento | `dust_devil`, `dust_storm`, `global_dust_storm`, `cold` ou `darkness` |
+| `cycles` | array de inteiros positivos | A regra se aplica somente aos ciclos listados |
+| `season` | ID da estação | Uma entre spring, summer, autumn, winter |
+| `intervalSeconds` | `[min, max]` opcional | Intervalo positivo para eventos repetidos |
+| `durationSeconds` | número positivo opcional | Duração ativa; ausente significa instantâneo (com intervalo) ou válido por toda a estação (sem intervalo) |
+| `effects` | efeitos do evento | Ver a tabela de efeitos abaixo |
 
-## Active event
+### Efeitos (`effects`)
 
-Stored in `GameState.activeEvents`.
-
-| Field | Type | Rules |
+| Campo | Usado por | Regra |
 |---|---|---|
-| `id` | string | Unique occurrence ID |
-| `ruleId` | string | References the configured rule |
-| `kind` | non-radiation event kind | Matches the rule |
-| `endsAt` | number or null | End game time; null means season-long |
-| `solarFactor` | number | Combined by consumers using the lowest active factor |
-| `blocksExternalJobs` | boolean | True when the active event prevents outside jobs |
+| `damagePanels` | redemoinhos | Até N painéis elegíveis, sorteados sem repetição (`nextIndex`) |
+| `clog` | redemoinhos c2–c4, tempestade densa | Um alvo por tipo listado, sorteado entre os elegíveis do tipo |
+| `clogChance` | redemoinhos c2–c4 | Sorteada uma vez por ocorrência (`nextFloat`), antes dos alvos; ausente = 100% |
+| `solarFactor` | tempestades, escuridão | Copiado para o evento ativo; ausente = 1 |
+| `shortCircuitEverySeconds` | tempestade global | Período contado do início da estação; não é escalado no ciclo 4 |
+| `shortCircuit` | tempestade global | Tipos que entram num **único** sorteio por ocorrência |
+| `blocksExternalJobs` | escuridão | Copiado para o evento ativo; ausente = false |
 
-State transitions:
+### Agendamento (`nextEventAt`)
+
+`nextEventAt[rule.id]` é o horário de **início** da próxima ocorrência de uma regra com
+`intervalSeconds`:
+
+- primeira da estação: início da estação + intervalo sorteado;
+- seguintes: início da anterior + `durationSeconds` (0 se ausente) + intervalo sorteado;
+- nunca depois do fim da estação; um horário igual ao fim da estação não é ocorrência.
+
+Regras sem `intervalSeconds` (frio, escuridão, tempestade global) não entram em `nextEventAt`. Os
+curtos da tempestade global também não: são contados pela janela de tempo do tick (ver
+[research.md](./research.md)).
+| `name`, `explain` | texto localizado | Inglês obrigatório; português opcional |
+| `source` | fonte de dados | Rótulo, URL válida e classificação científica obrigatórios |
+
+## Evento ativo
+
+Armazenado em `GameState.activeEvents`.
+
+| Campo | Tipo | Regras |
+|---|---|---|
+| `id` | string | Identificador único da ocorrência |
+| `ruleId` | string | Referência à regra configurada |
+| `kind` | tipo de evento não radioativo | Corresponde à regra |
+| `endsAt` | número ou null | Tempo de jogo de término; null significa válido por toda a estação |
+| `solarFactor` | número | Da regra (ausente = 1); consumidores combinam usando o menor fator ativo |
+| `blocksExternalJobs` | boolean | Da regra (ausente = false); verdadeiro impede trabalhos externos |
+
+Quais regras viram evento ativo:
+
+| Tipo | Quando é criado | `endsAt` | Exemplo de regra |
+|---|---|---|---|
+| `dust_storm` | em cada ocorrência agendada | início + `durationSeconds` | `c1_local_storm`, `c2_dense_storm` |
+| `global_dust_storm` | primeiro tick do verão | `null` | `c3_global_storm`, `c4_global_storm` |
+| `darkness` | primeiro tick do inverno | `null` | `c2_dark_winter`, `c3_dark_winter` |
+| `cold` | primeiro tick da estação | `null` | `c1_cold_autumn`, `c1_cold_winter`, … |
+| `dust_devil` | nunca | — | instantâneo: só status e log |
+
+Eventos de estação inteira são criados uma única vez (só se ainda não houver evento ativo com o
+mesmo `ruleId`). O `id` do evento ativo deve ser determinístico (por exemplo `ruleId` + horário de
+início), nunca aleatório.
+
+Transições de estado:
 
 ```text
-scheduled -> active -> expired
-scheduled -> active -> season boundary cleanup
+scheduled -> active -> expired               (elapsed >= endsAt)
+scheduled -> active -> limpeza no limite da estação
 ```
 
-Season-long events expire at the season boundary. Persistent structure statuses created by an
-event do not expire with the active occurrence.
+Eventos válidos por toda a estação expiram no limite da estação. Status persistentes de estruturas
+criados por um evento não expiram com a ocorrência ativa.
 
-## Structure status
+## Status da estrutura
 
-Stored on each `StructureInstance.status`.
+Armazenado em `StructureInstance.status`.
+
+Cada estrutura tem um único status. Prioridade: `short_circuit` > `damaged` > `clogged`; um evento
+nunca troca um status mais grave por um mais leve.
 
 ```text
 building -> active
-active -> damaged       (dust devil)
-active -> clogged       (dust/clog effect)
-active -> short_circuit (global dust storm)
-damaged/clogged/short_circuit -> active
+active  -> damaged        (redemoinho; só painel solar)
+active  -> clogged        (entupimento; gerador de O2, mina, refinaria)
+active  -> short_circuit  (tempestade global; mina, refinaria)
+clogged -> short_circuit  (o curto é mais grave e substitui o entupimento)
+damaged -> active         (reparo, engine)
+short_circuit -> active   (reparo, engine; o entupimento anterior não volta)
+clogged -> active         (limpeza, engine)
 ```
 
-Repairs clear `damaged` and `short_circuit`; cleaning clears `clogged`. Event code must not
-silently replace an existing status with an invalid status or target a structure that is absent.
+Quem pode ser alvo:
 
-## Radiation storm
-
-Stored in `GameState.radiationStorm` and scheduled through the existing `nextEventAt` map.
-
-| Field | Type | Rules |
+| Efeito | Tipos | Elegível |
 |---|---|---|
-| `phase` | `warning` or `active` | Warning precedes active phase |
-| `phaseEndsAt` | number | Game time when current phase changes |
-| `basedOn` | `{ date, url }` or null | Archived DONKI event citation |
+| Dano | `solar_panel` | pronto, sem `dust_filters`, `active` |
+| Entupimento | tipos em `clog` | pronto, sem `dust_filters`, `active` (pendente de confirmação do PO) |
+| Curto-circuito | tipos em `shortCircuit` | pronto, sem `dust_filters`, status diferente de `short_circuit` |
 
-State transitions:
+"Pronto" é status diferente de `building`. O derretedor de gelo aceita o filtro, mas nenhuma regra
+o atinge. Instalar o filtro depois não cura um status existente. O código de eventos nunca seleciona
+uma estrutura ausente; sem alvo elegível, aquele alvo se perde.
+
+## Tempestade de radiação
+
+Armazenada em `GameState.radiationStorm` e agendada pelo mapa `nextEventAt` existente.
+
+| Campo | Tipo | Regras |
+|---|---|---|
+| `phase` | `warning` ou `active` | O aviso precede a fase ativa |
+| `phaseEndsAt` | número | Tempo de jogo em que a fase atual muda |
+| `basedOn` | `{ date, url }` ou null | Citação do evento DONKI arquivado |
+
+Transições de estado:
 
 ```text
 none -> warning -> active -> none
 ```
 
-The warning lasts `mission.radiationStorm.warningSeconds`; the active phase lasts
-`mission.radiationStorm.durationSeconds`. The storm is scheduled only from the configured cycle
-and season and at most the configured `perCycle` count.
+O aviso dura `mission.radiationStorm.warningSeconds`; a fase ativa dura
+`mission.radiationStorm.durationSeconds`. A tempestade é agendada somente a partir do ciclo e da
+estação configurados e no máximo pela quantidade `perCycle` configurada.
 
-## DONKI snapshot
+## Snapshot DONKI
 
-Stored as committed JSON under `src/data/snapshots/`.
+Armazenado como JSON versionado em `src/data/snapshots/`.
 
-Expected outer shape:
+Formato externo esperado:
 
 ```text
 {
@@ -90,7 +144,7 @@ Expected outer shape:
 }
 ```
 
-The game uses only SEP records with:
+O jogo usa somente registros SEP com:
 
 ```text
 {
@@ -99,27 +153,38 @@ The game uses only SEP records with:
 }
 ```
 
-An empty or invalid eligible set returns `null` from selection and must be surfaced explicitly by
-the caller; no fabricated citation is allowed.
+Um conjunto elegível vazio ou inválido retorna `null` na seleção e deve ser informado
+explicitamente pelo chamador; nenhuma citação pode ser fabricada.
 
-## Mission log entry
+## Entrada do log da missão
 
-Stored in `GameState.log`.
+Armazenada em `GameState.log`.
 
-| Field | Type | Purpose |
+| Campo | Tipo | Finalidade |
 |---|---|---|
-| `at` | number | Game elapsed time |
-| `cycle`, `season` | mission position | Grouping in the debrief |
-| `kind` | log kind | Event, status, death, repair, cleaning, or power record |
-| `ref` | string | Structure, astronaut, or event identifier |
-| `cause` | optional string | Stable key used for plain-language explanation |
+| `at` | número | Tempo decorrido do jogo |
+| `cycle`, `season` | posição da missão | Agrupamento no debrief |
+| `kind` | tipo do log | Evento, status, morte, reparo, limpeza ou registro de energia |
+| `ref` | string | Identificador da estrutura, astronauta ou evento |
+| `cause` | string opcional | Chave estável usada para explicação em linguagem simples |
 
-The debrief treats the log as append-only history and does not infer historical losses from the
-current state.
+O debrief trata o log como histórico somente de acréscimo e não infere perdas históricas a partir
+do estado atual.
 
-## Science source
+Entradas gravadas pelos eventos de poeira (US2), uma por estrutura atingida:
 
-Configured through `DataSource`:
+| `kind` | `ref` | `cause` |
+|---|---|---|
+| `damaged` | id do painel | id da regra (ex.: `c1_dust_devils`) |
+| `clogged` | id da estrutura | id da regra (ex.: `c2_dense_storm`) |
+| `short_circuit` | id da estrutura | id da regra (ex.: `c3_global_storm`) |
+
+Usar o id da regra em `cause` deixa o debrief (US4) buscar `name`, `explain` e `source` direto na
+configuração, sem tabela de textos paralela.
+
+## Fonte científica
+
+Configurada por `DataSource`:
 
 ```text
 {
@@ -129,5 +194,5 @@ Configured through `DataSource`:
 }
 ```
 
-The sources screen must display the classification in kid-friendly English and distinguish
-archived DONKI data from live data.
+A tela de fontes deve exibir a classificação em inglês adequado para crianças e distinguir dados
+DONKI arquivados de dados ao vivo.

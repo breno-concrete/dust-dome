@@ -1,246 +1,326 @@
-# Feature Specification: Events and NASA Data
+# Especificação da feature: Eventos e dados da NASA
 
-**Feature Branch**: `data/002-events-data`
+**Branch da feature**: `data/002-events-data`
 
-**Created**: 2026-11-14
+**Criada em**: 2026-11-14
 
-**Status**: Draft
+**Status**: Rascunho
 
-**Input**: User description: "Read specs/002-events-data/brief.md and Part II of the constitution, then specify the Events and NASA data feature."
+**Entrada**: Descrição do usuário: "Leia specs/002-events-data/brief.md e a Parte II da
+constituição e especifique a feature de Eventos e dados da NASA."
 
-## User Scenarios & Testing *(mandatory)*
+## Cenários do usuário e testes *(obrigatório)*
 
-### User Story 1 - Experience Deterministic Seasonal Events (Priority: P1)
+### User Story 1 - Vivenciar eventos sazonais determinísticos (Prioridade: P1)
 
-As a player, I want each Martian season to produce its expected environmental events at
-repeatable times so that the same mission seed gives me the same challenge every time.
+Como jogador, quero que cada estação marciana produza seus eventos ambientais esperados em
+horários repetíveis, para que a mesma seed de missão sempre ofereça o mesmo desafio.
 
-**Why this priority**: Seasonal events are the foundation for all event effects and let players
-learn to prepare for the climate. Deterministic scheduling is also required for fair play and
-reproducible tests.
+**Por que esta prioridade**: Eventos sazonais são a base de todos os efeitos de eventos e ajudam o
+jogador a aprender a se preparar para o clima. O agendamento determinístico também é necessário
+para um jogo justo e testes reproduzíveis.
 
-**Independent Test**: Start two missions with the same seed, advance them through the same seasons,
-and compare event kinds, targets, timing, and season cleanup. Both runs must match and no event from
-the previous season may remain active.
+**Teste independente**: Iniciar duas missões com a mesma seed, avançá-las pelas mesmas estações e
+comparar tipos de evento, alvos, horários e limpeza da estação. As duas execuções devem coincidir,
+e nenhum evento da estação anterior pode continuar ativo.
 
-**Acceptance Scenarios**:
+**Cenários de aceite**:
 
-1. **Given** a mission with a known seed and a season's event configuration, **When** the season
-   advances, **Then** event times are selected deterministically within that season's configured
-   interval.
-2. **Given** two missions with the same seed and starting state, **When** they receive the same
-   time updates, **Then** they schedule the same event kinds, times, and selected targets.
-3. **Given** an active event at the end of a season, **When** the season changes, **Then** the
-   event is ended and the new season starts with only its own event schedule.
-4. **Given** a cycle-four season, **When** an event is scheduled, **Then** its interval and effect
-   use the maximum-scale rules defined for cycle four.
-
----
-
-### User Story 2 - Survive Dust, Cold, Darkness, and Storm Damage (Priority: P1)
-
-As a player, I want dust and cold events to visibly and mechanically affect my base so that my
-choices about repairs, cleaning, power, and protection matter.
-
-**Why this priority**: These events are the main environmental hazards of the Mars mission and
-connect the event system to production, structure status, power, and crew preparation.
-
-**Independent Test**: Feed a controlled state and event configuration into the event update logic,
-advance through each dust and seasonal hazard, and verify the resulting structure statuses,
-production effects, power effects, and job restrictions.
-
-**Acceptance Scenarios**:
-
-1. **Given** a dust devil and available solar panels, **When** it occurs, **Then** the configured
-   number of panels becomes damaged and the damage effect is applied.
-2. **Given** a local or dense dust storm, **When** it is active, **Then** solar output is reduced
-   by the configured amount for its duration.
-3. **Given** a dense storm in cycle two or large dust devils in cycle three or four, **When** the
-   event applies its clogging effect, **Then** the affected filters, mines, and refineries become
-   clogged according to that season's rules.
-4. **Given** a global dust storm in cycle three or four, **When** one of its short-circuit checks
-   occurs, **Then** a random eligible mine or iron refinery becomes short-circuited and produces no
-   output until repaired.
-5. **Given** a winter with total darkness, **When** the event is active, **Then** solar panels
-   produce no power and external jobs are blocked for the winter.
-6. **Given** an event has ended, **When** the next update runs, **Then** temporary storm effects
-   are removed while persistent damage, clogging, or short-circuit statuses remain until their
-   defined fix is applied.
+1. **Dado** uma missão com seed conhecida e a configuração de eventos de uma estação, **quando**
+   a estação avançar, **então** os horários dos eventos são selecionados deterministicamente
+   dentro do intervalo configurado para a estação. A primeira ocorrência vem um intervalo depois
+   do início da estação; nas regras com duração (tempestades), cada intervalo seguinte conta do
+   **fim** da ocorrência anterior (início + duração + intervalo).
+2. **Dado** duas missões com a mesma seed e estado inicial, **quando** receberem as mesmas
+   atualizações de tempo, **então** elas agendarão os mesmos tipos de evento, horários e alvos.
+3. **Dado** um evento ativo no fim de uma estação, **quando** a estação mudar, **então** o evento
+   terminará e a nova estação começará somente com seu próprio agendamento.
+4. **Dado** uma estação do quarto ciclo, **quando** um evento for agendado, **então** seu intervalo
+   e efeito usarão as regras de escala máxima definidas para o quarto ciclo.
 
 ---
 
-### User Story 3 - Respond to a Real Radiation Storm (Priority: P1)
+### User Story 2 - Sobreviver a poeira, frio, escuridão e danos de tempestades (Prioridade: P1)
 
-As a player, I want an honest warning before a radiation storm and a clear connection to a real
-NASA solar event so that I can shelter the crew and understand the science behind the danger.
+Como jogador, quero que eventos de poeira e frio afetem minha base de forma visível e mecânica,
+para que minhas escolhas sobre reparos, limpeza, energia e proteção sejam importantes.
 
-**Why this priority**: Radiation is a lethal mission hazard and the feature must satisfy the
-project's real-science requirement by using an archived NASA DONKI event without pretending it is
-live data.
+**Por que esta prioridade**: Esses eventos são os principais perigos ambientais da missão em Marte
+e conectam o sistema de eventos à produção, ao status das estruturas, à energia e à preparação
+da tripulação.
 
-**Independent Test**: Run a controlled cycle-two, cycle-three, or cycle-four mission through the
-warning, active, and ending phases, and verify shelter outcomes, paused jobs, deterministic
-selection, and DONKI attribution.
+**Teste independente**: Fornecer um estado e uma configuração de eventos controlados à lógica de
+atualização, avançar por cada perigo de poeira e sazonal e verificar os status resultantes das
+estruturas, os efeitos na produção e na energia e as restrições de trabalhos.
 
-**Acceptance Scenarios**:
+**Cenários de aceite**:
 
-1. **Given** a cycle two, three, or four mission in spring, summer, or autumn, **When** the seeded
-   radiation event time is reached, **Then** a ten-second warning phase starts and identifies the
-   archived DONKI event used as its model.
-2. **Given** the radiation warning phase, **When** the player shelters all astronauts or sends
-   them into habitats with radiation shelters, **Then** jobs pause and the astronauts are
-   protected when the storm hits.
-3. **Given** the radiation storm is active, **When** an astronaut is outside or in a habitat
-   without a radiation shelter, **Then** that astronaut dies according to the mission rules.
-4. **Given** a radiation storm is active for its configured duration, **When** the duration ends,
-   **Then** the storm ends, paused jobs can resume, and the next season does not inherit the active
-   storm.
-5. **Given** a DONKI snapshot with valid event details, **When** the game presents the radiation
-   source, **Then** it shows the event name or date and a source link, and labels the data as
-   archived rather than live.
-6. **Given** malformed or unavailable DONKI snapshot data, **When** the data layer attempts to
-   select an event, **Then** it reports the data problem explicitly rather than fabricating a
-   source or silently presenting an unverified event.
+Termos usados nos cenários:
+
+- **Pronta**: estrutura cuja construção terminou (status diferente de `building`).
+- **Em bom estado**: status `active` (nem danificada, nem entupida, nem em curto).
+- **Sem filtro**: sem o upgrade `dust_filters` instalado.
+- **Elegível**: pronta, sem filtro e em bom estado, salvo quando o cenário disser outra coisa.
+
+1. **Dado** um redemoinho de poeira, **quando** ele ocorrer, **então** até `damagePanels` painéis
+   solares elegíveis, sorteados sem repetição, ficarão `damaged`. Se houver menos painéis
+   elegíveis que `damagePanels`, todos os elegíveis serão danificados; se não houver nenhum, o dano
+   se perde. Painéis com filtro, em construção ou já com outro status nunca entram no sorteio.
+2. **Dado** uma regra com `clog` (redemoinhos dos ciclos dois a quatro, tempestade densa do ciclo
+   dois), **quando** a ocorrência acontecer, **então** primeiro se sorteia a `clogChance` (ausente
+   vale 100%). Se passar, **um** alvo de **cada** tipo listado em `clog` é sorteado entre as
+   estruturas elegíveis desse tipo e fica `clogged`. Um tipo sem estrutura elegível é ignorado sem
+   erro. No ciclo dois isso entope no máximo um gerador de oxigênio por redemoinho; nos ciclos três
+   e quatro, no máximo um gerador, uma mina e uma refinaria; na tempestade densa, no máximo uma
+   mina e uma refinaria.
+3. **Dado** uma tempestade de poeira local ou densa, **quando** ela começar, **então** um evento
+   ativo com o `solarFactor` da regra durará `durationSeconds` e será removido quando o tempo de jogo
+   alcançar o fim. A próxima tempestade começa um intervalo depois desse fim. Enquanto a
+   tempestade estiver ativa, só a limpeza fica proibida; construir, melhorar e reparar continuam.
+4. **Dado** uma tempestade de poeira global no ciclo três ou quatro, **quando** o verão começar,
+   **então** um evento ativo com o `solarFactor` da regra valerá o verão inteiro (limpeza proibida
+   o verão inteiro). A cada `shortCircuitEverySeconds` contados do início do verão (o primeiro aos
+   45 s com os valores atuais), **uma** estrutura é sorteada entre as minas e refinarias prontas,
+   sem filtro e sem curto (uma entupida pode ser sorteada) e fica `short_circuit`. Sem nenhuma
+   elegível, aquela ocorrência se perde. O fator do ciclo quatro (`finalCycleIntervalFactor`) não
+   muda esse período.
+5. **Dado** o inverno dos ciclos dois a quatro, **quando** o primeiro tick do inverno acontecer,
+   **então** um evento ativo de escuridão com o `solarFactor` da regra (0, painéis sem produção) e
+   `blocksExternalJobs` verdadeiro valerá o inverno inteiro. A mesma regra representa o frio
+   severo; não existe um evento de frio separado nesses invernos.
+6. **Dado** uma estação com regra de frio (outono dos ciclos um a quatro e inverno do ciclo um),
+   **quando** a estação começar, **então** um evento ativo de frio sem efeito mecânico
+   (`solarFactor` 1, sem bloqueio) valerá a estação inteira, só para o HUD e o debrief. O custo do
+   frio vem das tabelas de aquecimento do engine.
+7. **Dado** uma estrutura que já tem um status, **quando** um evento tentar aplicar outro,
+   **então** vale a prioridade curto-circuito > danificado > entupido: o status mais grave
+   substitui o mais leve, e o mais leve nunca substitui o mais grave. Cada estrutura tem um único
+   status.
+8. **Dado** que um evento danificou, entupiu ou pôs em curto uma estrutura, **quando** isso
+   acontecer, **então** uma entrada é acrescentada ao log da missão (`damaged`, `clogged` ou
+   `short_circuit`) com o id da estrutura em `ref` e o id da regra em `cause`.
+9. **Dado** que um evento terminou ou a estação mudou, **quando** a próxima atualização ocorrer,
+   **então** os eventos ativos temporários são removidos, enquanto danos, entupimentos e curtos
+   continuam até o reparo ou a limpeza. Instalar o filtro depois não cura um status existente; só
+   protege dali em diante.
 
 ---
 
-### User Story 4 - Understand the Mission in the Debrief and Sources (Priority: P2)
+### User Story 3 - Reagir a uma tempestade de radiação real (Prioridade: P1)
 
-As a player, I want the end-of-mission debrief to explain losses in plain language and show the
-science sources so that I can learn why the base succeeded or failed.
+Como jogador, quero receber um aviso honesto antes de uma tempestade de radiação e uma conexão
+clara com um evento solar real da NASA, para que eu possa abrigar a tripulação e entender a
+ciência por trás do perigo.
 
-**Why this priority**: The debrief turns failures into learning and ensures the game presents
-NASA and other science references honestly to its 7-12 year-old audience.
+**Por que esta prioridade**: Radiação é um perigo letal da missão, e a feature deve cumprir o
+requisito de ciência real usando um evento DONKI arquivado da NASA sem fingir que os dados estão
+ao vivo.
 
-**Independent Test**: Provide a mission log containing multiple event causes and outcomes, then
-generate the debrief and sources content and verify that each relevant loss is explained and each
-source is identified.
+**Teste independente**: Executar uma missão controlada dos ciclos dois, três ou quatro pelas fases
+de aviso, atividade e término e verificar resultados de abrigo, trabalhos pausados, seleção
+determinística e atribuição ao DONKI.
 
-**Acceptance Scenarios**:
+**Cenários de aceite**:
 
-1. **Given** a mission log with event-caused damage, losses, and resource impacts, **When** the
-   mission ends, **Then** the debrief groups the outcomes by cycle or event and explains each
-   cause in plain English.
-2. **Given** a mission log with no losses, **When** the mission ends, **Then** the debrief still
-   explains the environmental events encountered and why the base survived.
-3. **Given** a science fact or game simplification used by an event, **When** the sources screen
-   is shown, **Then** it identifies the real basis, links to the source, and labels simplified or
-   gameplay-only rules as simplifications.
-4. **Given** the archived DONKI radiation event, **When** the sources screen is shown, **Then**
-   it names the event and provides its NASA source link without claiming current or live data.
-5. **Given** player-facing event or debrief text, **When** it is displayed, **Then** English is
-   available and the wording uses plain terms suitable for ages 7-12.
+1. **Dado** uma missão do ciclo dois, três ou quatro na primavera, verão ou outono, **quando** o
+   horário do evento de radiação com seed for alcançado, **então** uma fase de aviso de dez
+   segundos começará e identificará o evento DONKI arquivado usado como modelo.
+2. **Dado** a fase de aviso da radiação, **quando** o jogador abrigar todos os astronautas ou os
+   enviar para habitats com abrigos de radiação, **então** os trabalhos pausarão e os astronautas
+   estarão protegidos quando a tempestade atingir a base.
+3. **Dado** uma tempestade de radiação ativa, **quando** um astronauta estiver fora ou em um
+   habitat sem abrigo de radiação, **então** esse astronauta morrerá conforme as regras da missão.
+4. **Dado** que a tempestade de radiação está ativa durante sua duração configurada, **quando** a
+   duração terminar, **então** a tempestade acabará, os trabalhos pausados poderão voltar e a
+   próxima estação não herdará a tempestade ativa.
+5. **Dado** um snapshot DONKI com detalhes válidos, **quando** o jogo apresentar a fonte da
+   radiação, **então** mostrará o nome ou a data do evento e um link da fonte, identificando os
+   dados como arquivados em vez de atuais.
+6. **Dado** um snapshot DONKI malformado ou indisponível, **quando** a camada de dados tentar
+   selecionar um evento, **então** informará explicitamente o problema em vez de fabricar uma
+   fonte ou apresentar silenciosamente um evento não verificado.
 
-## Edge Cases
+---
 
-- The seeded interval may be shorter than the remaining time in a season; no event may be
-  scheduled outside the current season.
-- A season can end while a temporary storm is active; temporary effects must be cleared at the
-  boundary while persistent structure statuses remain.
-- A dust event may select a structure type that does not exist in the current base; the event
-  must not create an invalid target or fail silently.
-- A structure may already be damaged, clogged, or short-circuited when another event targets it;
-  the resulting status must follow the configured status rules and remain valid.
-- A radiation warning may begin while astronauts are already outside or jobs are queued; jobs
-  must pause during the storm sequence and resume only when allowed.
-- The mission may end during an event; the debrief must preserve the event and loss causes already
-  recorded in the log.
-- A DONKI snapshot can contain no eligible event; the data layer must report the missing data
-  explicitly and must not invent a NASA citation.
+### User Story 4 - Entender a missão no debrief e nas fontes (Prioridade: P2)
 
-## Requirements *(mandatory)*
+Como jogador, quero que o debrief da missão explique as perdas com palavras simples e mostre as
+fontes científicas, para que eu aprenda por que a base teve sucesso ou falhou.
 
-### Functional Requirements
+**Por que esta prioridade**: O debrief transforma falhas em aprendizado e garante que o jogo
+apresente referências da NASA e da ciência com honestidade para seu público de 7 a 12 anos.
 
-- **FR-001**: The event system MUST schedule events from the configured cycle and season rules
-  using the mission seed and the state's seeded random generator.
-- **FR-002**: The event system MUST produce identical event schedules and target selections for
-  identical seeds, starting states, configurations, and time updates.
-- **FR-003**: The event system MUST end active seasonal events at the season boundary and MUST
-  prevent event effects from leaking into another season.
-- **FR-004**: The event system MUST implement the configured effects for dust devils, local dust
-  storms, dense dust storms, global dust storms, cold, total darkness, clogging, and
-  short-circuiting across cycles one through four.
-- **FR-005**: The event system MUST preserve persistent structure statuses until the corresponding
-  repair or cleaning action removes them, while removing temporary effects when their events end.
-- **FR-006**: The event system MUST apply cycle-four maximum-scale intervals and global-storm
-  effects as defined by the game design canon.
-- **FR-007**: The event system MUST schedule at most one radiation storm per cycle in spring,
-  summer, or autumn for cycles two through four, using seeded timing.
-- **FR-008**: The radiation storm MUST provide a ten-second warning phase, a configured active
-  duration, and a distinct ending state.
-- **FR-009**: During a radiation storm, astronauts outside or in habitats without radiation
-  shelters MUST receive the configured lethal outcome, while sheltered astronauts remain safe.
-- **FR-010**: Radiation warnings MUST pause affected jobs and allow them to resume only when the
-  storm sequence permits.
-- **FR-011**: The data layer MUST parse archived NASA DONKI snapshots and provide a selected
-  real event with its identifying details and source link.
-- **FR-012**: The data layer MUST expose deterministic event selection for a provided seeded
-  generator and MUST report invalid or missing snapshot data explicitly.
-- **FR-013**: Every event and science-based rule presented to the player MUST have an explanation
-  and a source or a clear label identifying it as a gameplay simplification.
-- **FR-014**: The debrief MUST derive its event causes and resource or crew losses from the mission
-  log rather than inventing outcomes.
-- **FR-015**: The debrief MUST explain every recorded loss in plain English and identify the
-  relevant real-science explanation or gameplay simplification.
-- **FR-016**: The sources screen MUST distinguish archived data from live data and MUST show the
-  real DONKI citation for the radiation storm.
-- **FR-017**: The implementation MUST keep NASA I/O in the data layer; the event engine MUST remain
-  pure and MUST not perform network or file I/O, use timers, or use unseeded randomness.
-- **FR-018**: The feature MUST remain within the DEV A ownership paths and MUST request a shared
-  contract change when a required `GameState` field is not already available.
+**Teste independente**: Fornecer um log de missão com várias causas e resultados de eventos,
+gerar o conteúdo do debrief e das fontes e verificar se cada perda relevante é explicada e cada
+fonte é identificada.
 
-### Key Entities
+**Cenários de aceite**:
 
-- **Season event rule**: The configured event kind, cycle and season, interval, duration, effect,
-  explanation, and science source used to schedule an event.
-- **Active event**: A scheduled event with its start and end timing, current phase, effect state,
-  and any selected structure target.
-- **Structure status**: The persistent or temporary condition of a base structure, including
-  damaged, clogged, or short-circuited.
-- **Radiation storm**: The warning, active, and ended phases of a solar particle event, including
-  its timing, shelter requirements, and DONKI citation.
-- **DONKI snapshot**: An archived NASA event record containing the identifying information, event
-  date, source link, and data needed to model a radiation storm offline.
-- **Mission log entry**: A recorded event, effect, loss, or recovery used to explain the mission in
-  the debrief.
-- **Science source**: A named reference for a real Mars or space-weather fact, with a link and an
-  indication of whether the rule is real, scaled, simplified, or gameplay-only.
+1. **Dado** um log de missão com danos, perdas e impactos em recursos causados por eventos,
+   **quando** a missão terminar, **então** o debrief agrupará os resultados por ciclo ou evento e
+   explicará cada causa em inglês simples.
+2. **Dado** um log de missão sem perdas, **quando** a missão terminar, **então** o debrief ainda
+   explicará os eventos ambientais encontrados e por que a base sobreviveu.
+3. **Dado** um fato científico ou uma simplificação do jogo usada por um evento, **quando** a
+   tela de fontes for exibida, **então** ela identificará a base real, terá um link para a fonte e
+   marcará regras simplificadas ou exclusivas do jogo como simplificações.
+4. **Dado** o evento de radiação DONKI arquivado, **quando** a tela de fontes for exibida,
+   **então** ela nomeará o evento e fornecerá seu link da NASA sem afirmar que os dados são atuais
+   ou ao vivo.
+5. **Dado** um texto de evento ou debrief voltado ao jogador, **quando** for exibido, **então**
+   haverá versão em inglês e as palavras serão simples o suficiente para idades de 7 a 12 anos.
 
-## Success Criteria *(mandatory)*
+## Casos extremos
 
-### Measurable Outcomes
+- O intervalo com seed pode ser menor que o tempo restante na estação; nenhum evento pode ser
+  agendado fora da estação atual.
+- Uma estação pode terminar enquanto uma tempestade temporária está ativa; efeitos temporários
+  devem ser limpos no limite, enquanto status persistentes das estruturas permanecem.
+- Um evento de poeira pode listar um tipo de estrutura que não existe ou não tem estrutura
+  elegível; aquele alvo se perde sem erro, e os outros tipos da mesma ocorrência continuam valendo.
+- Uma mina ou refinaria entupida pode entrar em curto (o curto é mais grave); uma estrutura em
+  curto nunca volta a entupida por um evento. Quando o curto é reparado, a estrutura volta a
+  `active`, sem o entupimento anterior (regra do engine).
+- Um tick grande (velocidade 4× ou atraso do navegador) pode cobrir mais de uma ocorrência; elas
+  são aplicadas em ordem cronológica, para a mesma seed dar o mesmo resultado qualquer que seja o
+  tamanho do tick.
+- Na virada de estação, o tempo que sobra do tick anterior não pode contar curtos-circuitos da
+  estação passada.
+- Um evento de estação inteira (frio, escuridão, tempestade global) é criado uma única vez por
+  estação, mesmo que a atualização rode muitas vezes.
+- Um aviso de radiação pode começar enquanto astronautas estão fora ou trabalhos estão na fila;
+  os trabalhos devem pausar durante a sequência da tempestade e voltar somente quando permitido.
+- A missão pode terminar durante um evento; o debrief deve preservar as causas de eventos e perdas
+  já registradas no log.
+- Um snapshot DONKI pode não conter evento elegível; a camada de dados deve informar a ausência
+  explicitamente e não inventar uma citação da NASA.
 
-- **SC-001**: 100% of the configured cycle-and-season event rules produce only deterministic
-  schedules and target selections for repeated runs with the same seed.
-- **SC-002**: 100% of temporary event effects are removed at event or season end, while every
-  persistent damage, clogging, or short-circuit outcome remains recorded until its defined fix.
-- **SC-003**: Every acceptance scenario for dust, cold, darkness, global storms, and radiation
-  storms passes in focused automated tests before the corresponding story PR is opened.
-- **SC-004**: Every radiation storm shown in a mission identifies one archived NASA DONKI event with
-  a source link; no radiation storm is presented as live data.
-- **SC-005**: A debrief generated from a complete mission log accounts for 100% of recorded crew
-  deaths, structure losses, and resource losses with a plain-language cause.
-- **SC-006**: A reviewer can trace every event rule and science-based simplification to a named
-  source or explicit gameplay label in the sources screen.
-- **SC-007**: The complete project check passes with the feature integrated, including ownership
-  validation and the repository's existing test suite.
+## Requisitos *(obrigatório)*
 
-## Assumptions
+### Requisitos funcionais
 
-- The existing `GameState`, config schema, store, seeded random helpers, tick loop, and repair or
-  cleaning actions provide the contract needed by this feature; missing fields require a shared
-  contract change request rather than an edit by DEV A.
-- Product owners provide valid `events.json` and `mission.json` configuration, including the
-  radiation storm rules, English explanations, and source metadata.
-- NASA DONKI data is committed as an offline snapshot and is not fetched by the game at runtime.
-- The existing engine owns time advancement, production, power, crew deaths, and win or lose
-  resolution; this feature supplies event updates and records effects through the existing
-  contract.
-- The existing UI owned by DEV B presents alerts and radiation alarms; this feature provides the
-  state and source data needed by that UI.
-- The existing scene owned by DEV C presents visual consequences; this feature provides the
-  statuses and active-event state needed by that scene.
-- Event balance values remain in `src/config/*.json` and may be changed by product owners without
-  changing the behavioral requirements in this specification.
-- The first release requires English player-facing text; Portuguese is optional.
+- **FR-001**: O sistema de eventos DEVE agendar eventos a partir das regras configuradas de ciclo
+  e estação usando a seed da missão e o gerador aleatório com seed do estado.
+- **FR-002**: O sistema DEVE produzir agendamentos e seleções de alvos idênticos para seeds,
+  estados iniciais, configurações e atualizações de tempo idênticos.
+- **FR-003**: O sistema DEVE terminar eventos sazonais ativos no limite da estação e IMPEDIR que
+  seus efeitos vazem para outra estação.
+- **FR-004**: O sistema DEVE implementar os efeitos configurados de redemoinhos, tempestades
+  locais, tempestades densas e globais, frio, escuridão total, entupimentos e curtos nos ciclos
+  um a quatro, com os alvos e limites dos cenários 1 a 6 da US2.
+- **FR-004a**: Cada estrutura DEVE ter um único status, e um evento NÃO DEVE substituir um status
+  mais grave por um mais leve (curto-circuito > danificado > entupido).
+- **FR-004b**: Eventos de estação inteira (frio, escuridão, tempestade global) DEVEM estar ativos
+  desde o primeiro tick da estação; tempestades com duração DEVEM expirar em início + duração.
+- **FR-004c**: Todo dano, entupimento e curto-circuito causado por um evento DEVE gerar uma entrada
+  no log da missão, com a estrutura em `ref` e o id da regra em `cause`.
+- **FR-004d**: O sistema de eventos NÃO DEVE fixar números de balanceamento no código: fatores
+  solares, chances, quantidades e períodos vêm de `src/config/*.json`.
+- **FR-005**: O sistema DEVE preservar status persistentes das estruturas até que a ação
+  correspondente de reparo ou limpeza os remova, removendo efeitos temporários ao fim dos eventos.
+- **FR-006**: O sistema DEVE aplicar os intervalos de escala máxima do ciclo quatro (só em regras
+  com `intervalSeconds`, hoje só os redemoinhos) e os efeitos de tempestade global definidos pelo
+  cânone do jogo. O período de curto-circuito da tempestade global não é escalado.
+- **FR-007**: O sistema DEVE agendar no máximo uma tempestade de radiação por ciclo na primavera,
+  verão ou outono dos ciclos dois a quatro, usando horário com seed.
+- **FR-008**: A tempestade de radiação DEVE oferecer uma fase de aviso de dez segundos, uma duração
+  ativa configurada e um estado final distinto.
+- **FR-009**: Durante uma tempestade de radiação, astronautas fora ou em habitats sem abrigo DEVEM
+  receber o resultado letal configurado, enquanto astronautas abrigados permanecem seguros.
+- **FR-010**: Avisos de radiação DEVEM pausar trabalhos afetados e permitir que voltem somente
+  quando a sequência da tempestade permitir.
+- **FR-011**: A camada de dados DEVE analisar snapshots arquivados do NASA DONKI e fornecer um
+  evento real selecionado com seus detalhes identificadores e link da fonte.
+- **FR-012**: A camada de dados DEVE expor seleção determinística de eventos para um gerador com
+  seed fornecido e informar explicitamente dados inválidos ou ausentes do snapshot.
+- **FR-013**: Todo evento e regra científica apresentada ao jogador DEVE ter uma explicação e uma
+  fonte ou um rótulo claro de simplificação de gameplay.
+- **FR-014**: O debrief DEVE derivar suas causas de eventos e perdas de recursos ou tripulação do
+  log da missão, sem inventar resultados.
+- **FR-015**: O debrief DEVE explicar toda perda registrada em inglês simples e identificar a
+  explicação científica real ou a simplificação do jogo relacionada.
+- **FR-016**: A tela de fontes DEVE distinguir dados arquivados de dados atuais e exibir a citação
+  DONKI real da tempestade de radiação.
+- **FR-017**: A implementação DEVE manter o I/O da NASA na camada de dados; o engine de eventos
+  DEVE permanecer puro e não realizar rede ou leitura de arquivos, usar timers ou aleatoriedade
+  sem seed.
+- **FR-018**: A feature DEVE permanecer nos caminhos de ownership do DEV A e solicitar alteração
+  de contrato compartilhado quando um campo necessário de `GameState` não estiver disponível.
+
+### Entidades principais
+
+- **Regra de evento sazonal**: tipo de evento, ciclo e estação, intervalo, duração, efeito,
+  explicação e fonte científica configurados, usados para agendar um evento.
+- **Evento ativo**: ocorrência que está afetando a base agora: regra de origem, tipo, horário de fim
+  (ou a estação inteira), fator solar e bloqueio de trabalhos externos. Os alvos de estrutura não
+  ficam no evento ativo: viram status das estruturas e entradas do log.
+- **Status da estrutura**: condição persistente de uma estrutura da base: danificada, entupida ou
+  em curto, com prioridade curto > danificado > entupido.
+- **Tempestade de radiação**: fases de aviso, ativa e encerrada de um evento de partículas solares,
+  incluindo horários, requisitos de abrigo e citação DONKI.
+- **Snapshot DONKI**: registro arquivado de evento da NASA com identificação, data, link da fonte
+  e dados necessários para modelar uma tempestade de radiação offline.
+- **Entrada do log da missão**: evento, efeito, perda ou recuperação registrada e usada para
+  explicar a missão no debrief.
+- **Fonte científica**: referência nomeada para um fato real de Marte ou do clima espacial, com
+  link e indicação de regra real, escalada, simplificada ou exclusiva do jogo.
+
+## Critérios de sucesso *(obrigatório)*
+
+### Resultados mensuráveis
+
+- **SC-001**: 100% das regras de eventos configuradas para ciclo e estação produzem somente
+  agendamentos e seleções de alvos determinísticos em execuções repetidas com a mesma seed.
+- **SC-002**: 100% dos efeitos temporários são removidos ao fim do evento ou da estação, enquanto
+  todo dano, entupimento ou curto persistente permanece registrado até sua correção definida.
+- **SC-003**: Todo cenário de aceite de poeira, frio, escuridão, tempestades globais e radiação
+  passa em testes automatizados focados antes da abertura da PR da story correspondente.
+- **SC-004**: Toda tempestade de radiação exibida identifica um evento DONKI arquivado com link da
+  fonte; nenhuma tempestade é apresentada como dado atual.
+- **SC-005**: Um debrief gerado a partir de um log completo contabiliza 100% das mortes registradas
+  da tripulação, perdas de estruturas e perdas de recursos com uma causa em linguagem simples.
+- **SC-006**: Um revisor consegue rastrear cada regra de evento e simplificação científica até
+  uma fonte nomeada ou um rótulo explícito de gameplay na tela de fontes.
+- **SC-007**: A verificação completa do projeto passa com a feature integrada, incluindo validação
+  de ownership e a suíte de testes existente do repositório.
+
+## Premissas
+
+- O `GameState`, schema de configuração, store, helpers aleatórios com seed, loop de tick e ações
+  de reparo ou limpeza existentes fornecem o contrato necessário; campos ausentes exigem uma
+  solicitação de alteração em `shared/`, não uma edição do DEV A.
+- Os POs fornecem configurações válidas de `events.json` e `mission.json`, incluindo regras da
+  tempestade de radiação, explicações em inglês e metadados das fontes.
+- Os dados DONKI da NASA são um snapshot offline versionado e não são buscados em runtime.
+- O engine existente é responsável pelo avanço do tempo, produção, energia, mortes da tripulação
+  e resultado de vitória ou derrota; esta feature fornece atualizações de eventos e registra os
+  efeitos no contrato existente.
+- A interface existente do DEV B apresenta alertas e alarmes de radiação; esta feature fornece os
+  dados de estado e fontes necessários para essa interface.
+- A cena existente do DEV C apresenta consequências visuais; esta feature fornece os status e o
+  estado de eventos ativos necessários para a cena.
+- Valores de balanceamento dos eventos permanecem em `src/config/*.json` e podem ser alterados
+  pelos POs sem mudar os requisitos comportamentais desta especificação.
+- A primeira versão exige textos voltados ao jogador em inglês; português é opcional.
+- As regras de eventos seguem as respostas do PO de 2026-11-14 (R1–R6, T1–T7, E1–E4, F1–F4,
+  C1–C4). O que depende de outras áreas está em [change-requests.md](./change-requests.md).
+- O sorteio de entupimento considera só estruturas em bom estado, como o sorteio de painéis (R2).
+  **Pendente de confirmação do PO**; se o PO decidir incluir estruturas já entupidas ou em curto, o
+  sorteio pode cair numa estrutura já pior e não ter efeito (R5).
+- Para que o `solarFactor` da escuridão (0) venha da configuração, `c2_dark_winter` e
+  `c3_dark_winter` precisam ganhar `"solarFactor": 0` em `effects` (pedido aos POs). Até lá, os
+  testes usam uma regra montada no próprio teste. Regras sem `solarFactor` valem 1, um valor
+  neutro e não de balanceamento.
+
+### Fora do escopo da US2 (engine, Breno)
+
+A US2 só grava `activeEvents`, status das estruturas e log. O engine lê esses dados e é dono de:
+
+- bloquear a limpeza enquanto houver tempestade de poeira ativa, sem bloquear construir, melhorar
+  ou reparar;
+- bloquear todos os trabalhos externos quando um evento ativo tiver `blocksExternalJobs`: o
+  trabalho em andamento pausa, o astronauta volta e o trabalho espera na fila até a primavera;
+- multiplicar a produção solar pelo `solarFactor` dos eventos ativos;
+- levar a estrutura a `active` quando um curto-circuito for reparado;
+- matar, no primeiro instante do inverno dos ciclos 3 e 4, os astronautas em habitat sem
+  isolamento térmico, sem carência.
