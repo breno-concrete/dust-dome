@@ -1,0 +1,119 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 140px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  gap: var(--space-2);
+}
+
+.titleGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-muted);
+}
+
+.label {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.valueGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.current {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.target {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.alertBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--space-1);
+  color: var(--color-danger);
+  animation: pulseWarning 1s infinite ease-in-out;
+}
+
+.track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  overflow: visible;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--color-ok);
+  transition: width 0.3s ease;
+}
+
+.targetMarker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 4px #ffffff;
+  z-index: 2;
+  transform: translateX(-50%);
+}
+
+/* Resource specific colors */
+.oxygen .fill {
+  background: var(--color-oxygen);
+}
+
+.water .fill {
+  background: var(--color-water);
+}
+
+.food .fill {
+  background: var(--color-food);
+}
+
+/* Low reserve alert state */
+.low {
+  border-color: var(--color-danger);
+  animation: flashRed 1.2s infinite ease-in-out;
+}
+
+.low .fill {
+  background: var(--color-danger) !important;
+}
+
+.zero {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
+}
+
+.zero .current {
+  color: var(--color-danger);
+}
