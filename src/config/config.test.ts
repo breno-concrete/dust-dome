@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { createGame } from '../engine/game'
 import { placementError } from '../engine/placement'
 import { config } from './loadConfig'
-import { SEASONS } from './schema'
+import { LOSS_CAUSES, SEASONS } from './schema'
 
 const resourceIds = new Set(config.resources.map((r) => r.id))
 const structureIds = new Set(config.structures.map((s) => s.id))
@@ -130,5 +130,44 @@ describe('config rules', () => {
         ],
       }
     }
+  })
+})
+
+// Commander Vega's texts (narrator.json) — constitution II.12 and VII.
+describe('narrator texts', () => {
+  const { narrator } = config
+
+  it('has a briefing for every season of every cycle (II.12)', () => {
+    for (let cycle = 1; cycle <= config.seasons.cycles; cycle++) {
+      for (const season of SEASONS) {
+        expect(
+          narrator.briefings[String(cycle)]?.[season]?.text.en,
+          `cycle ${cycle} ${season}`,
+        ).toBeTruthy()
+      }
+    }
+  })
+
+  it('warns about the cold inside the spring briefing of the cycle that needs insulation (II.12)', () => {
+    const cycle = String(config.mission.insulationRequiredFromCycle)
+    expect(narrator.briefings[cycle]?.spring.warning?.en).toBeTruthy()
+  })
+
+  it('explains every way to lose an astronaut, when it happens and in the debrief (VII)', () => {
+    for (const cause of LOSS_CAUSES) {
+      expect(narrator.lossMessages[cause].en, cause).toBeTruthy()
+      expect(narrator.debrief.causes[cause].en, cause).toBeTruthy()
+    }
+  })
+
+  it('says why an astronaut comes back inside at the exposure warning (VII, II.9)', () => {
+    expect(narrator.exposureWarning.en).toBeTruthy()
+  })
+
+  it('has a victory text, a "targets not met" text and tutorial steps with unique ids', () => {
+    expect(narrator.victory.en).toBeTruthy()
+    expect(narrator.debrief.targetsNotMet.en).toBeTruthy()
+    expect(narrator.tutorial.length).toBeGreaterThan(0)
+    unique(narrator.tutorial.map((s) => s.id))
   })
 })
