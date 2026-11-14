@@ -209,6 +209,61 @@ export const MissionConfigSchema = z.object({
   }),
 })
 
+// ---------- narrator.json ----------
+/** Everything Commander Vega says (II.12). The POs write the texts. */
+
+/** Why an astronaut died; the same keys as LogEntry.cause in the engine. */
+export const LOSS_CAUSES = [
+  'radiation_storm',
+  'cold',
+  'empty_oxygen',
+  'empty_water',
+  'empty_food',
+] as const
+export const LossCauseSchema = z.enum(LOSS_CAUSES)
+export type LossCause = z.infer<typeof LossCauseSchema>
+
+const CauseTextsSchema = z.object({
+  radiation_storm: LocalizedTextSchema,
+  cold: LocalizedTextSchema,
+  empty_oxygen: LocalizedTextSchema,
+  empty_water: LocalizedTextSchema,
+  empty_food: LocalizedTextSchema,
+})
+
+export const BriefingSchema = z.object({
+  text: LocalizedTextSchema,
+  /** Shown highlighted after the text, e.g. the cold warning in the spring of cycle 3. */
+  warning: LocalizedTextSchema.optional(),
+})
+
+export const NarratorConfigSchema = z.object({
+  /** One briefing per cycle ("1", "2", ...) and season, shown when the season starts. */
+  briefings: z.record(
+    z.string(),
+    z.object({
+      spring: BriefingSchema,
+      summer: BriefingSchema,
+      autumn: BriefingSchema,
+      winter: BriefingSchema,
+    }),
+  ),
+  /** Said by the commander when an astronaut dies, by cause. */
+  lossMessages: CauseTextsSchema,
+  /** Said when an astronaut reaches mission.exposure.warnAt and comes back inside (never lethal). */
+  exposureWarning: LocalizedTextSchema,
+  /** End of cycle 4 with every win target met. */
+  victory: LocalizedTextSchema,
+  debrief: z.object({
+    /** Why each loss happened, with the real science behind it. */
+    causes: CauseTextsSchema,
+    /** The base survived but did not meet the win targets. */
+    targetsNotMet: LocalizedTextSchema,
+  }),
+  /** First-spring tutorial; each step waits for the player. */
+  tutorial: z.array(z.object({ id: z.string().min(1), text: LocalizedTextSchema })),
+})
+
 export const GameConfigSchema = z.object({
   resources: z.array(ResourceDefSchema),
   structures: z.array(StructureDefSchema),
@@ -216,6 +271,7 @@ export const GameConfigSchema = z.object({
   seasons: SeasonsConfigSchema,
   events: z.array(EventRuleSchema),
   mission: MissionConfigSchema,
+  narrator: NarratorConfigSchema,
 })
 
 export type LocalizedText = z.infer<typeof LocalizedTextSchema>
@@ -226,4 +282,6 @@ export type UpgradeDef = z.infer<typeof UpgradeDefSchema>
 export type SeasonDef = z.infer<typeof SeasonDefSchema>
 export type EventRule = z.infer<typeof EventRuleSchema>
 export type MissionConfig = z.infer<typeof MissionConfigSchema>
+export type NarratorConfig = z.infer<typeof NarratorConfigSchema>
+export type Briefing = z.infer<typeof BriefingSchema>
 export type GameConfig = z.infer<typeof GameConfigSchema>
