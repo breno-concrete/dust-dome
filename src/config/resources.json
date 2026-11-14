@@ -7,8 +7,8 @@
       "pt": "Hematita"
     },
     "explain": {
-      "en": "A red iron oxide rock. Mars is full of iron oxide. It is our money and becomes iron.",
-      "pt": "Uma rocha vermelha de óxido de ferro. Marte é cheio dela. É o nosso dinheiro e vira ferro."
+      "en": "An iron-rich mineral that is very common on Mars and gives the planet its reddish color. We use raw hematite for the first buildings and to make iron in the refinery. NASA's Opportunity rover found small hematite spheres on Mars in 2004.",
+      "pt": "É um mineral rico em ferro muito comum em Marte, responsável pela cor avermelhada do planeta. Usamos hematita bruta nas primeiras construções e para produzir ferro na refinaria. O rover Opportunity da NASA encontrou pequenas esferas de hematita em Marte em 2004."
     },
     "icon": "hematite",
     "start": 60
@@ -21,8 +21,8 @@
       "pt": "Regolito"
     },
     "explain": {
-      "en": "Loose Martian soil. Piled on buildings, it blocks radiation and cold.",
-      "pt": "Solo solto de Marte. Empilhado nas construções, bloqueia radiação e frio."
+      "en": "The layer of dust, sand and loose rocks that covers the whole surface of Mars. It makes solid foundations and thick shields against cold and radiation. In space exploration, regolith works as bricks and as a protective blanket for bases.",
+      "pt": "É a camada de poeira, areia e pedras soltas que cobre toda a superfície de Marte. Ele serve para fazer fundações firmes e criar escudos grossos contra o frio e a radiação. Na exploração espacial, o regolito funciona como tijolo e cobertor protetor para as bases."
     },
     "icon": "regolith",
     "start": 40
@@ -35,8 +35,8 @@
       "pt": "Ferro"
     },
     "explain": {
-      "en": "Made from hematite in the refinery. Used for stronger buildings.",
-      "pt": "Feito da hematita na refinaria. Usado em construções mais fortes."
+      "en": "A strong metal made by heating and purifying hematite in the refinery. We use iron to build mid-level structures, make repair parts and produce steel. Getting iron on Mars will be key to building big colonies in the future.",
+      "pt": "É um metal forte obtido ao aquecer e purificar a hematita dentro da refinaria. Usamos o ferro para construir estruturas de nível intermediário, fabricar peças de reparo e produzir aço. Extrair ferro em Marte será fundamental para construir grandes colônias no futuro."
     },
     "icon": "iron",
     "start": 0
@@ -49,8 +49,8 @@
       "pt": "Aço"
     },
     "explain": {
-      "en": "Iron made stronger with carbon from the Martian air.",
-      "pt": "Ferro mais forte, com carbono do ar de Marte."
+      "en": "A super-strong metal made in the factory by combining iron with carbon from the Martian air. We need steel to build the nuclear reactor and the advanced dust shields. Being strong and long-lasting makes steel essential against the extreme climate.",
+      "pt": "É um metal super-resistente criado na fábrica ao combinar ferro com o carbono do ar marciano. Precisamos de aço para construir o Reator Nuclear e os Escudos Antipoeira avançados. A combinação de resistência e durabilidade torna o aço indispensável para enfrentar o clima extremo."
     },
     "icon": "steel",
     "start": 0
@@ -63,8 +63,8 @@
       "pt": "Peças de reparo"
     },
     "explain": {
-      "en": "Bolts and plates to fix broken buildings.",
-      "pt": "Parafusos e placas para consertar construções quebradas."
+      "en": "Bolts, cables and parts made from iron in our workshop to fix broken machines. Whenever a dust devil or a short circuit damages something, we need 4 parts for the repair. Keeping spare parts makes sure a small fault does not become a big problem for the mission.",
+      "pt": "São parafusos, cabos e componentes feitos de ferro na nossa oficina para consertar máquinas estragadas. Sempre que um redemoinho ou curto-circuito danificar algo, precisamos de 4 peças para o reparo. Ter peças reservas garante que um pequeno defeito não vire um grande problema na missão."
     },
     "icon": "repair_parts",
     "start": 0
@@ -77,8 +77,8 @@
       "pt": "Oxigênio"
     },
     "explain": {
-      "en": "The air we breathe. Mars air is mostly carbon dioxide, so we make our own oxygen.",
-      "pt": "O ar que respiramos. O ar de Marte é quase todo gás carbônico, então fazemos nosso oxigênio."
+      "en": "The invisible gas people must breathe all the time to stay alive. Mars air has almost no oxygen, so our generator must keep making it. Each person in the colony uses 1 unit of oxygen per season.",
+      "pt": "É o gás invisível que os humanos precisam respirar o tempo todo para sobreviver. Como o ar de Marte quase não tem oxigênio, nosso gerador precisa fabricá-lo sem parar. Cada pessoa na colônia consome 1 unidade de oxigênio por estação."
     },
     "icon": "oxygen",
     "start": 8
@@ -91,8 +91,8 @@
       "pt": "Água"
     },
     "explain": {
-      "en": "Melted from ice buried under the ground. For drinking and for plants.",
-      "pt": "Derretida do gelo enterrado no chão. Para beber e para as plantas."
+      "en": "The liquid the crew needs to drink and the greenhouse plants need to stay alive. On Mars, water does not flow in rivers: it is frozen underground and must be melted. Each person uses 1 unit of water per season, plus what goes to the greenhouse.",
+      "pt": "É o líquido essencial para matar a sede da tripulação e manter as plantas da estufa vivas. Em Marte, a água não corre em rios; ela está congelada no subsolo e precisa ser derretida. Cada pessoa consome 1 unidade de água por estação, além do que vai para a estufa."
     },
     "icon": "water",
     "start": 20
@@ -105,8 +105,8 @@
       "pt": "Comida"
     },
     "explain": {
-      "en": "Grown in a warm, pressurized greenhouse.",
-      "pt": "Cultivada numa estufa quente e pressurizada."
+      "en": "Healthy vegetables and grains grown inside our pressurized greenhouse to feed the team. Without enough food in storage, the astronauts lose strength and the colony cannot survive. Each person eats 1 unit of food every season.",
+      "pt": "São vegetais e grãos nutritivos cultivados dentro da nossa estufa pressurizada para alimentar a equipe. Sem comida suficiente nas reservas, os astronautas perdem forças e a colônia não sobrevive. Cada pessoa consome 1 unidade de alimento a cada estação do ano."
     },
     "icon": "food",
     "start": 8
