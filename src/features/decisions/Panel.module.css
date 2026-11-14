@@ -1,0 +1,46 @@
+.build,
+.power {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  max-height: 70vh;
+  overflow: auto;
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  border-radius: var(--radius);
+}
+
+.build {
+  left: var(--space-3);
+  bottom: var(--space-3);
+  width: min(320px, 45vw);
+}
+
+.power {
+  right: var(--space-3);
+  bottom: var(--space-3);
+  width: min(300px, 45vw);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dialog {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 55%);
+}
+
+.dialogBox {
+  max-width: 520px;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius);
+}

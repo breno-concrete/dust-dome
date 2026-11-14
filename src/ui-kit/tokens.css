@@ -1,0 +1,38 @@
+/* Owner: Dev B. The ONLY global CSS file. Features use CSS Modules
+   (Something.module.css next to the component), never global classes. */
+:root {
+  --color-bg: #0b1020;
+  --color-surface: #161d33;
+  --color-text: #f4f6fb;
+  --color-muted: #a9b1c7;
+  --color-accent: #ffb347;
+  --color-danger: #ff6b6b;
+  --color-ok: #5bd6a0;
+
+  --font-body: system-ui, sans-serif;
+  --font-size-base: 18px; /* kids 7-12: keep text big */
+  --radius: 12px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+}
+
+.screen {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}

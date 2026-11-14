@@ -1,0 +1,63 @@
+{
+  "cycles": 4,
+  "winterDarknessFromCycle": 2,
+  "source": {
+    "label": "NASA Solar System Exploration: Mars in depth",
+    "url": "https://solarsystem.nasa.gov/planets/mars/in-depth.amp",
+    "kind": "scaled"
+  },
+  "seasons": [
+    {
+      "id": "spring",
+      "name": {
+        "en": "Spring",
+        "pt": "Primavera"
+      },
+      "explain": {
+        "en": "The south warms up, ice turns into gas and dust devils dance.",
+        "pt": "O sul esquenta, o gelo vira gás e os redemoinhos de poeira dançam."
+      },
+      "sols": 142,
+      "durationSeconds": 255
+    },
+    {
+      "id": "summer",
+      "name": {
+        "en": "Summer",
+        "pt": "Verão"
+      },
+      "explain": {
+        "en": "Mars is closest to the Sun: the most light, and the dust storm season.",
+        "pt": "Marte fica mais perto do Sol: mais luz, e a época das tempestades de poeira."
+      },
+      "sols": 154,
+      "durationSeconds": 277
+    },
+    {
+      "id": "autumn",
+      "name": {
+        "en": "Autumn",
+        "pt": "Outono"
+      },
+      "explain": {
+        "en": "The longest and calmest season, but cold fronts and CO₂ frost arrive.",
+        "pt": "A estação mais longa e calma, mas chegam frentes frias e geada de CO₂."
+      },
+      "sols": 194,
+      "durationSeconds": 348
+    },
+    {
+      "id": "winter",
+      "name": {
+        "en": "Winter",
+        "pt": "Inverno"
+      },
+      "explain": {
+        "en": "Mars is farthest from the Sun: extreme cold, long nights and dry-ice snow.",
+        "pt": "Marte fica mais longe do Sol: frio extremo, noites longas e neve de gelo seco."
+      },
+      "sols": 178,
+      "durationSeconds": 320
+    }
+  ]
+}

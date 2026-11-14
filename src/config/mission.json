@@ -1,0 +1,86 @@
+{
+  "crew": 4,
+  "colonists": 12,
+  "needs": {
+    "oxygen": 1,
+    "water": 2,
+    "food": 1
+  },
+  "grid": {
+    "width": 12,
+    "height": 12
+  },
+  "startingStructures": [
+    {
+      "type": "habitat",
+      "tile": [5, 5]
+    },
+    {
+      "type": "mine",
+      "tile": [8, 5]
+    },
+    {
+      "type": "solar_panel",
+      "tile": [3, 3]
+    },
+    {
+      "type": "solar_panel",
+      "tile": [3, 4]
+    },
+    {
+      "type": "oxygen_generator",
+      "tile": [5, 3]
+    },
+    {
+      "type": "ice_melter",
+      "tile": [6, 3]
+    }
+  ],
+  "jobs": {
+    "buildSeconds": 15,
+    "upgradeSeconds": 15,
+    "repairSeconds": 5,
+    "cleanSeconds": 10
+  },
+  "exposure": {
+    "maxShareOfSeason": 0.25,
+    "recoveryRate": 0.5,
+    "warnAt": 0.75
+  },
+  "emptyReserve": {
+    "graceSeconds": 15,
+    "deathEverySeconds": 15
+  },
+  "damage": {
+    "damagedFactor": 0.5,
+    "cloggedFactor": 0.75
+  },
+  "repair": {
+    "parts": 4,
+    "qteBolts": 5,
+    "qteSeconds": 6
+  },
+  "brownoutOrder": [
+    "steel_factory",
+    "repair_workshop",
+    "iron_refinery",
+    "mine",
+    "ice_melter",
+    "greenhouse",
+    "oxygen_generator"
+  ],
+  "insulationRequiredFromCycle": 3,
+  "finalCycleIntervalFactor": 0.75,
+  "radiationStorm": {
+    "fromCycle": 2,
+    "perCycle": 1,
+    "seasons": ["spring", "summer", "autumn"],
+    "warningSeconds": 10,
+    "durationSeconds": 20,
+    "source": {
+      "label": "NASA DONKI: solar energetic particle events",
+      "url": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/",
+      "kind": "real"
+    }
+  }
+}

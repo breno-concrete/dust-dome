@@ -1,0 +1,296 @@
+[
+  {
+    "id": "c1_dust_devils",
+    "kind": "dust_devil",
+    "cycles": [1],
+    "season": "spring",
+    "effects": {
+      "damagePanels": 1
+    },
+    "name": {
+      "en": "Dust devils",
+      "pt": "Redemoinhos de poeira"
+    },
+    "explain": {
+      "en": "Spinning whirlwinds of dust. Here they can hit and damage a solar panel.",
+      "pt": "Redemoinhos girando poeira. Aqui eles podem acertar e danificar um painel solar."
+    },
+    "source": {
+      "label": "Dust devils on Mars (they also cleaned Spirit's panels)",
+      "url": "https://www.scientificamerican.com/article/lost-opportunity-after-a-15-year-odyssey-nasas-trailblazing-mars-rover-approaches-its-end/",
+      "kind": "simplification"
+    },
+    "intervalSeconds": [30, 45]
+  },
+  {
+    "id": "c1_local_storm",
+    "kind": "dust_storm",
+    "cycles": [1],
+    "season": "summer",
+    "effects": {
+      "solarFactor": 0.6
+    },
+    "name": {
+      "en": "Local dust storm",
+      "pt": "Tempestade de poeira local"
+    },
+    "explain": {
+      "en": "Dust in the sky blocks part of the sunlight for a while.",
+      "pt": "A poeira no céu bloqueia parte da luz do sol por um tempo."
+    },
+    "source": {
+      "label": "NASA JPL Edu: the 2018 global dust storm and Opportunity",
+      "url": "https://jpl.nasa.gov/edu/news/2019/2/13/mars-rover-mission-comes-to-an-end-but-science-legacy-live-on",
+      "kind": "scaled"
+    },
+    "intervalSeconds": [30, 30],
+    "durationSeconds": 15
+  },
+  {
+    "id": "c1_cold_autumn",
+    "kind": "cold",
+    "cycles": [1],
+    "season": "autumn",
+    "effects": {},
+    "name": {
+      "en": "Cooling down",
+      "pt": "Esfriando"
+    },
+    "explain": {
+      "en": "Shorter days and colder nights: heating needs more power.",
+      "pt": "Dias mais curtos e noites mais frias: o aquecimento gasta mais energia."
+    },
+    "source": {
+      "label": "NASA Solar System Exploration: Mars in depth",
+      "url": "https://solarsystem.nasa.gov/planets/mars/in-depth.amp",
+      "kind": "scaled"
+    }
+  },
+  {
+    "id": "c1_cold_winter",
+    "kind": "cold",
+    "cycles": [1],
+    "season": "winter",
+    "effects": {},
+    "name": {
+      "en": "Intense cold",
+      "pt": "Frio intenso"
+    },
+    "explain": {
+      "en": "Far from the Sun, Mars freezes. Heating, the greenhouse and the ice melter need much more power.",
+      "pt": "Longe do Sol, Marte congela. Aquecimento, estufa e derretedor precisam de muito mais energia."
+    },
+    "source": {
+      "label": "NASA Solar System Exploration: Mars in depth",
+      "url": "https://solarsystem.nasa.gov/planets/mars/in-depth.amp",
+      "kind": "scaled"
+    }
+  },
+  {
+    "id": "c2_dust_devils",
+    "kind": "dust_devil",
+    "cycles": [2],
+    "season": "spring",
+    "effects": {
+      "damagePanels": 1,
+      "clog": ["oxygen_generator"],
+      "clogChance": 0.5
+    },
+    "name": {
+      "en": "Frequent dust devils",
+      "pt": "Redemoinhos frequentes"
+    },
+    "explain": {
+      "en": "More dust devils: they hit panels and clog the oxygen generator's air filters.",
+      "pt": "Mais redemoinhos: acertam painéis e entopem os filtros de ar do gerador de oxigênio."
+    },
+    "source": {
+      "label": "Dust devils on Mars (they also cleaned Spirit's panels)",
+      "url": "https://www.scientificamerican.com/article/lost-opportunity-after-a-15-year-odyssey-nasas-trailblazing-mars-rover-approaches-its-end/",
+      "kind": "simplification"
+    },
+    "intervalSeconds": [20, 30]
+  },
+  {
+    "id": "c2_dense_storm",
+    "kind": "dust_storm",
+    "cycles": [2],
+    "season": "summer",
+    "effects": {
+      "solarFactor": 0.4,
+      "clog": ["mine", "iron_refinery"]
+    },
+    "name": {
+      "en": "Dense dust storm",
+      "pt": "Tempestade de poeira densa"
+    },
+    "explain": {
+      "en": "Thick dust blocks the Sun and clogs the mine and the refinery.",
+      "pt": "Poeira grossa bloqueia o Sol e entope a mina e a refinaria."
+    },
+    "source": {
+      "label": "NASA JPL Edu: the 2018 global dust storm and Opportunity",
+      "url": "https://jpl.nasa.gov/edu/news/2019/2/13/mars-rover-mission-comes-to-an-end-but-science-legacy-live-on",
+      "kind": "scaled"
+    },
+    "intervalSeconds": [30, 30],
+    "durationSeconds": 20
+  },
+  {
+    "id": "c2_cold_autumn",
+    "kind": "cold",
+    "cycles": [2],
+    "season": "autumn",
+    "effects": {},
+    "name": {
+      "en": "Sharp cold",
+      "pt": "Frio acentuado"
+    },
+    "explain": {
+      "en": "The cold comes earlier and stronger. Even the ice melter needs more power.",
+      "pt": "O frio chega mais cedo e mais forte. Até o derretedor precisa de mais energia."
+    },
+    "source": {
+      "label": "NASA Solar System Exploration: Mars in depth",
+      "url": "https://solarsystem.nasa.gov/planets/mars/in-depth.amp",
+      "kind": "scaled"
+    }
+  },
+  {
+    "id": "c2_dark_winter",
+    "kind": "darkness",
+    "cycles": [2],
+    "season": "winter",
+    "effects": {
+      "blocksExternalJobs": true
+    },
+    "name": {
+      "en": "Severe cold and total darkness",
+      "pt": "Frio severo e escuridão total"
+    },
+    "explain": {
+      "en": "No sunlight reaches the panels and it is too cold to go outside.",
+      "pt": "Nenhuma luz chega aos painéis e está frio demais para sair."
+    },
+    "source": {
+      "label": "NASA Solar System Exploration: Mars in depth",
+      "url": "https://solarsystem.nasa.gov/planets/mars/in-depth.amp",
+      "kind": "scaled"
+    }
+  },
+  {
+    "id": "c3_dust_devils",
+    "kind": "dust_devil",
+    "cycles": [3, 4],
+    "season": "spring",
+    "effects": {
+      "damagePanels": 2,
+      "clog": ["oxygen_generator", "mine", "iron_refinery"],
+      "clogChance": 1
+    },
+    "name": {
+      "en": "Giant dust devils",
+      "pt": "Redemoinhos gigantes"
+    },
+    "explain": {
+      "en": "Bigger, longer dust devils damage panels and clog machines.",
+      "pt": "Redemoinhos maiores e mais longos danificam painéis e entopem máquinas."
+    },
+    "source": {
+      "label": "Dust devils on Mars (they also cleaned Spirit's panels)",
+      "url": "https://www.scientificamerican.com/article/lost-opportunity-after-a-15-year-odyssey-nasas-trailblazing-mars-rover-approaches-its-end/",
+      "kind": "simplification"
+    },
+    "intervalSeconds": [30, 40]
+  },
+  {
+    "id": "c3_global_storm",
+    "kind": "global_dust_storm",
+    "cycles": [3],
+    "season": "summer",
+    "effects": {
+      "solarFactor": 0.2,
+      "shortCircuitEverySeconds": 45,
+      "shortCircuit": ["mine", "iron_refinery"]
+    },
+    "name": {
+      "en": "Global dust storm",
+      "pt": "Tempestade global de poeira"
+    },
+    "explain": {
+      "en": "Dust covers the whole planet, almost blacking out the Sun, like the 2018 storm that ended the Opportunity rover.",
+      "pt": "A poeira cobre o planeta inteiro e quase apaga o Sol, como a tempestade de 2018 que encerrou o rover Opportunity."
+    },
+    "source": {
+      "label": "NASA JPL Edu: the 2018 global dust storm and Opportunity",
+      "url": "https://jpl.nasa.gov/edu/news/2019/2/13/mars-rover-mission-comes-to-an-end-but-science-legacy-live-on",
+      "kind": "scaled"
+    }
+  },
+  {
+    "id": "c4_global_storm",
+    "kind": "global_dust_storm",
+    "cycles": [4],
+    "season": "summer",
+    "effects": {
+      "solarFactor": 0.15,
+      "shortCircuitEverySeconds": 45,
+      "shortCircuit": ["mine", "iron_refinery"]
+    },
+    "name": {
+      "en": "Global dust storm (maximum)",
+      "pt": "Tempestade global (máxima)"
+    },
+    "explain": {
+      "en": "The final test: the worst storm of all.",
+      "pt": "O teste final: a pior tempestade de todas."
+    },
+    "source": {
+      "label": "NASA JPL Edu: the 2018 global dust storm and Opportunity",
+      "url": "https://jpl.nasa.gov/edu/news/2019/2/13/mars-rover-mission-comes-to-an-end-but-science-legacy-live-on",
+      "kind": "scaled"
+    }
+  },
+  {
+    "id": "c3_cold_autumn",
+    "kind": "cold",
+    "cycles": [3, 4],
+    "season": "autumn",
+    "effects": {},
+    "name": {
+      "en": "Extreme cold",
+      "pt": "Frio extremo"
+    },
+    "explain": {
+      "en": "Autumn is now as cold as a winter.",
+      "pt": "O outono agora é frio como um inverno."
+    },
+    "source": {
+      "label": "NASA Solar System Exploration: Mars in depth",
+      "url": "https://solarsystem.nasa.gov/planets/mars/in-depth.amp",
+      "kind": "scaled"
+    }
+  },
+  {
+    "id": "c3_dark_winter",
+    "kind": "darkness",
+    "cycles": [3, 4],
+    "season": "winter",
+    "effects": {
+      "blocksExternalJobs": true
+    },
+    "name": {
+      "en": "Absolute cold and darkness",
+      "pt": "Frio absoluto e escuridão"
+    },
+    "explain": {
+      "en": "Only insulated habitats survive this winter.",
+      "pt": "Só módulos com isolamento sobrevivem a este inverno."
+    },
+    "source": {
+      "label": "NASA Solar System Exploration: Mars in depth",
+      "url": "https://solarsystem.nasa.gov/planets/mars/in-depth.amp",
+      "kind": "scaled"
+    }
+  }
+]

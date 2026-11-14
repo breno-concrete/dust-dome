@@ -1,0 +1,49 @@
+[
+  {
+    "id": "thermal_insulation",
+    "name": {
+      "en": "Thermal insulation",
+      "pt": "Isolamento térmico"
+    },
+    "explain": {
+      "en": "A thick blanket on the walls keeps the heat inside, so heating needs less power.",
+      "pt": "Um cobertor grosso nas paredes segura o calor, então o aquecimento gasta menos energia."
+    },
+    "effect": "insulation",
+    "cost": {
+      "regolith": 25,
+      "iron": 20
+    }
+  },
+  {
+    "id": "radiation_shelter",
+    "name": {
+      "en": "Radiation shelter",
+      "pt": "Abrigo antirradiação"
+    },
+    "explain": {
+      "en": "A room covered with thick regolith. Hide here when the Sun throws a particle storm.",
+      "pt": "Uma sala coberta de regolito grosso. Esconda-se aqui quando o Sol lançar uma tempestade de partículas."
+    },
+    "effect": "radiation_shelter",
+    "cost": {
+      "regolith": 30,
+      "iron": 15
+    }
+  },
+  {
+    "id": "dust_filters",
+    "name": {
+      "en": "Dust filters & shields",
+      "pt": "Filtros e escudos antipoeira"
+    },
+    "explain": {
+      "en": "Filters keep dust out of machines and shields protect panels. They cannot bring back sunlight blocked by a storm.",
+      "pt": "Filtros tiram a poeira das máquinas e escudos protegem os painéis. Não trazem de volta a luz bloqueada pela tempestade."
+    },
+    "effect": "dust_filters",
+    "cost": {
+      "steel": 20
+    }
+  }
+]

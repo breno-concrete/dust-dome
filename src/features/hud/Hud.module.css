@@ -1,0 +1,19 @@
+.hud {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  border-radius: var(--radius);
+}
+
+.speeds {
+  display: flex;
+  gap: var(--space-1);
+  margin-left: auto;
+}

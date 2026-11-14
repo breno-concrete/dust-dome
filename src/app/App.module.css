@@ -1,0 +1,23 @@
+/* Owner: Breno. Only the two layers live here; each area positions its own
+   components inside its layer with its own CSS Module. */
+.stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sceneLayer,
+.uiLayer {
+  position: absolute;
+  inset: 0;
+}
+
+/* Clicks go through the empty parts of the UI layer to the 3D scene. */
+.uiLayer {
+  pointer-events: none;
+}
+
+.uiLayer > * {
+  pointer-events: auto;
+}

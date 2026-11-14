@@ -1,0 +1,467 @@
+[
+  {
+    "id": "habitat",
+    "name": {
+      "en": "Habitat module",
+      "pt": "Módulo habitacional"
+    },
+    "explain": {
+      "en": "Home for 4 astronauts. Its walls keep the heat in and the radiation out.",
+      "pt": "Casa para 4 astronautas. As paredes guardam o calor e barram a radiação."
+    },
+    "level": 1,
+    "cost": {
+      "hematite": 40,
+      "regolith": 30
+    },
+    "size": 2,
+    "power": {
+      "kind": "consumer",
+      "minKw": 4,
+      "maxKw": 8
+    },
+    "switchable": false,
+    "heatingKw": {
+      "1": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 6,
+        "winter": 10
+      },
+      "2": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 8,
+        "winter": 12
+      },
+      "3": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 12,
+        "winter": 14
+      },
+      "4": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 12,
+        "winter": 14
+      }
+    },
+    "insulatedHeatingKw": {
+      "1": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 5,
+        "winter": 7
+      },
+      "2": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 6,
+        "winter": 8
+      },
+      "3": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 8,
+        "winter": 9
+      },
+      "4": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 8,
+        "winter": 9
+      }
+    },
+    "capacity": 4,
+    "upgrades": ["thermal_insulation", "radiation_shelter"]
+  },
+  {
+    "id": "solar_panel",
+    "name": {
+      "en": "Solar panel",
+      "pt": "Painel solar"
+    },
+    "explain": {
+      "en": "Turns sunlight into electricity. Less sun in winter and in dust storms means less power.",
+      "pt": "Transforma luz do sol em eletricidade. Menos sol no inverno e nas tempestades de poeira, menos energia."
+    },
+    "level": 1,
+    "cost": {
+      "hematite": 15
+    },
+    "size": 1,
+    "power": {
+      "kind": "solar",
+      "kwBySeason": {
+        "spring": 12,
+        "summer": 15,
+        "autumn": 9,
+        "winter": 4
+      }
+    },
+    "switchable": false,
+    "upgrades": ["dust_filters"]
+  },
+  {
+    "id": "battery",
+    "name": {
+      "en": "Battery bank",
+      "pt": "Banco de baterias"
+    },
+    "explain": {
+      "en": "Saves extra electricity for the dark and dusty days.",
+      "pt": "Guarda a eletricidade que sobra para os dias escuros e de poeira."
+    },
+    "level": 1,
+    "cost": {
+      "hematite": 20
+    },
+    "size": 1,
+    "power": {
+      "kind": "storage",
+      "capacityEu": 1500
+    },
+    "switchable": false
+  },
+  {
+    "id": "mine",
+    "name": {
+      "en": "Mine",
+      "pt": "Mina"
+    },
+    "explain": {
+      "en": "Digs hematite and regolith from the ground.",
+      "pt": "Escava hematita e regolito do chão."
+    },
+    "level": 1,
+    "cost": {
+      "hematite": 25
+    },
+    "size": 2,
+    "power": {
+      "kind": "consumer",
+      "minKw": 3,
+      "maxKw": 6
+    },
+    "switchable": true,
+    "outputs": {
+      "min": {
+        "hematite": 25,
+        "regolith": 20
+      },
+      "max": {
+        "hematite": 45,
+        "regolith": 35
+      }
+    },
+    "upgrades": ["dust_filters"]
+  },
+  {
+    "id": "oxygen_generator",
+    "name": {
+      "en": "Oxygen generator",
+      "pt": "Gerador de oxigênio"
+    },
+    "explain": {
+      "en": "Splits carbon dioxide from the Martian air into oxygen, like NASA's MOXIE on the Perseverance rover.",
+      "pt": "Separa o gás carbônico do ar de Marte em oxigênio, como o MOXIE da NASA no rover Perseverance."
+    },
+    "level": 1,
+    "cost": {
+      "hematite": 30
+    },
+    "size": 1,
+    "power": {
+      "kind": "consumer",
+      "minKw": 6,
+      "maxKw": 10
+    },
+    "switchable": true,
+    "outputs": {
+      "min": {
+        "oxygen": 4
+      },
+      "max": {
+        "oxygen": 7
+      }
+    },
+    "upgrades": ["dust_filters"],
+    "source": {
+      "label": "NASA JPL: MOXIE makes oxygen on Mars",
+      "url": "https://www.jpl.nasa.gov/news/nasas-perseverance-mars-rover-extracts-first-oxygen-from-red-planet/",
+      "kind": "scaled"
+    }
+  },
+  {
+    "id": "ice_melter",
+    "name": {
+      "en": "Ice melter",
+      "pt": "Derretedor de gelo"
+    },
+    "explain": {
+      "en": "Digs up ice buried under the dust and melts it into water. Radar found glaciers like this under Hellas.",
+      "pt": "Escava o gelo enterrado sob a poeira e derrete em água. Um radar achou geleiras assim em Hellas."
+    },
+    "level": 1,
+    "cost": {
+      "hematite": 20
+    },
+    "size": 1,
+    "power": {
+      "kind": "consumer",
+      "minKw": 4,
+      "maxKw": 8
+    },
+    "switchable": true,
+    "outputs": {
+      "min": {
+        "water": 30
+      },
+      "max": {
+        "water": 55
+      }
+    },
+    "heatingKw": {
+      "1": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 4,
+        "winter": 6
+      },
+      "2": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 5,
+        "winter": 7
+      },
+      "3": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 7,
+        "winter": 8
+      },
+      "4": {
+        "spring": 4,
+        "summer": 4,
+        "autumn": 7,
+        "winter": 8
+      }
+    },
+    "upgrades": ["dust_filters"],
+    "source": {
+      "label": "Hellas Planitia: buried glaciers detected by MRO SHARAD radar",
+      "url": "https://en.wikipedia.org/wiki/Hellas_Planitia",
+      "kind": "real"
+    }
+  },
+  {
+    "id": "iron_refinery",
+    "name": {
+      "en": "Iron refinery",
+      "pt": "Refinaria de ferro"
+    },
+    "explain": {
+      "en": "Heats hematite to pull out the iron.",
+      "pt": "Aquece a hematita para tirar o ferro."
+    },
+    "level": 2,
+    "cost": {
+      "hematite": 50,
+      "regolith": 20
+    },
+    "size": 2,
+    "power": {
+      "kind": "consumer",
+      "minKw": 6,
+      "maxKw": 12
+    },
+    "switchable": true,
+    "inputs": {
+      "min": {
+        "hematite": 30
+      },
+      "max": {
+        "hematite": 60
+      }
+    },
+    "outputs": {
+      "min": {
+        "iron": 12
+      },
+      "max": {
+        "iron": 24
+      }
+    },
+    "upgrades": ["dust_filters"]
+  },
+  {
+    "id": "greenhouse",
+    "name": {
+      "en": "Pressurized greenhouse",
+      "pt": "Estufa pressurizada"
+    },
+    "explain": {
+      "en": "A warm bubble where plants grow with water and light.",
+      "pt": "Uma bolha quente onde as plantas crescem com água e luz."
+    },
+    "level": 2,
+    "cost": {
+      "regolith": 15,
+      "iron": 20
+    },
+    "size": 2,
+    "power": {
+      "kind": "consumer",
+      "minKw": 5,
+      "maxKw": 9
+    },
+    "switchable": true,
+    "inputs": {
+      "min": {
+        "water": 15
+      },
+      "max": {
+        "water": 30
+      }
+    },
+    "outputs": {
+      "min": {
+        "food": 4
+      },
+      "max": {
+        "food": 8
+      }
+    },
+    "heatingKw": {
+      "1": {
+        "spring": 5,
+        "summer": 5,
+        "autumn": 6,
+        "winter": 8
+      },
+      "2": {
+        "spring": 5,
+        "summer": 5,
+        "autumn": 7,
+        "winter": 9
+      },
+      "3": {
+        "spring": 5,
+        "summer": 5,
+        "autumn": 9,
+        "winter": 10
+      },
+      "4": {
+        "spring": 5,
+        "summer": 5,
+        "autumn": 9,
+        "winter": 10
+      }
+    }
+  },
+  {
+    "id": "repair_workshop",
+    "name": {
+      "en": "Repair workshop",
+      "pt": "Oficina de reparos"
+    },
+    "explain": {
+      "en": "Turns iron into bolts and plates for repairs.",
+      "pt": "Transforma ferro em parafusos e placas para consertos."
+    },
+    "level": 2,
+    "cost": {
+      "iron": 25
+    },
+    "size": 1,
+    "power": {
+      "kind": "consumer",
+      "minKw": 2,
+      "maxKw": 5
+    },
+    "switchable": true,
+    "inputs": {
+      "min": {
+        "iron": 4
+      },
+      "max": {
+        "iron": 8
+      }
+    },
+    "outputs": {
+      "min": {
+        "repair_parts": 10
+      },
+      "max": {
+        "repair_parts": 20
+      }
+    }
+  },
+  {
+    "id": "steel_factory",
+    "name": {
+      "en": "Steel & alloy factory",
+      "pt": "Fábrica de aço e ligas"
+    },
+    "explain": {
+      "en": "Mixes iron with carbon from the air to make steel.",
+      "pt": "Mistura ferro com carbono do ar para fazer aço."
+    },
+    "level": 2,
+    "cost": {
+      "regolith": 30,
+      "iron": 45
+    },
+    "size": 2,
+    "power": {
+      "kind": "consumer",
+      "minKw": 10,
+      "maxKw": 18
+    },
+    "switchable": true,
+    "inputs": {
+      "min": {
+        "iron": 15
+      },
+      "max": {
+        "iron": 30
+      }
+    },
+    "outputs": {
+      "min": {
+        "steel": 9
+      },
+      "max": {
+        "steel": 18
+      }
+    }
+  },
+  {
+    "id": "nuclear_reactor",
+    "name": {
+      "en": "Compact nuclear reactor",
+      "pt": "Reator nuclear compacto"
+    },
+    "explain": {
+      "en": "Makes steady power day and night, in any storm. NASA is designing a 40 kW reactor like this.",
+      "pt": "Gera energia constante de dia e de noite, em qualquer tempestade. A NASA projeta um reator de 40 kW assim."
+    },
+    "level": 3,
+    "cost": {
+      "regolith": 40,
+      "steel": 30
+    },
+    "size": 2,
+    "power": {
+      "kind": "constant",
+      "kw": 40
+    },
+    "switchable": false,
+    "source": {
+      "label": "NASA Fission Surface Power project (40 kW)",
+      "url": "https://www.nasa.gov/?p=602427",
+      "kind": "real"
+    }
+  }
+]

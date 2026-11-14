@@ -1,0 +1,125 @@
+// CONTRACT FILE. Owner: Breno (backups: Dev B, Dev C).
+// The only bridge between React (2D UI, 3D scene) and the engine.
+// - 2D UI (Dev B), debrief/sources (Dev A) read state and call the game actions.
+// - 3D scene and QTE (Dev C) may only call: hoverAt, placeAt, selectStructure, finishQte.
+// Components never import src/engine or src/data directly.
+import { create } from 'zustand'
+import { config } from '../config/loadConfig'
+import * as actions from '../engine/actions'
+import { createGame, tick } from '../engine/game'
+import type {
+  ActionError,
+  ActionResult,
+  GameState,
+  PowerMode,
+  StructureTypeId,
+  Tile,
+  UpgradeId,
+} from '../engine/types'
+
+export type Screen = 'title' | 'game' | 'end' | 'sources'
+export type Speed = 0 | 1 | 2 | 4
+
+export interface GameStore {
+  screen: Screen
+  game: GameState | null
+  /** 0 = paused. Game seconds per real second. */
+  speed: Speed
+  /** Structure type being placed on the grid (build menu -> scene). */
+  placing: StructureTypeId | null
+  hoverTile: Tile | null
+  selectedStructureId: string | null
+  /** Structure whose repair QTE is open. */
+  qteFor: string | null
+  lastError: ActionError | null
+
+  start: (seed?: number) => void
+  /** Called by the loop with real seconds elapsed. */
+  advance: (realSeconds: number) => void
+  setSpeed: (speed: Speed) => void
+  goTo: (screen: Screen) => void
+
+  beginPlacement: (type: StructureTypeId | null) => void
+  hoverAt: (tile: Tile | null) => void
+  placeAt: (tile: Tile) => void
+  selectStructure: (id: string | null) => void
+
+  setPowerMode: (type: StructureTypeId, mode: PowerMode) => void
+  installUpgrade: (structureId: string, upgradeId: UpgradeId) => void
+  openQte: (structureId: string) => void
+  finishQte: (success: boolean) => void
+  clean: (structureId: string) => void
+  shelterAll: () => void
+  dismissBriefing: () => void
+}
+
+export const useGameStore = create<GameStore>((set, get) => {
+  /** Applies an ActionResult: new state, last error, end screen when the mission ends. */
+  const apply = (result: ActionResult) =>
+    set({
+      game: result.state,
+      lastError: result.ok ? null : result.reason,
+      screen: result.state.status === 'running' ? get().screen : 'end',
+    })
+
+  const withGame = (fn: (game: GameState) => ActionResult) => {
+    const game = get().game
+    if (game) apply(fn(game))
+  }
+
+  return {
+    screen: 'title',
+    game: null,
+    speed: 1,
+    placing: null,
+    hoverTile: null,
+    selectedStructureId: null,
+    qteFor: null,
+    lastError: null,
+
+    start: (seed = Date.now()) =>
+      set({
+        screen: 'game',
+        game: createGame(config, seed),
+        speed: 1,
+        placing: null,
+        hoverTile: null,
+        selectedStructureId: null,
+        qteFor: null,
+        lastError: null,
+      }),
+
+    advance: (realSeconds) => {
+      const { game, speed, screen } = get()
+      if (!game || speed === 0 || screen !== 'game') return
+      const next = tick(game, config, realSeconds * speed)
+      if (next !== game) set({ game: next, screen: next.status === 'running' ? 'game' : 'end' })
+    },
+
+    setSpeed: (speed) => set({ speed }),
+    goTo: (screen) => set({ screen }),
+
+    beginPlacement: (type) => set({ placing: type, selectedStructureId: null }),
+    hoverAt: (tile) => set({ hoverTile: tile }),
+    placeAt: (tile) => {
+      const type = get().placing
+      if (!type) return
+      withGame((g) => actions.build(g, config, type, tile))
+      if (!get().lastError) set({ placing: null })
+    },
+    selectStructure: (id) => set({ selectedStructureId: id, placing: null }),
+
+    setPowerMode: (type, mode) => withGame((g) => actions.setPowerMode(g, config, type, mode)),
+    installUpgrade: (structureId, upgradeId) =>
+      withGame((g) => actions.installUpgrade(g, config, structureId, upgradeId)),
+    openQte: (structureId) => set({ qteFor: structureId }),
+    finishQte: (success) => {
+      const id = get().qteFor
+      set({ qteFor: null })
+      if (id) withGame((g) => actions.startRepair(g, config, id, success))
+    },
+    clean: (structureId) => withGame((g) => actions.clean(g, config, structureId)),
+    shelterAll: () => withGame((g) => actions.shelterAll(g, config)),
+    dismissBriefing: () => withGame((g) => actions.dismissBriefing(g)),
+  }
+})

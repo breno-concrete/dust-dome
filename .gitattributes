@@ -1,0 +1,10 @@
+# Same line endings on Windows, macOS and Linux, so nobody gets a
+# "whole file changed" diff just because of CRLF.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.mp3 binary
+*.ogg binary
+*.wav binary
+*.woff2 binary

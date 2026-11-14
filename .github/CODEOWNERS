@@ -1,0 +1,31 @@
+# Only SHARED files are listed here. A PR that touches them needs approval from
+# one of the owners on that line (any one of them is enough; two names per line
+# because nobody can approve their own PR). Area folders are NOT listed: the
+# "ownership" CI job keeps each branch inside its area, and the owner merges on green.
+#
+# Who is who:
+#   breno-concrete = Breno, tech lead / engine     caio-nascime = events, NASA data, debrief
+#   jvsauma        = 2D UI / UI kit                pedrolmelo   = isometric scene, repair QTE
+#   athyelbrito    = game product owner
+# The science product owner joins later: add their username to the /src/config/*.json line.
+
+# Repo plumbing, dependencies, agent and Spec Kit setup
+/.github/                @breno-concrete @caio-nascime
+/.specify/               @breno-concrete @caio-nascime
+/.claude/                @breno-concrete @caio-nascime
+/CLAUDE.md               @breno-concrete @caio-nascime
+/package.json            @breno-concrete @caio-nascime
+/package-lock.json       @breno-concrete @caio-nascime
+/vite.config.ts          @breno-concrete @caio-nascime
+/tsconfig*.json          @breno-concrete @caio-nascime
+
+# The contract between areas
+/src/engine/types.ts     @breno-concrete @caio-nascime
+/src/config/schema.ts    @breno-concrete @caio-nascime
+/src/app/                @breno-concrete @jvsauma @pedrolmelo
+
+# Game content and balance (numbers and texts) belong to the POs
+/src/config/*.json       @athyelbrito
+
+# Shared visual building blocks used by every screen
+/src/ui-kit/             @jvsauma @caio-nascime

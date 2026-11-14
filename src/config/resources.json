@@ -1,0 +1,114 @@
+[
+  {
+    "id": "hematite",
+    "kind": "material",
+    "name": {
+      "en": "Hematite",
+      "pt": "Hematita"
+    },
+    "explain": {
+      "en": "A red iron oxide rock. Mars is full of iron oxide. It is our money and becomes iron.",
+      "pt": "Uma rocha vermelha de óxido de ferro. Marte é cheio dela. É o nosso dinheiro e vira ferro."
+    },
+    "icon": "hematite",
+    "start": 60
+  },
+  {
+    "id": "regolith",
+    "kind": "material",
+    "name": {
+      "en": "Regolith",
+      "pt": "Regolito"
+    },
+    "explain": {
+      "en": "Loose Martian soil. Piled on buildings, it blocks radiation and cold.",
+      "pt": "Solo solto de Marte. Empilhado nas construções, bloqueia radiação e frio."
+    },
+    "icon": "regolith",
+    "start": 40
+  },
+  {
+    "id": "iron",
+    "kind": "material",
+    "name": {
+      "en": "Iron",
+      "pt": "Ferro"
+    },
+    "explain": {
+      "en": "Made from hematite in the refinery. Used for stronger buildings.",
+      "pt": "Feito da hematita na refinaria. Usado em construções mais fortes."
+    },
+    "icon": "iron",
+    "start": 0
+  },
+  {
+    "id": "steel",
+    "kind": "material",
+    "name": {
+      "en": "Steel",
+      "pt": "Aço"
+    },
+    "explain": {
+      "en": "Iron made stronger with carbon from the Martian air.",
+      "pt": "Ferro mais forte, com carbono do ar de Marte."
+    },
+    "icon": "steel",
+    "start": 0
+  },
+  {
+    "id": "repair_parts",
+    "kind": "material",
+    "name": {
+      "en": "Repair parts",
+      "pt": "Peças de reparo"
+    },
+    "explain": {
+      "en": "Bolts and plates to fix broken buildings.",
+      "pt": "Parafusos e placas para consertar construções quebradas."
+    },
+    "icon": "repair_parts",
+    "start": 0
+  },
+  {
+    "id": "oxygen",
+    "kind": "vital",
+    "name": {
+      "en": "Oxygen",
+      "pt": "Oxigênio"
+    },
+    "explain": {
+      "en": "The air we breathe. Mars air is mostly carbon dioxide, so we make our own oxygen.",
+      "pt": "O ar que respiramos. O ar de Marte é quase todo gás carbônico, então fazemos nosso oxigênio."
+    },
+    "icon": "oxygen",
+    "start": 8
+  },
+  {
+    "id": "water",
+    "kind": "vital",
+    "name": {
+      "en": "Water",
+      "pt": "Água"
+    },
+    "explain": {
+      "en": "Melted from ice buried under the ground. For drinking and for plants.",
+      "pt": "Derretida do gelo enterrado no chão. Para beber e para as plantas."
+    },
+    "icon": "water",
+    "start": 20
+  },
+  {
+    "id": "food",
+    "kind": "vital",
+    "name": {
+      "en": "Food",
+      "pt": "Comida"
+    },
+    "explain": {
+      "en": "Grown in a warm, pressurized greenhouse.",
+      "pt": "Cultivada numa estufa quente e pressurizada."
+    },
+    "icon": "food",
+    "start": 8
+  }
+]
