@@ -18,4 +18,10 @@ describe('updateCrew', () => {
   it.todo(
     'from insulationRequiredFromCycle, at winter start astronauts in uninsulated habitats die',
   )
+  it.todo(
+    'at extreme cold, astronauts inside move into insulated habitats with room and only the rest die',
+  )
+  it.todo('two empty reserves have separate countdowns')
+  it.todo('the victim of a countdown is the first living astronaut in crew order')
+  it.todo('resting ends when exposure is back to 0')
 })

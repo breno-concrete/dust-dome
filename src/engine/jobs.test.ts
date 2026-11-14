@@ -16,4 +16,8 @@ describe('updateJobs', () => {
   it.todo('a clean job restores clogged structures and cannot run during an active dust storm')
   it.todo('jobs pause while an event blocks external jobs, and resume after')
   it.todo('the astronaut goes back inside when the job ends')
+  it.todo('no job starts while a radiation storm is on (warning or active)')
+  it.todo(
+    'a job whose astronaut dies or is recalled goes back to the queue with its remaining time',
+  )
 })
