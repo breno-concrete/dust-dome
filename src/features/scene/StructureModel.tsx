@@ -588,6 +588,47 @@ const OXY_GEO = {
   ),
 }
 
+// Shared datum & static procedural geometries for Ice Melter (1x1 footprint <= 0.88 x 0.88)
+const ICE_BASE_Y = 0.022
+
+const ICE_GEO = {
+  // Open-top octagonal thermal melting cauldron (continuous outer wall, thick lip, inner cavity)
+  openVat: latheOctagon(
+    [
+      [0, 0],
+      [0.12, 0.012],
+      [0.195, 0.06],
+      [0.205, 0.3],
+      [0.162, 0.3],
+      [0.155, 0.21],
+      [0, 0.21],
+    ],
+    8,
+  ),
+  // Hollow dark bezel ring crowning the open cauldron rim without occluding the ice bath
+  vatRim: latheOctagon(
+    [
+      [0.214, 0],
+      [0.214, 0.026],
+      [0.158, 0.026],
+      [0.158, 0],
+    ],
+    8,
+  ),
+  // Meltwater drain line from bottom of heated vat into front water collector tank
+  meltDrainPipe: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(0.12, ICE_BASE_Y + 0.12, -0.01),
+      new Vector3(0.16, ICE_BASE_Y + 0.1, 0.12),
+      new Vector3(0.22, ICE_BASE_Y + 0.14, 0.22),
+    ]),
+    8,
+    0.02,
+    6,
+    false,
+  ),
+}
+
 const DEFAULT_VISUAL: VisualState = {
   light: 1,
   dustHaze: 0,
@@ -774,28 +815,13 @@ function StructureMesh({
 
     case 'ice_melter':
       return (
-        <group position={[0, 0.12, 0]}>
-          {/* Heated melting tank */}
-          <mesh position={[0, 0.3, 0]}>
-            <cylinderGeometry args={[0.32, 0.36, 0.54, 8]} />
-            <meshStandardMaterial
-              color={hullColor}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          {/* Water dome */}
-          <mesh position={[0, 0.6, 0]}>
-            <icosahedronGeometry args={[0.24, 0]} />
-            <meshStandardMaterial color={WATER_BLUE} flatShading />
-          </mesh>
-          {/* Thermal heating ring */}
-          <mesh position={[0, 0.32, 0]}>
-            <cylinderGeometry args={[0.37, 0.37, 0.1, 8]} />
-            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
-          </mesh>
-        </group>
+        <IceMelterMesh
+          hullColor={hullColor}
+          secondaryColor={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          nightGlow={nightGlow}
+        />
       )
 
     case 'iron_refinery':
@@ -1562,6 +1588,261 @@ function OxygenGeneratorMesh({
       <mesh position={[0.016, OXY_BASE_Y + 0.24, -0.16]} rotation={[0, 0.28, Math.PI / 2]}>
         <cylinderGeometry args={[0.03, 0.03, 0.022, 6]} />
         <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+    </group>
+  )
+}
+
+function IceMelterMesh({
+  hullColor,
+  secondaryColor,
+  emissive,
+  emissiveIntensity,
+  nightGlow,
+}: {
+  hullColor: string
+  secondaryColor: string
+  emissive: string
+  emissiveIntensity: number
+  nightGlow: boolean
+}) {
+  const vatX = 0.12
+  const vatZ = -0.06
+  const heatGlow = nightGlow ? 0.8 : 0.38
+  const iceGlow = nightGlow ? 0.35 : 0.16
+
+  // Raw glacier crystal spires & ice blocks staged cleanly beside the feed chute (-X/+Z)
+  const iceCrystals = [
+    { pos: [-0.3, 0.13, 0.11] as const, r: 0.066, h: 0.2, rot: [0.15, 0.3, -0.16] as const, c: FROST_ICE },
+    { pos: [-0.23, 0.11, 0.17] as const, r: 0.056, h: 0.16, rot: [-0.14, 0.9, 0.12] as const, c: '#b8f0ff' },
+    { pos: [-0.31, 0.1, 0.01] as const, r: 0.05, h: 0.13, rot: [0.18, -0.5, 0.14] as const, c: FROST_GLOW },
+    { pos: [-0.18, 0.09, 0.13] as const, r: 0.048, h: 0.12, rot: [-0.12, 0.4, -0.18] as const, c: FROST_ICE },
+  ] as const
+
+  // Inclined ice feed chute geometry (runs along +X from ice staging tray into open vat)
+  const chuteStartX = -0.23
+  const chuteStartY = ICE_BASE_Y + 0.11
+  const chuteEndX = -0.02
+  const chuteEndY = ICE_BASE_Y + 0.445
+  const chuteLen = Math.hypot(chuteEndX - chuteStartX, chuteEndY - chuteStartY)
+  const chutePitch = Math.atan2(chuteEndY - chuteStartY, chuteEndX - chuteStartX)
+
+  const vatLegs = [
+    [-0.105, -0.105],
+    [0.105, -0.105],
+    [-0.105, 0.105],
+    [0.105, 0.105],
+  ] as const
+
+  const coilHeights = [0.24, 0.315] as const
+
+  return (
+    <group position={[0, 0.12, 0]}>
+      {/* -X Glacier ice staging skid & jagged faceted ice crystal cluster */}
+      <group position={[0, ICE_BASE_Y, 0]}>
+        <mesh position={[-0.25, 0.018, 0.06]}>
+          <boxGeometry args={[0.27, 0.036, 0.38]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[-0.25, 0.04, 0.06]}>
+          <boxGeometry args={[0.22, 0.01, 0.32]} />
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+        {iceCrystals.map((cr, idx) => (
+          <mesh key={idx} position={cr.pos} rotation={cr.rot}>
+            <cylinderGeometry args={[0.01, cr.r, cr.h, 6]} />
+            <meshStandardMaterial
+              color={cr.c}
+              emissive={FROST_GLOW}
+              emissiveIntensity={iceGlow}
+              flatShading
+            />
+          </mesh>
+        ))}
+        {/* Chunky irregular base ice boulder */}
+        <mesh position={[-0.25, 0.08, 0.09]} rotation={[0.4, 0.7, 0.2]}>
+          <dodecahedronGeometry args={[0.075, 0]} />
+          <meshStandardMaterial
+            color="#d8f6ff"
+            emissive={FROST_GLOW}
+            emissiveIntensity={iceGlow}
+            flatShading
+          />
+        </mesh>
+      </group>
+
+      {/* Inclined ice feed chute delivering ice blocks straight into open vat */}
+      <group
+        position={[(chuteStartX + chuteEndX) * 0.5, (chuteStartY + chuteEndY) * 0.5, vatZ]}
+        rotation={[0, 0, chutePitch]}
+      >
+        <mesh>
+          <boxGeometry args={[chuteLen, 0.026, 0.115]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {([-0.056, 0.056] as const).map((rz, idx) => (
+          <mesh key={idx} position={[0, 0.02, rz]}>
+            <boxGeometry args={[chuteLen, 0.036, 0.016]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+        ))}
+        {/* Ice blocks sliding up the chute into the heated cauldron */}
+        <mesh position={[-0.06, 0.044, 0]} rotation={[0.2, 0.4, 0.15]}>
+          <dodecahedronGeometry args={[0.045, 0]} />
+          <meshStandardMaterial
+            color={FROST_ICE}
+            emissive={FROST_GLOW}
+            emissiveIntensity={iceGlow + 0.08}
+            flatShading
+          />
+        </mesh>
+        <mesh position={[0.08, 0.044, 0]} rotation={[-0.3, 0.6, 0.2]}>
+          <octahedronGeometry args={[0.042, 0]} />
+          <meshStandardMaterial
+            color="#b8f0ff"
+            emissive={FROST_GLOW}
+            emissiveIntensity={iceGlow + 0.08}
+            flatShading
+          />
+        </mesh>
+      </group>
+      {/* Chute support stanchion */}
+      <mesh position={[-0.14, ICE_BASE_Y + 0.11, vatZ]}>
+        <boxGeometry args={[0.038, 0.22, 0.085]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Open heated melting vat with glowing orange thermal coils & floating melting ice */}
+      <group position={[vatX, ICE_BASE_Y, vatZ]}>
+        {vatLegs.map(([lx, lz], idx) => (
+          <mesh key={idx} position={[lx, 0.075, lz]}>
+            <boxGeometry args={[0.034, 0.15, 0.034]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+        {/* Continuous open-top cauldron wall & cavity */}
+        <mesh geometry={ICE_GEO.openVat} position={[0, 0.12, 0]}>
+          <meshStandardMaterial
+            color={hullColor}
+            emissive={emissive}
+            emissiveIntensity={emissiveIntensity}
+            flatShading
+          />
+        </mesh>
+        {/* Exposed glowing orange heating coils wrapping the cauldron */}
+        {coilHeights.map((cy, idx) => (
+          <mesh key={idx} position={[0, cy, 0]} rotation={[0, HAB_PHI, 0]}>
+            <cylinderGeometry args={[0.212, 0.212, 0.03, 8]} />
+            <meshStandardMaterial
+              color={SAFETY_ORANGE}
+              emissive={SAFETY_ORANGE}
+              emissiveIntensity={heatGlow}
+              flatShading
+            />
+          </mesh>
+        ))}
+        {/* Hollow dark upper bezel rim leaving the cauldron interior wide open */}
+        <mesh geometry={ICE_GEO.vatRim} position={[0, 0.404, 0]}>
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Liquid meltwater pool inside the open cauldron */}
+        <mesh position={[0, 0.375, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.156, 0.156, 0.02, 8]} />
+          <meshStandardMaterial
+            color={WATER_BLUE}
+            emissive={WATER_BLUE}
+            emissiveIntensity={nightGlow ? 0.38 : 0.14}
+            flatShading
+          />
+        </mesh>
+        {/* Partially melted ice blocks floating right inside the water bath */}
+        <mesh position={[-0.045, 0.4, 0.035]} rotation={[0.4, 0.5, 0.25]}>
+          <dodecahedronGeometry args={[0.068, 0]} />
+          <meshStandardMaterial
+            color={FROST_ICE}
+            emissive={FROST_GLOW}
+            emissiveIntensity={iceGlow + 0.1}
+            flatShading
+          />
+        </mesh>
+        <mesh position={[0.058, 0.398, 0.025]} rotation={[-0.3, 0.8, 0.4]}>
+          <octahedronGeometry args={[0.056, 0]} />
+          <meshStandardMaterial
+            color="#c4f3ff"
+            emissive={FROST_GLOW}
+            emissiveIntensity={iceGlow + 0.1}
+            flatShading
+          />
+        </mesh>
+        <mesh position={[0.01, 0.42, -0.05]} rotation={[0.2, -0.4, -0.2]}>
+          <cylinderGeometry args={[0.012, 0.042, 0.095, 5]} />
+          <meshStandardMaterial
+            color={FROST_ICE}
+            emissive={FROST_GLOW}
+            emissiveIntensity={iceGlow + 0.1}
+            flatShading
+          />
+        </mesh>
+
+        {/* High overhead radiant heat lamp mast & emitter positioned so ice bath stays visible */}
+        <mesh position={[0, 0.335, -0.235]}>
+          <boxGeometry args={[0.046, 0.67, 0.046]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 0.655, -0.145]}>
+          <boxGeometry args={[0.044, 0.042, 0.21]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <group position={[0, 0.615, -0.055]} rotation={[0.28, 0, 0]}>
+          <mesh rotation={[0, HAB_PHI, 0]}>
+            <cylinderGeometry args={[0.05, 0.088, 0.06, 8]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+          <mesh position={[0, -0.032, 0]} rotation={[0, HAB_PHI, 0]}>
+            <cylinderGeometry args={[0.072, 0.072, 0.014, 8]} />
+            <meshStandardMaterial
+              color={WARM_WINDOW_LIGHT}
+              emissive={SAFETY_ORANGE}
+              emissiveIntensity={nightGlow ? 0.95 : 0.55}
+              flatShading
+            />
+          </mesh>
+        </group>
+      </group>
+
+      {/* Clarified meltwater collector tank (+X / +Z corner) */}
+      <group position={[0.23, ICE_BASE_Y, 0.24]}>
+        <mesh position={[0, 0.018, 0]}>
+          <boxGeometry args={[0.24, 0.036, 0.24]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 0.145, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.105, 0.105, 0.22, 8]} />
+          <meshStandardMaterial color={WATER_BLUE} flatShading />
+        </mesh>
+        <mesh position={[0, 0.268, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.095, 0.112, 0.035, 8]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 0.3, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.036, 0.052, 0.035, 8]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+        {/* Illuminated frost-blue water level sight gauge */}
+        <mesh position={[0.098, 0.145, 0.04]} rotation={[0, Math.PI / 8, 0]}>
+          <boxGeometry args={[0.014, 0.13, 0.036]} />
+          <meshStandardMaterial
+            color={FROST_ICE}
+            emissive={FROST_GLOW}
+            emissiveIntensity={nightGlow ? 0.85 : 0.35}
+            flatShading
+          />
+        </mesh>
+      </group>
+
+      {/* Meltwater transfer pipe draining out of the heated cauldron into the collector tank */}
+      <mesh geometry={ICE_GEO.meltDrainPipe}>
+        <meshStandardMaterial color={WATER_BLUE} flatShading />
       </mesh>
     </group>
   )
