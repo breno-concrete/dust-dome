@@ -520,6 +520,74 @@ const MINE_GEO = {
   })(),
 }
 
+// Shared datum & static procedural geometries for Oxygen Generator (1x1 footprint <= 0.88 x 0.88)
+const OXY_BASE_Y = 0.022
+
+const OXY_GEO = {
+  // Chamfered MOXIE electrolysis processor housing
+  coreHousing: (() => {
+    const g = new ExtrudeGeometry(makeChamferedArchShape(0.21, 0.36, 0.055), {
+      depth: 0.28,
+      bevelEnabled: true,
+      bevelThickness: 0.015,
+      bevelSize: 0.015,
+      bevelSegments: 1,
+    })
+    g.rotateY(Math.PI / 2)
+    g.translate(-0.14, 0, 0)
+    return g
+  })(),
+  // Flared intake cowl at top of MOXIE dust-filter stack
+  intakeCowl: latheOctagon(
+    [
+      [0.072, 0],
+      [0.112, 0.045],
+      [0.112, 0.1],
+      [0.068, 0.115],
+      [0, 0.115],
+    ],
+    8,
+  ),
+  // Faceted vertical pressurized O2 capsule vessel (WATER_BLUE)
+  tankBody: latheOctagon(
+    [
+      [0, 0.03],
+      [0.088, 0.045],
+      [0.145, 0.1],
+      [0.145, 0.29],
+      [0.095, 0.35],
+      [0.048, 0.37],
+      [0, 0.375],
+    ],
+    8,
+  ),
+  // High-pressure O2 transfer pipe arching from MOXIE core to pressurized tank crown
+  o2FeedPipe: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(-0.02, OXY_BASE_Y + 0.34, 0.04),
+      new Vector3(0.06, OXY_BASE_Y + 0.44, 0.04),
+      new Vector3(0.16, OXY_BASE_Y + 0.45, 0.04),
+      new Vector3(0.21, OXY_BASE_Y + 0.4, 0.04),
+    ]),
+    10,
+    0.02,
+    6,
+    false,
+  ),
+  // Exhaust transfer line from MOXIE rear to CO condenser stack
+  exhaustPipe: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(-0.02, OXY_BASE_Y + 0.24, -0.15),
+      new Vector3(0.08, OXY_BASE_Y + 0.24, -0.18),
+      new Vector3(0.16, OXY_BASE_Y + 0.24, -0.21),
+    ]),
+    6,
+    0.018,
+    6,
+    false,
+  ),
+}
+
 const DEFAULT_VISUAL: VisualState = {
   light: 1,
   dustHaze: 0,
@@ -695,28 +763,13 @@ function StructureMesh({
 
     case 'oxygen_generator':
       return (
-        <group position={[0, 0.12, 0]}>
-          {/* MOXIE-style atmospheric processor core */}
-          <mesh position={[-0.12, 0.28, 0]}>
-            <boxGeometry args={[0.42, 0.52, 0.56]} />
-            <meshStandardMaterial
-              color={hullColor}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          {/* Pressurized O2 spherical tank */}
-          <mesh position={[0.22, 0.34, 0]}>
-            <icosahedronGeometry args={[0.22, 0]} />
-            <meshStandardMaterial color={WATER_BLUE} flatShading />
-          </mesh>
-          {/* Intake stack */}
-          <mesh position={[-0.12, 0.64, 0]}>
-            <cylinderGeometry args={[0.1, 0.12, 0.22, 6]} />
-            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
-          </mesh>
-        </group>
+        <OxygenGeneratorMesh
+          hullColor={hullColor}
+          secondaryColor={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          nightGlow={nightGlow}
+        />
       )
 
     case 'ice_melter':
@@ -1329,6 +1382,187 @@ function MineMesh({
           <meshStandardMaterial color={secondaryColor} flatShading />
         </mesh>
       </group>
+    </group>
+  )
+}
+
+function OxygenGeneratorMesh({
+  hullColor,
+  secondaryColor,
+  emissive,
+  emissiveIntensity,
+  nightGlow,
+}: {
+  hullColor: string
+  secondaryColor: string
+  emissive: string
+  emissiveIntensity: number
+  nightGlow: boolean
+}) {
+  const glowLevel = nightGlow ? 0.9 : 0.42
+  const statorSlats = [-0.055, 0, 0.055] as const
+  const cradleLegs = [
+    [-0.1, -0.1],
+    [0.1, -0.1],
+    [-0.1, 0.1],
+    [0.1, 0.1],
+  ] as const
+
+  return (
+    <group position={[0, 0.12, 0]}>
+      {/* Equipment skid tray under MOXIE processor (-X) */}
+      <mesh position={[-0.14, OXY_BASE_Y + 0.022, 0]}>
+        <boxGeometry args={[0.35, 0.044, 0.5]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Beveled MOXIE electrolysis core housing */}
+      <mesh
+        geometry={OXY_GEO.coreHousing}
+        position={[-0.14, OXY_BASE_Y + 0.058, 0]}
+      >
+        <meshStandardMaterial
+          color={hullColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          flatShading
+        />
+      </mesh>
+
+      {/* Front louver radiator panel & glowing O2 telemetry bar (+Z) */}
+      <group position={[-0.14, OXY_BASE_Y + 0.23, 0.228]}>
+        <mesh>
+          <boxGeometry args={[0.21, 0.17, 0.018]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {statorSlats.map((sy, idx) => (
+          <mesh key={idx} position={[-0.02, sy, 0.011]}>
+            <boxGeometry args={[0.13, 0.024, 0.012]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+        ))}
+        <mesh position={[0.072, 0, 0.012]}>
+          <boxGeometry args={[0.026, 0.12, 0.012]} />
+          <meshStandardMaterial
+            color={MINT_GREEN}
+            emissive={MINT_GREEN}
+            emissiveIntensity={glowLevel}
+            flatShading
+          />
+        </mesh>
+      </group>
+
+      {/* Rear radiator louvers (-Z) & side service hatch (-X) */}
+      <group position={[-0.14, OXY_BASE_Y + 0.23, -0.228]}>
+        <mesh>
+          <boxGeometry args={[0.19, 0.15, 0.016]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {statorSlats.map((sy, idx) => (
+          <mesh key={idx} position={[0, sy, -0.01]}>
+            <boxGeometry args={[0.14, 0.022, 0.012]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+        ))}
+      </group>
+      <group position={[-0.296, OXY_BASE_Y + 0.22, 0]}>
+        <mesh>
+          <boxGeometry args={[0.016, 0.2, 0.16]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[-0.01, 0, -0.032]}>
+          <boxGeometry args={[0.01, 0.13, 0.055]} />
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+        <mesh position={[-0.01, 0.02, 0.042]}>
+          <boxGeometry args={[0.01, 0.09, 0.024]} />
+          <meshStandardMaterial
+            color={WATER_BLUE}
+            emissive={WATER_BLUE}
+            emissiveIntensity={glowLevel}
+            flatShading
+          />
+        </mesh>
+      </group>
+
+      {/* CO2 intake dust-filter turbine stack on MOXIE roof (aligned to HAB_PHI) */}
+      <group position={[-0.15, OXY_BASE_Y + 0.43, -0.04]}>
+        <mesh position={[0, 0.03, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.088, 0.105, 0.06, 8]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 0.102, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.092, 0.092, 0.09, 8]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+        <mesh geometry={OXY_GEO.intakeCowl} position={[0, 0.145, 0]}>
+          <meshStandardMaterial color={hullColor} flatShading />
+        </mesh>
+        <mesh position={[0, 0.27, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.06, 0.075, 0.025, 8]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+      </group>
+
+      {/* Pressurized O2 storage capsule & steel cradle (+X) */}
+      <group position={[0.21, OXY_BASE_Y, 0.04]}>
+        <mesh position={[0, 0.02, 0]}>
+          <boxGeometry args={[0.28, 0.04, 0.28]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {cradleLegs.map(([lx, lz], idx) => (
+          <mesh key={idx} position={[lx, 0.125, lz]}>
+            <boxGeometry args={[0.03, 0.19, 0.03]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+        {/* Phase-matched clamping girdle around the O2 tank waist */}
+        <mesh position={[0, 0.22, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.158, 0.158, 0.044, 8]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Faceted WATER_BLUE O2 tank */}
+        <mesh geometry={OXY_GEO.tankBody} position={[0, 0.035, 0]}>
+          <meshStandardMaterial color={WATER_BLUE} flatShading />
+        </mesh>
+        {/* Top safety-orange pressure relief dome */}
+        <mesh position={[0, 0.415, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.038, 0.062, 0.045, 8]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+      </group>
+
+      {/* Secondary CO exhaust condenser stack (+X / -Z) */}
+      <group position={[0.16, OXY_BASE_Y, -0.21]}>
+        <mesh position={[0, 0.02, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.072, 0.082, 0.04, 8]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 0.24, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.05, 0.056, 0.42, 8]} />
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+        <mesh position={[0, 0.47, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.066, 0.05, 0.05, 8]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+      </group>
+
+      {/* Curved high-pressure O2 manifold, flange collar & CO exhaust pipe */}
+      <mesh geometry={OXY_GEO.o2FeedPipe}>
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+      <mesh position={[0.016, OXY_BASE_Y + 0.34, 0.04]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.034, 0.034, 0.022, 6]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <mesh geometry={OXY_GEO.exhaustPipe}>
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <mesh position={[0.016, OXY_BASE_Y + 0.24, -0.16]} rotation={[0, 0.28, Math.PI / 2]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.022, 6]} />
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
     </group>
   )
 }
