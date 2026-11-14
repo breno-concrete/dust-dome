@@ -1,5 +1,4 @@
-// Owner: Dev B. Top bar: clock, 3 vital bars with win targets, power meter,
-// wallet, crew panel, time controls.
+// Owner: Dev B. Prototype-inspired HUD for reserves, time, materials, energy and crew.
 import { secondsLeftInSeason, seasonDef, targets } from '../../app/selectors'
 import { useGameStore, type Speed } from '../../app/store'
 import { config } from '../../config/loadConfig'
@@ -13,19 +12,24 @@ import styles from './Hud.module.css'
 const strings = {
   cycle: { en: 'Year', pt: 'Ano' },
   pause: { en: 'Pause', pt: 'Pausar' },
+  resume: { en: 'Resume', pt: 'Continuar' },
   power: { en: 'Power', pt: 'Energia' },
   crew: { en: 'Crew', pt: 'Tripulação' },
   inside: { en: 'Sheltered', pt: 'Abrigado' },
   outside: { en: 'EVA', pt: 'Externo' },
   deceased: { en: 'Lost', pt: 'Perdido' },
-  wallet: { en: 'Materials', pt: 'Materiais' },
+  lifeSupport: { en: 'Life support reserves', pt: 'Reservas vitais' },
+  gameClock: { en: 'Game clock', pt: 'Relógio do jogo' },
+  missionHud: { en: 'Mission status', pt: 'Status da missão' },
+  powerDeficit: { en: 'Warning: power deficit!', pt: 'Alerta: falta de energia!' },
+  powerStable: { en: 'Power grid stable', pt: 'Rede de energia estável' },
+  radiation: { en: 'Radiation', pt: 'Radiação' },
+  materialsAndEnergy: { en: 'Materials and energy', pt: 'Materiais e energia' },
 }
 
-const VITALS: { id: 'oxygen' | 'water' | 'food'; seasonNeed: number }[] = [
-  { id: 'oxygen', seasonNeed: 4 }, // 4 crew * 1 U
-  { id: 'water', seasonNeed: 8 }, // 4 crew * 2 U
-  { id: 'food', seasonNeed: 4 }, // 4 crew * 1 U
-]
+// A reserve is low when it holds less than one season of crew needs (constitution II.8).
+const VITALS = ['food', 'water', 'oxygen'] as const
+const crewNeed = (id: (typeof VITALS)[number]) => config.mission.crew * config.mission.needs[id]
 
 const WALLET_RESOURCES: ResourceId[] = ['hematite', 'regolith', 'iron', 'steel', 'repair_parts']
 
@@ -46,23 +50,19 @@ export function Hud() {
   if (!game) return null
   const season = seasonDef(game.time.season)
   const isPowerDeficit = game.power.balanceKw < 0
+  const isPaused = speed === 0
 
   return (
-    <header className={styles.hud} role="banner" aria-label="Mission HUD">
-      {/* 1. Time & Season Clock */}
-      <div className={styles.clockGroup}>
-        <strong className={styles.clockText}>
-          {t(strings.cycle)} {game.time.cycle} · {season ? t(season.name) : ''} · {formatTime(left)}
-        </strong>
-      </div>
-
-      {/* 2. Vital Reserve Bars with Win Targets & Low Alerts */}
-      <div className={styles.vitalsGroup} aria-label="Vital life support reserves">
-        {VITALS.map(({ id, seasonNeed }) => {
+    <header className={styles.hud} role="banner" aria-label={t(strings.missionHud)}>
+      <section
+        className={[styles.panel, styles.lifePanel].join(' ')}
+        aria-label={t(strings.lifeSupport)}
+      >
+        {VITALS.map((id) => {
           const def = config.resources.find((r) => r.id === id)
           const current = game.stock[id] ?? 0
           const target = targets.reserves[id]
-          const isLow = current < seasonNeed
+          const isLow = current < crewNeed(id)
 
           return (
             <ResourceBar
@@ -75,27 +75,62 @@ export function Hud() {
               isLow={isLow}
               isZero={current <= 0}
               icon={<Icon name={id as IconName} size={16} />}
+              variant="hud"
             />
           )
         })}
-      </div>
+      </section>
 
-      {/* 3. Power Meter with Surplus / Deficit Alerts */}
-      <div
-        data-testid="power"
-        className={[styles.powerMeter, isPowerDeficit && styles.deficit].filter(Boolean).join(' ')}
-        title={isPowerDeficit ? 'Warning: Electrical deficit!' : 'Electrical grid stable'}
+      <section
+        className={[styles.panel, styles.timePanel].join(' ')}
+        aria-label={t(strings.gameClock)}
       >
-        <Icon name="power" size={16} className={styles.powerIcon} />
-        <span className={styles.powerLabel}>{t(strings.power)}:</span>
-        <strong className={styles.powerValue}>
-          {game.power.balanceKw >= 0 ? '+' : ''}
-          {game.power.balanceKw} kW
-        </strong>
-      </div>
+        <div className={styles.date}>
+          <strong>
+            {t(strings.cycle)} {game.time.cycle}
+          </strong>
+          <span>
+            <span className={styles.seasonLabel}>{season ? t(season.name) : ''}</span>
+            <i aria-hidden="true" />
+            <span className={styles.clock}>{formatTime(left)}</span>
+          </span>
+        </div>
+        <div className={styles.timeDivider} aria-hidden="true" />
+        <div className={styles.speeds} role="group" aria-label="Game speed controls">
+          <Button
+            className={[styles.timeButton, isPaused && styles.selectedTimeButton]
+              .filter(Boolean)
+              .join(' ')}
+            variant={isPaused ? 'active' : 'secondary'}
+            onClick={() => setSpeed(isPaused ? 1 : 0)}
+            aria-label={t(isPaused ? strings.resume : strings.pause)}
+            aria-pressed={isPaused}
+            icon={<Icon name={isPaused ? 'play' : 'pause'} size={18} />}
+          >
+            {t(isPaused ? strings.resume : strings.pause)}
+          </Button>
+          {SPEEDS.map((x) => (
+            <Button
+              key={x}
+              className={[styles.timeButton, speed === x && styles.selectedTimeButton]
+                .filter(Boolean)
+                .join(' ')}
+              variant={speed === x ? 'active' : 'secondary'}
+              onClick={() => setSpeed(x)}
+              aria-label={`${x}x speed`}
+              aria-pressed={speed === x}
+            >
+              {x}×
+            </Button>
+          ))}
+        </div>
+      </section>
 
-      {/* 4. Materials Wallet */}
-      <div className={styles.wallet} data-testid="wallet" aria-label={t(strings.wallet)}>
+      <section
+        className={[styles.panel, styles.materials].join(' ')}
+        data-testid="wallet"
+        aria-label={t(strings.materialsAndEnergy)}
+      >
         {WALLET_RESOURCES.map((id) => {
           const def = config.resources.find((r) => r.id === id)
           const count = Math.floor(game.stock[id] ?? 0)
@@ -103,19 +138,46 @@ export function Hud() {
           return (
             <div
               key={id}
-              className={styles.walletItem}
+              className={[styles.material, styles[id]].join(' ')}
               data-testid={`wallet-${id}`}
-              title={def ? t(def.name) : id}
             >
-              <Icon name={id as IconName} size={15} />
-              <span className={styles.walletCount}>{count}</span>
+              <span className={styles.materialIcon}>
+                <Icon name={id as IconName} size={23} />
+              </span>
+              <span className={styles.materialValues} title={def ? t(def.name) : id}>
+                <small>{def ? t(def.name) : id}</small>
+                <strong>{count}</strong>
+              </span>
             </div>
           )
         })}
-      </div>
+        <div
+          data-testid="power"
+          className={[styles.material, styles.energyStat, isPowerDeficit && styles.deficit]
+            .filter(Boolean)
+            .join(' ')}
+          title={t(isPowerDeficit ? strings.powerDeficit : strings.powerStable)}
+        >
+          <span className={styles.materialIcon}>
+            <Icon name="power" size={24} />
+          </span>
+          <span className={styles.materialValues}>
+            <small>{t(strings.power)}</small>
+            <strong>
+              {game.power.balanceKw >= 0 ? '+' : ''}
+              {game.power.balanceKw}
+              <em> kW</em>
+            </strong>
+          </span>
+        </div>
+      </section>
 
-      {/* 5. Crew Status and Radiation Exposure Panel */}
-      <div className={styles.crewPanel} data-testid="crew-panel" aria-label={t(strings.crew)}>
+      <section
+        className={[styles.panel, styles.crewPanel].join(' ')}
+        data-testid="crew-panel"
+        aria-label={t(strings.crew)}
+      >
+        <h2 className={styles.crewHeading}>{t(strings.crew)}</h2>
         {game.crew.map((astronaut) => {
           const isWarning = astronaut.exposure >= 0.75
           const exposurePercent = Math.round(astronaut.exposure * 100)
@@ -132,9 +194,11 @@ export function Hud() {
               key={astronaut.id}
               className={memberClasses}
               data-testid={`crew-member-${astronaut.id}`}
-              title={`${astronaut.name}: ${astronaut.alive ? (astronaut.location === 'inside' ? t(strings.inside) : t(strings.outside)) : t(strings.deceased)} (Radiation: ${exposurePercent}%)`}
+              title={`${astronaut.name}: ${astronaut.alive ? (astronaut.location === 'inside' ? t(strings.inside) : t(strings.outside)) : t(strings.deceased)} (${t(strings.radiation)}: ${exposurePercent}%)`}
             >
-              <Icon name="astronaut" size={16} />
+              <span className={styles.astronautIcon}>
+                <Icon name="astronaut" size={20} />
+              </span>
               <span className={styles.astronautName}>{astronaut.name.split(' ')[0]}</span>
               {astronaut.alive ? (
                 <span className={styles.exposureValue}>
@@ -149,28 +213,7 @@ export function Hud() {
             </div>
           )
         })}
-      </div>
-
-      {/* 6. Time and Speed Controls */}
-      <div className={styles.speeds} role="group" aria-label="Game speed controls">
-        <Button
-          variant={speed === 0 ? 'active' : 'secondary'}
-          onClick={() => setSpeed(0)}
-          aria-label={t(strings.pause)}
-        >
-          {t(strings.pause)}
-        </Button>
-        {SPEEDS.map((x) => (
-          <Button
-            key={x}
-            variant={speed === x ? 'active' : 'secondary'}
-            onClick={() => setSpeed(x)}
-            aria-label={`${x}x speed`}
-          >
-            {x}×
-          </Button>
-        ))}
-      </div>
+      </section>
     </header>
   )
 }

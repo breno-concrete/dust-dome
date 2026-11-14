@@ -12,6 +12,58 @@
     box-shadow 0.2s ease;
 }
 
+.hud {
+  flex-direction: row;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.hudIcon {
+  display: grid;
+  flex: 0 0 39px;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  border-radius: 14px;
+}
+
+.hudContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.oxygen.hud .hudIcon {
+  color: #ae9553;
+  background: #f7edce;
+}
+
+.water.hud .hudIcon {
+  color: #649cad;
+  background: #e1f0f4;
+}
+
+.food.hud .hudIcon {
+  color: #7f9b58;
+  background: #eaf0d9;
+}
+
+.oxygen.hud .fill {
+  background: #d4b86b;
+}
+
+.water.hud .fill {
+  background: #80b7ca;
+}
+
+.food.hud .fill {
+  background: #9cb971;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -70,6 +122,10 @@
   overflow: visible;
 }
 
+.hud .track {
+  background: rgb(120 105 85 / 20%);
+}
+
 .fill {
   height: 100%;
   border-radius: 4px;
@@ -111,6 +167,10 @@
   background: var(--color-danger) !important;
 }
 
+.hud.low .alertBadge {
+  margin-left: var(--space-1);
+}
+
 .zero {
   border-color: var(--color-danger);
   box-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
@@ -118,4 +178,46 @@
 
 .zero .current {
   color: var(--color-danger);
+}
+
+@media (max-width: 440px) {
+  .hud {
+    gap: 5px;
+  }
+
+  .hudIcon {
+    flex-basis: 26px;
+    width: 26px;
+    height: 26px;
+    border-radius: 10px;
+  }
+
+  .hudIcon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .hud .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  .hud .valueGroup {
+    gap: 1px;
+  }
+
+  .hud .current {
+    font-size: 10px;
+  }
+
+  .hud .target {
+    font-size: 8px;
+  }
+
+  .hud .track {
+    height: 5px;
+  }
 }

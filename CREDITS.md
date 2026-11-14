@@ -18,8 +18,9 @@ All data sources used by the game are also listed in-game on the sources screen.
 
 ## Fonts, icons and UI art (Dev B)
 
-| Asset | Author | License | Link |
-| ----- | ------ | ------- | ---- |
+| Asset                                                   | Author                                 | License                                   | Link                                                        |
+| ------------------------------------------------------- | -------------------------------------- | ----------------------------------------- | ----------------------------------------------------------- |
+| SVG icons and HUD visual design adapted for the game UI | Figma Make prototype provided by Sauma | No license stated in the supplied archive | `Menu para Base Espacial.zip` (local source, not committed) |
 
 ## Libraries (Breno)
 
@@ -32,5 +33,7 @@ GitHub Spec Kit (MIT) for spec-driven development.
 - English versions of the product owners' Portuguese game texts in `src/config/*.json` translated
   with Claude (Anthropic) and reviewed by the team.
 - UI kit components and HUD implementation assistance: Google DeepMind Antigravity CLI.
+- Sprint 2 construction and upgrade UI, and adaptation of the supplied Figma Make icons: GitHub Copilot.
+- Review and fixes of the sprint 2 construction/upgrade UI and HUD: Claude Code (Anthropic).
 
 <!-- Add where and how AI tools were used. AI images/videos need a visible watermark. -->

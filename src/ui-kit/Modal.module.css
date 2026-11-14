@@ -24,6 +24,17 @@
   animation: modalEnter 0.2s ease-out;
 }
 
+.wide {
+  max-width: 1040px;
+  max-height: calc(100dvh - 32px);
+}
+
+.wide .content {
+  min-height: 0;
+  overflow: auto;
+  color-scheme: dark;
+}
+
 @keyframes modalEnter {
   from {
     opacity: 0;
@@ -67,4 +78,65 @@
   gap: var(--space-2);
   border-top: 1px solid var(--color-surface-border);
   padding-top: var(--space-3);
+}
+
+/* Light tone: warm prototype look. Re-defines the tokens for everything inside the dialog,
+   so buttons and cards inherit dark text on a light surface. */
+.backdropLight {
+  position: absolute;
+  background: rgb(74 81 70 / 40%);
+  backdrop-filter: none;
+}
+
+/* Wide dialogs sit between the HUD panels. */
+.backdropWide {
+  padding: 118px 28px 132px 312px;
+}
+
+.light {
+  --color-surface: rgb(251 246 234 / 96%);
+  --color-surface-hover: #efe6d2;
+  --color-surface-border: rgb(148 119 91 / 24%);
+  --color-text: #3f3a36;
+  --color-muted: #5c6358;
+  --color-accent: #a9674c;
+  --color-warning: #9a4f1f;
+  --color-focus: #a9674c;
+
+  max-height: 100%;
+  border-radius: 24px;
+  box-shadow: 0 16px 48px rgb(68 43 29 / 18%);
+  color: var(--color-text);
+}
+
+.light .title {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.light .header {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.light .closeBtn {
+  border: 0;
+  border-radius: 50%;
+  background: rgb(173 117 92 / 12%);
+  color: #5c6358;
+}
+
+@media (max-width: 900px) {
+  .backdropWide {
+    padding: 16px 16px 120px;
+  }
+}
+
+.light .content {
+  color-scheme: light;
+  scrollbar-color: rgb(148 119 91 / 45%) transparent;
 }

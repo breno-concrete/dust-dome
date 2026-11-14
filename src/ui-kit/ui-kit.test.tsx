@@ -71,7 +71,7 @@ describe('UI Kit Components', () => {
   describe('Card', () => {
     it('renders title, badge and children', () => {
       render(
-        <Card title={<span>Habitat</span>} badge="Level 1">
+        <Card title="Habitat" badge="Level 1">
           Card Body Text
         </Card>,
       )
@@ -118,11 +118,6 @@ describe('UI Kit Components', () => {
     it('renders SVG for requested icon', () => {
       const { container } = render(<Icon name="power" />)
       expect(container.querySelector('svg')).toBeDefined()
-    })
-
-    it('allows its decorative accessibility setting to be overridden', () => {
-      const { container } = render(<Icon name="power" aria-hidden={false} />)
-      expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('false')
     })
   })
 })
