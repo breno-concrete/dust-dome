@@ -129,7 +129,7 @@ consumption (FR-006–FR-010; R3, R4).
 
 ### Implementation for User Story 2
 
-- [ ] T035 [US2] In `src/engine/economy.ts` implement `applyProduction(state, config, dt)` per R3–R4: per-step amount `= perSeason × dt / seasonDuration`; skip `building`, `off` and shed types; condition factor from `mission.damage` scales inputs and outputs (`short_circuit` = 0); process producers without inputs, then converters by type in reverse `mission.brownoutOrder` then creation order (fraction `f = min(1, available / need)`), then crew consumption from `mission.needs`; clamp every stock at 0
+- [x] T035 [US2] In `src/engine/economy.ts` implement `applyProduction(state, config, dt)` per R3–R4: per-step amount `= perSeason × dt / seasonDuration`; skip `building`, `off` and shed types; condition factor from `mission.damage` scales inputs and outputs (`short_circuit` = 0); process producers without inputs, then converters by type in reverse `mission.brownoutOrder` then creation order (fraction `f = min(1, available / need)`), then crew consumption from `mission.needs`; clamp every stock at 0
 - [ ] T036 [US2] Run `npx vitest run src/engine/economy.test.ts` (green), refactor, `npm run check`, commit `feat(us2): production and consumption`, open the PR from `engine/us2-economy`, merge on green
 
 **Checkpoint**: reserves rise and fall through the seasons.
