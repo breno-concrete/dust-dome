@@ -237,10 +237,10 @@ protecting habitats, win and lose, and the fixed tick order (FR-026–FR-037; R1
 
 **Purpose**: end-to-end proof of the success criteria and cleanup. Branch `engine/polish`.
 
-- [ ] T080 In `src/engine/game.test.ts` add the scripted full-mission tests from [quickstart.md](quickstart.md): a prepared base (enough habitats, insulation, shelter, reactor or batteries, reserves) wins after 4 cycles at `dt = 0.25`; the untouched starting base loses; the same script twice with the same seed gives deep-equal states (SC-001, SC-002)
-- [ ] T081 In `src/engine/game.test.ts` add a loose timing check that the full mission at `dt = 0.25` finishes in under 2 s (SC-006); if CI proves flaky, keep it as a printed measurement instead of an assertion
-- [ ] T082 [P] Remove the stale `TODO(Breno, …)` header comments and confirm with a search that no `not_implemented` result is left in `src/engine/actions.ts`
-- [ ] T083 Run the browser check from `specs/001-engine-core/quickstart.md` (`npm run dev`, play at 4× until the end screen) and `npm run check`; tell jvsauma and caio-nascime which log causes and fields are final for the HUD and the debrief
+- [X] T080 In `src/engine/mission.test.ts` (kept out of `game.test.ts`, whose module mocks would slow a whole mission down) add the scripted full-mission tests from [quickstart.md](quickstart.md): a prepared base (enough habitats, insulation, shelter, reactor or batteries, reserves) wins after 4 cycles at `dt = 0.25`; the untouched starting base loses; the same script twice with the same seed gives deep-equal states (SC-001, SC-002)
+- [X] T081 In `src/engine/mission.test.ts` add a loose timing check that the full mission at `dt = 0.25` finishes in under 2 s (SC-006); if CI proves flaky, keep it as a printed measurement instead of an assertion
+- [X] T082 [P] Remove the stale `TODO(Breno, …)` header comments and confirm with a search that no `not_implemented` result is left in `src/engine/actions.ts`
+- [X] T083 Run the browser check from `specs/001-engine-core/quickstart.md` (`npm run dev`, play at 4× until the end screen) and `npm run check`; tell jvsauma and caio-nascime which log causes and fields are final for the HUD and the debrief
 
 ---
 
