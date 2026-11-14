@@ -40,6 +40,13 @@ describe('createGame', () => {
     expect(game.log).toEqual([{ at: 0, cycle: 1, season: first, kind: 'season_start', ref: first }])
   })
 
+  it('createGame already has a power report', () => {
+    expect(game.power.productionKw).toBeGreaterThan(0)
+    expect(game.power.demandKw).toBeGreaterThan(0)
+    expect(game.power.balanceKw).toBeCloseTo(game.power.productionKw - game.power.demandKw)
+    expect(game.batteryEu).toBe(0)
+  })
+
   it('is deterministic for the same seed', () => {
     expect(createGame(config, 42)).toEqual(game)
   })

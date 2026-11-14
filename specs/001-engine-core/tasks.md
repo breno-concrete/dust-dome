@@ -145,19 +145,19 @@ consumption (FR-006–FR-010; R3, R4).
 
 ### Tests for User Story 3 ⚠️ (write first, must fail)
 
-- [ ] T037 [US3] Create branch `engine/us3-power`, then in `src/engine/power.test.ts` turn "solar panels produce kwBySeason x the active events solarFactor" into a test, including two active events whose factors multiply
-- [ ] T038 [US3] In `src/engine/power.test.ts` turn "solar panels produce 0 in winter from seasons.winterDarknessFromCycle" into a test (winter of that cycle → 0; winter of cycle 1 → `kwBySeason.winter`)
-- [ ] T039 [US3] In `src/engine/power.test.ts` turn "a damaged panel produces x damagedFactor" into a test
-- [ ] T040 [US3] In `src/engine/power.test.ts` turn "the reactor produces its constant kW in every season and event" into a test (all four seasons, cycle 3, with darkness and a storm active)
-- [ ] T041 [US3] In `src/engine/power.test.ts` turn "consumers draw 0 (off), minKw (min) or maxKw (max)" into a test, plus "structures under construction and short-circuited structures draw nothing"
-- [ ] T042 [US3] In `src/engine/power.test.ts` turn "heatingKw by cycle and season replaces minKw; max adds maxKw - minKw" into a test (greenhouse or ice melter at min and max, habitat always at min)
-- [ ] T043 [US3] In `src/engine/power.test.ts` turn "an insulated habitat uses insulatedHeatingKw" into a test (upgrade found through `upgrades.json` `effect: "insulation"`)
-- [ ] T044 [US3] In `src/engine/power.test.ts` turn "surplus charges batteries up to their capacity; deficit drains them" into a test (capacity = sum of finished battery banks' `capacityEu`; a bank under construction stores nothing; charge stays within `[0, capacity]`)
-- [ ] T045 [US3] In `src/engine/power.test.ts` turn "with batteries empty, sheds types in mission.brownoutOrder until demand fits" into a test
-- [ ] T046 [US3] In `src/engine/power.test.ts` turn "never sheds habitats and flags unheated when even their heating cannot be met" into a test
-- [ ] T047 [US3] In `src/engine/power.test.ts` add tests "a shed type comes back when production alone covers it", "every shed type comes back when the batteries are full", "a step with batteries above empty does not shed" and "logs power_shed only when the shed set changes" (R6)
-- [ ] T048 [P] [US3] In `src/engine/game.test.ts` add the test "createGame already has a power report" (production and demand of the starting base are above 0, batteries unchanged)
-- [ ] T049 [US3] Run `npx vitest run src/engine/power.test.ts src/engine/game.test.ts`, confirm red, commit `test(us3): power, heating, batteries and brownout (red)`
+- [X] T037 [US3] Create branch `engine/us3-power`, then in `src/engine/power.test.ts` turn "solar panels produce kwBySeason x the active events solarFactor" into a test, including two active events whose factors multiply
+- [X] T038 [US3] In `src/engine/power.test.ts` turn "solar panels produce 0 in winter from seasons.winterDarknessFromCycle" into a test (winter of that cycle → 0; winter of cycle 1 → `kwBySeason.winter`)
+- [X] T039 [US3] In `src/engine/power.test.ts` turn "a damaged panel produces x damagedFactor" into a test
+- [X] T040 [US3] In `src/engine/power.test.ts` turn "the reactor produces its constant kW in every season and event" into a test (all four seasons, cycle 3, with darkness and a storm active)
+- [X] T041 [US3] In `src/engine/power.test.ts` turn "consumers draw 0 (off), minKw (min) or maxKw (max)" into a test, plus "structures under construction and short-circuited structures draw nothing"
+- [X] T042 [US3] In `src/engine/power.test.ts` turn "heatingKw by cycle and season replaces minKw; max adds maxKw - minKw" into a test (greenhouse or ice melter at min and max, habitat always at min)
+- [X] T043 [US3] In `src/engine/power.test.ts` turn "an insulated habitat uses insulatedHeatingKw" into a test (upgrade found through `upgrades.json` `effect: "insulation"`)
+- [X] T044 [US3] In `src/engine/power.test.ts` turn "surplus charges batteries up to their capacity; deficit drains them" into a test (capacity = sum of finished battery banks' `capacityEu`; a bank under construction stores nothing; charge stays within `[0, capacity]`)
+- [X] T045 [US3] In `src/engine/power.test.ts` turn "with batteries empty, sheds types in mission.brownoutOrder until demand fits" into a test
+- [X] T046 [US3] In `src/engine/power.test.ts` turn "never sheds habitats and flags unheated when even their heating cannot be met" into a test
+- [X] T047 [US3] In `src/engine/power.test.ts` add tests "a shed type comes back when production alone covers it", "every shed type comes back when the batteries are full", "a step with batteries above empty does not shed" and "logs power_shed only when the shed set changes" (R6)
+- [X] T048 [P] [US3] In `src/engine/game.test.ts` add the test "createGame already has a power report" (production and demand of the starting base are above 0, batteries unchanged)
+- [X] T049 [US3] Run `npx vitest run src/engine/power.test.ts src/engine/game.test.ts`, confirm red, commit `test(us3): power, heating, batteries and brownout (red)`
 
 ### Implementation for User Story 3
 

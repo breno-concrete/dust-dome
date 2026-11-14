@@ -72,7 +72,7 @@ export function tick(state: GameState, config: GameConfig, dt: number): GameStat
   }
   let s = advanceTime(state, config, dt)
   s = updateEvents(s, config, dt)
-  s = computePower(s, config)
+  s = computePower(s, config, dt)
   s = applyProduction(s, config, dt)
   s = updateJobs(s, config, dt)
   s = updateCrew(s, config, dt)
