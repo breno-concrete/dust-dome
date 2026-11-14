@@ -1,0 +1,193 @@
+{
+  "briefings": {
+    "1": {
+      "spring": {
+        "text": {
+          "en": "Welcome to Hellas Planitia, team! Spring has begun and the Sun is warming the ground, which creates whirlwinds of dust called dust devils. Keep an eye on our solar panels and keep the mining running well.",
+          "pt": "Bem-vindos a Hellas Planitia, equipe! A primavera começou e o Sol está aquecendo o solo, o que cria redemoinhos de poeira chamados dust devils. Fiquem atentos aos nossos painéis solares e mantenham a mineração funcionando bem."
+        }
+      },
+      "summer": {
+        "text": {
+          "en": "We have reached the Martian summer! Since we are in the southern hemisphere, this is the warmest and brightest time of the year, great for charging batteries. But the heat brings local dust storms that dim the sunlight for a while.",
+          "pt": "Chegamos ao verão marciano! Como estamos no hemisfério sul, esta é a época mais quente e iluminada do ano, ótima para carregar baterias. Porém, o calor traz tempestades locais de poeira que reduzem a luz solar por alguns instantes."
+        }
+      },
+      "autumn": {
+        "text": {
+          "en": "Summer is behind us and Mars is moving away from the Sun, so the air is cooling fast this autumn. Our habitat and the greenhouse will need a bit more power to stay warm inside. Use this time to stock up before the hard cold!",
+          "pt": "O verão ficou para trás e Marte está se afastando do Sol, fazendo o ar esfriar rápido neste outono. Nosso módulo e a estufa vão precisar de um pouco mais de energia para manter o calor interno. Aproveitem para estocar recursos antes do frio pesado!"
+        }
+      },
+      "winter": {
+        "text": {
+          "en": "The first winter is here and the temperature outside has dropped hard! Heating the base will take a lot of power, while the solar panels make much less. Change the machines' priority if you need to save battery.",
+          "pt": "O primeiro inverno chegou e as temperaturas despencaram lá fora! O aquecimento da base vai puxar bastante energia, enquanto os painéis solares geram bem menos luz. Ajustem a prioridade das máquinas se precisarem economizar bateria."
+        }
+      }
+    },
+    "2": {
+      "spring": {
+        "text": {
+          "en": "We survived our first year on Mars, well done! This spring, dust devils come more often and can even clog our oxygen generator. Remember to send an astronaut to clean the machines whenever dust piles up.",
+          "pt": "Sobrevivemos ao primeiro ano em Marte, parabéns! Nesta primavera, os redemoinhos de poeira estão mais frequentes e podem até entupir nosso gerador de oxigênio. Lembrem-se de mandar um astronauta limpar as máquinas sempre que acumularem poeira."
+        }
+      },
+      "summer": {
+        "text": {
+          "en": "Watch the sky, team: this summer's dust storms are much thicker! Besides cutting a lot of solar power, they can clog our mine and the iron refinery. Have water, food and power reserves ready.",
+          "pt": "Atenção ao céu, equipe: as tempestades de poeira deste verão estão bem mais densas! Além de diminuir bastante a energia solar, elas podem entupir nossa mina e a refinaria de ferro. Tenham reservas de água, comida e energia prontas."
+        }
+      },
+      "autumn": {
+        "text": {
+          "en": "This autumn's cold is even harsher, and it hits our ice melter too. If you have not built Thermal insulation on the habitat and the greenhouse yet, now is a great time! Remember that next winter will be dark.",
+          "pt": "O frio deste outono está ainda mais rigoroso, afetando também o nosso derretedor de gelo. Se vocês ainda não construíram o Isolamento Térmico no módulo e na estufa, agora é uma ótima hora! Lembre-se de que o próximo inverno será escuro."
+        }
+      },
+      "winter": {
+        "text": {
+          "en": "We are entering a severe winter with total darkness outside! Our solar panels will make nothing, and no astronaut can go out for repairs until spring. Trust the charged batteries and spend every kilowatt wisely.",
+          "pt": "Entramos em um inverno severo com escuridão total lá fora! Nossos painéis solares não vão gerar nada e nenhum astronauta poderá sair para fazer reparos até a primavera. Confiem nas baterias carregadas e gerenciem cada quilowatt com sabedoria."
+        }
+      }
+    },
+    "3": {
+      "spring": {
+        "text": {
+          "en": "The light is back and we can go out again, but this spring brings bigger, longer-lasting dust devils! They can damage two panels at once and clog several machines at the same time. Work your way toward the Steel factory.",
+          "pt": "A luz voltou e podemos sair novamente, mas esta primavera traz redemoinhos maiores e mais duradouros! Eles podem danificar dois painéis de uma vez e entupir várias máquinas ao mesmo tempo. Trabalhem para avançar rumo à Fábrica de Aço."
+        },
+        "warning": {
+          "en": "Excellent work in the first two years, but I have an important engineering warning. The next winters on Mars will be extreme, and what we have now will not be enough to hold in the heat. Build Thermal insulation on the habitat module before the winter of cycle 3!",
+          "pt": "Excelente trabalho nos dois primeiros anos, mas tenho um aviso importante de engenharia. Os próximos invernos em Marte serão extremos e nossas medidas atuais não vão bastar para segurar o calor. Construam o Isolamento Térmico no Módulo Habitacional antes do inverno do Ciclo 3!"
+        }
+      },
+      "summer": {
+        "text": {
+          "en": "Top alert: a global dust storm is covering all of Mars! Sunlight will drop almost to zero, and static electricity can short-circuit the mine and the refinery. Dust shields and the nuclear reactor will make all the difference now.",
+          "pt": "Alerta máximo: uma tempestade global de poeira está cobrindo Marte inteiro! A luz solar vai cair quase a zero e a eletricidade estática pode causar curtos-circuitos na mina e na refinaria. Escudos antipoeira e o Reator Nuclear farão toda a diferença agora."
+        }
+      },
+      "autumn": {
+        "text": {
+          "en": "The global dust is settling, but this autumn is already as freezing as last winter! Heating use has gone way up across the base. If you have not installed Thermal insulation yet, do it before winter starts!",
+          "pt": "A poeira global está baixando, mas este outono já está tão gelado quanto o inverno passado! O consumo de aquecimento subiu muito em toda a base. Se ainda não instalaram o Isolamento Térmico, façam isso antes que o inverno comece!"
+        }
+      },
+      "winter": {
+        "text": {
+          "en": "This is the coldest, darkest winter we have ever faced on Mars. Total darkness has blocked the panels and locked the base's outer hatches. Thanks to our thermal insulation and power reserves, we will get through this frozen night together!",
+          "pt": "Este é o inverno mais frio e escuro que já enfrentamos em Marte. A escuridão total bloqueou os painéis e trancou as comportas externas da base. Graças ao nosso isolamento térmico e às reservas de energia, vamos superar juntos essa noite gelada!"
+        }
+      }
+    },
+    "4": {
+      "spring": {
+        "text": {
+          "en": "This is the last year before the 32 new colonists arrive! The Martian weather is at its strongest this spring. Keep the filters clean, make steel and make sure we have enough habitat modules for 36 people.",
+          "pt": "Entramos no último ano antes da chegada dos 32 novos colonos! O clima marciano está no seu nível máximo de intensidade nesta primavera. Mantenham os filtros limpos, produzam aço e garantam que tenhamos módulos suficientes para abrigar 36 pessoas."
+        }
+      },
+      "summer": {
+        "text": {
+          "en": "Get every defense ready for the last summer before the colonists' ship arrives! Global storms and short circuits will test everything we have built so far. Keep the oxygen, water and food reserves rising toward the target.",
+          "pt": "Preparem todas as defesas para o último verão antes da chegada da nave de colonos! Tempestades globais e curtos-circuitos vão testar tudo o que construímos até aqui. Mantenham as reservas de oxigênio, água e comida subindo rumo à meta."
+        }
+      },
+      "autumn": {
+        "text": {
+          "en": "We are on the home stretch, team! This autumn's extreme cold needs a very well-balanced power grid. Check that we have enough oxygen, water, food and beds for the whole new crew on its way.",
+          "pt": "Estamos na reta final, equipe! O frio extremo deste outono exige que nossa rede elétrica esteja muito bem equilibrada. Confiram se temos oxigênio, água, comida e camas suficientes para toda a nova tripulação que está a caminho."
+        }
+      },
+      "winter": {
+        "text": {
+          "en": "The last winter of the mission! We are in total darkness and bitter cold, but our engineering was made for this. Keep the heating steady and the reserves above the target until the end of the season so we can welcome the colonists!",
+          "pt": "Último inverno da missão! Estamos no escuro total e no frio absoluto, mas nossa engenharia foi feita para isso. Mantenham o aquecimento estável e as reservas acima da meta até o fim da estação para darmos boas-vindas aos colonos!"
+        }
+      }
+    }
+  },
+  "lossMessages": {
+    "radiation_storm": {
+      "en": "An astronaut could not get into the radiation shelter in time and received a deadly dose of solar particles. Outside, or in a habitat without a shelter, nothing blocks this radiation. When the alarm sounds, bring everyone into the shelter within 10 seconds!",
+      "pt": "Um astronauta não conseguiu entrar no Abrigo Antirradiação a tempo e recebeu uma dose fatal de partículas solares. Lá fora, ou num módulo sem abrigo, nada bloqueia essa radiação. Quando o alarme tocar, recolha todos para o abrigo em até 10 segundos!"
+    },
+    "cold": {
+      "en": "Without Thermal insulation, or without power for the heating, the heat inside the habitat escaped too fast into the freezing Martian air. In physics, heat always moves from the warmer place to the colder one until everything freezes. Use insulating layers and keep the heating on in the next winters!",
+      "pt": "Sem o Isolamento Térmico, ou sem energia para o aquecimento, o calor de dentro do módulo escapou rápido demais para o ar congelante de Marte. Na física, o calor sempre viaja do lugar mais quente para o mais frio até tudo congelar. Use camadas isolantes e mantenha o aquecimento ligado nos próximos invernos!"
+    },
+    "empty_oxygen": {
+      "en": "Our vital reserves reached zero and we could not keep the crew's life support going. In a space colony, every person needs a steady supply to breathe, drink and eat. Try to balance production and storage better next time!",
+      "pt": "Nossas reservas vitais chegaram a zero e não conseguimos manter o suporte à vida da tripulação. Em uma colônia espacial, cada pessoa precisa de suprimentos constantes para respirar, beber e se alimentar. Tente equilibrar melhor a produção e o estoque na próxima tentativa!"
+    },
+    "empty_water": {
+      "en": "Our vital reserves reached zero and we could not keep the crew's life support going. In a space colony, every person needs a steady supply to breathe, drink and eat. Try to balance production and storage better next time!",
+      "pt": "Nossas reservas vitais chegaram a zero e não conseguimos manter o suporte à vida da tripulação. Em uma colônia espacial, cada pessoa precisa de suprimentos constantes para respirar, beber e se alimentar. Tente equilibrar melhor a produção e o estoque na próxima tentativa!"
+    },
+    "empty_food": {
+      "en": "Our vital reserves reached zero and we could not keep the crew's life support going. In a space colony, every person needs a steady supply to breathe, drink and eat. Try to balance production and storage better next time!",
+      "pt": "Nossas reservas vitais chegaram a zero e não conseguimos manter o suporte à vida da tripulação. Em uma colônia espacial, cada pessoa precisa de suprimentos constantes para respirar, beber e se alimentar. Tente equilibrar melhor a produção e o estoque na próxima tentativa!"
+    }
+  },
+  "exposureWarning": {
+    "en": "An astronaut's radiation meter reached 75% after a long time working outside the base. Because Mars has no protective magnetic field, they stopped working and came back inside by themselves to recover. When the meter drops to 25%, they can go out again, and any free astronaut can continue the job where it stopped.",
+    "pt": "O medidor de radiação de um astronauta chegou a 75% depois de muito tempo trabalhando fora da base. Como Marte não tem campo magnético protetor, ele parou o trabalho e voltou sozinho para dentro para se recuperar. Quando o medidor baixar para 25%, ele pode sair de novo, e qualquer astronauta livre pode continuar o trabalho de onde parou."
+  },
+  "victory": {
+    "en": "Mission accomplished, engineers! The landing ship has just arrived safely, and our base has air, water, food and shelter for all 36 people. You mastered the real challenges of Mars and proved that humans can live on the Red Planet!",
+    "pt": "Missão cumprida, engenheiros! A nave de pouso acaba de chegar em segurança e nossa base tem ar, água, comida e abrigo para todas as 36 pessoas. Vocês dominaram os desafios reais de Marte e provaram que a humanidade pode viver no Planeta Vermelho!"
+  },
+  "debrief": {
+    "causes": {
+      "radiation_storm": {
+        "en": "Diagnosis: caught in a solar storm. The astronauts were outside or in a habitat without a radiation shelter when the particles arrived, and only the regolith shelter blocks this radiation.",
+        "pt": "Diagnóstico: Exposição a uma tempestade solar. Os astronautas estavam lá fora ou num módulo sem Abrigo Antirradiação quando as partículas chegaram, e só o abrigo de regolito bloqueia essa radiação."
+      },
+      "cold": {
+        "en": "Diagnosis: too much heat lost in winter. The habitat module had no Thermal insulation before the winter of cycle 3, or ran out of power for heating, so it was impossible to keep it warm enough to live in.",
+        "pt": "Diagnóstico: Perda excessiva de calor no inverno. O módulo habitacional não possuía Isolamento Térmico instalado antes do inverno do Ciclo 3, ou ficou sem energia para o aquecimento, tornando impossível manter a temperatura interna habitável."
+      },
+      "empty_oxygen": {
+        "en": "Diagnosis: breathing support collapsed. O₂ production did not keep up with what the crew breathed: check whether the generator ran out of power or was clogged with dust.",
+        "pt": "Diagnóstico: Colapso no suporte respiratório. A produção de O₂ não acompanhou o consumo da tripulação — verifique se o gerador ficou sem energia ou entupido por poeira."
+      },
+      "empty_water": {
+        "en": "Diagnosis: the colony ran out of water. The ice melter did not keep up with what the crew and the pressurized greenhouse used together.",
+        "pt": "Diagnóstico: Escassez hídrica na colônia. O derretedor de gelo não supriu o consumo combinado da tripulação e da estufa pressurizada."
+      },
+      "empty_food": {
+        "en": "Diagnosis: not enough food at the base. The greenhouse did not grow enough food for the team, because of missing water, missing power or too much cold.",
+        "pt": "Diagnóstico: Déficit alimentar na base. A estufa não produziu alimento suficiente para a equipe, seja por falta de água, falta de energia ou frio excessivo."
+      }
+    },
+    "targetsNotMet": {
+      "en": "Diagnosis: not enough infrastructure for the colonists. The base survived the 4 cycles, but did not reach the minimum stock of oxygen, water and food, or the habitat modules, to receive the 32 new colonists.",
+      "pt": "Diagnóstico: Infraestrutura insuficiente para os colonos. A base sobreviveu aos 4 ciclos, mas não alcançou o estoque mínimo de oxigênio, água e comida ou os módulos habitacionais para receber os 32 novos colonos."
+    }
+  },
+  "tutorial": [
+    {
+      "id": "build_solar_panel",
+      "text": {
+        "en": "Hello, cadet! I am Commander Vega, and I will help you get our Mars base ready before the new colonists arrive. Let's start by making more power: open the build menu and place a new Solar panel on the grid!",
+        "pt": "Olá, cadete! Sou a Comandante Vega e vou ajudar você a preparar nossa base em Marte antes que os novos colonos cheguem. Vamos começar gerando mais energia: abra o menu de construção e coloque um novo Painel Solar na grade!"
+      }
+    },
+    {
+      "id": "follow_astronaut",
+      "text": {
+        "en": "Great! See how one of our 4 astronauts went outside to build the panel, but their radiation meter started to rise. When the job is done, they will come back inside by themselves to stay safe.",
+        "pt": "Ótimo! Veja que um dos nossos 4 astronautas saiu da base para construir o painel, mas o medidor de radiação dele começou a subir. Quando o trabalho terminar, ele voltará para dentro sozinho para se proteger."
+      }
+    },
+    {
+      "id": "read_vital_bars",
+      "text": {
+        "en": "Now look at the bars at the top of the screen: they show our oxygen, water, food and power balance. Keep everything in the green, and click on buildings when you want to read how they work at NASA!",
+        "pt": "Agora olhe as barras no topo da tela: elas mostram nosso oxigênio, água, comida e o balanço de energia. Mantenha tudo no verde e clique nos prédios quando quiser ler como eles funcionam na NASA!"
+      }
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import upgrades from './upgrades.json'
 import seasons from './seasons.json'
 import events from './events.json'
 import mission from './mission.json'
+import narrator from './narrator.json'
 
 export const config: GameConfig = GameConfigSchema.parse({
   resources,
@@ -14,4 +15,5 @@ export const config: GameConfig = GameConfigSchema.parse({
   seasons,
   events,
   mission,
+  narrator,
 })
