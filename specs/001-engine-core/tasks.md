@@ -55,7 +55,7 @@ the crew buttons.
 
 ### Test builders (ship inside the US1 PR, branch `engine/us1-seasons`)
 
-- [ ] T002 Create `src/engine/testState.ts`, imported only by `*.test.ts` files, exporting small pure builders over `createGame(config, 1)`: `gameAt(config, cycle, season, secondsIntoSeason = 0)` (briefing closed, clock set), `withStructures(state, config, specs)` where each spec is `{ type, tile, status?: StructureStatus, upgrades?: string[] }` and ids come from `state.nextId`, `onlyStructures(state, config, specs)` (replaces the starting base), `withStock(state, partialStock)`, `withEvents(state, partialActiveEvents)`, `withCrew(state, patches)` (patch astronauts by index); every builder returns a new state
+- [x] T002 Create `src/engine/testState.ts`, imported only by `*.test.ts` files, exporting small pure builders over `createGame(config, 1)`: `gameAt(config, cycle, season, secondsIntoSeason = 0)` (briefing closed, clock set), `withStructures(state, config, specs)` where each spec is `{ type, tile, status?: StructureStatus, upgrades?: string[] }` and ids come from `state.nextId`, `onlyStructures(state, config, specs)` (replaces the starting base), `withStock(state, partialStock)`, `withEvents(state, partialActiveEvents)`, `withCrew(state, patches)` (patch astronauts by index); every builder returns a new state
 
 ### Contract v2 (branch `shared/contract-v2`, exact delta in [contracts/contract-v2.md](contracts/contract-v2.md))
 
@@ -88,18 +88,18 @@ system needed.
 
 ### Tests for User Story 1 ⚠️ (write first, must fail)
 
-- [ ] T016 [US1] Create branch `engine/us1-seasons`, then in `src/engine/time.test.ts` turn "moves to the next season when secondsIntoSeason reaches its duration, keeping the remainder" into a test: from `gameAt(config, 1, 'spring', duration − 1)` advance 3 s → season is the next one in `config.seasons.seasons`, `secondsIntoSeason` is 2, `elapsed` grew by 3
-- [ ] T017 [US1] In `src/engine/time.test.ts` turn "moves from winter to spring of the next cycle" into a test (winter of cycle 1 near its end → spring of cycle 2)
-- [ ] T018 [US1] In `src/engine/time.test.ts` turn "opens the commander briefing at every season start" into a test: after a rollover, `briefing` equals `{ cycle, season }` of the new season and the last `log` entry has kind `season_start`, `cycle`, `season` and `ref` = the season id
-- [ ] T019 [US1] In `src/engine/time.test.ts` turn "stops advancing after winter of the last cycle" into a test: from the last winter (`config.seasons.cycles`) 1 s before its end, advance 5 s → cycle and season unchanged, `secondsIntoSeason` equals the winter duration, `elapsed` grew by 1, no briefing opened, and `isMissionTimeOver(state, config)` is true
-- [ ] T020 [US1] In `src/engine/time.test.ts` add tests "seasonStartedThisStep is true only in the step where the season changed" and "the clock reaches the same season and time whether advanced in 1 s or 0.25 s steps" (US1 scenario 7)
-- [ ] T021 [P] [US1] In `src/engine/game.test.ts` add tests "createGame logs the first season_start" and "tick does nothing once the mission time is over" (same reference returned)
-- [ ] T022 [US1] Run `npx vitest run src/engine/time.test.ts src/engine/game.test.ts`, confirm the new tests fail because the behavior is missing (not because of a typo), and commit `test(us1): seasons, cycles and briefings (red)`
+- [x] T016 [US1] Create branch `engine/us1-seasons`, then in `src/engine/time.test.ts` turn "moves to the next season when secondsIntoSeason reaches its duration, keeping the remainder" into a test: from `gameAt(config, 1, 'spring', duration − 1)` advance 3 s → season is the next one in `config.seasons.seasons`, `secondsIntoSeason` is 2, `elapsed` grew by 3
+- [x] T017 [US1] In `src/engine/time.test.ts` turn "moves from winter to spring of the next cycle" into a test (winter of cycle 1 near its end → spring of cycle 2)
+- [x] T018 [US1] In `src/engine/time.test.ts` turn "opens the commander briefing at every season start" into a test: after a rollover, `briefing` equals `{ cycle, season }` of the new season and the last `log` entry has kind `season_start`, `cycle`, `season` and `ref` = the season id
+- [x] T019 [US1] In `src/engine/time.test.ts` turn "stops advancing after winter of the last cycle" into a test: from the last winter (`config.seasons.cycles`) 1 s before its end, advance 5 s → cycle and season unchanged, `secondsIntoSeason` equals the winter duration, `elapsed` grew by 1, no briefing opened, and `isMissionTimeOver(state, config)` is true
+- [x] T020 [US1] In `src/engine/time.test.ts` add tests "seasonStartedThisStep is true only in the step where the season changed" and "the clock reaches the same season and time whether advanced in 1 s or 0.25 s steps" (US1 scenario 7)
+- [x] T021 [P] [US1] In `src/engine/game.test.ts` add tests "createGame logs the first season_start" and "tick does nothing once the mission time is over" (same reference returned)
+- [x] T022 [US1] Run `npx vitest run src/engine/time.test.ts src/engine/game.test.ts`, confirm the new tests fail because the behavior is missing (not because of a typo), and commit `test(us1): seasons, cycles and briefings (red)`
 
 ### Implementation for User Story 1
 
-- [ ] T023 [US1] In `src/engine/time.ts` implement `advanceTime` per R1–R2 and export `seasonDuration(config, season)`, `seasonStartedThisStep(state, dt)` (true when `secondsIntoSeason < dt`) and `isMissionTimeOver(state, config)`; on each rollover set `briefing` and append `{ at, cycle, season, kind: 'season_start', ref: season }` to `log`; clamp at the end of the last winter
-- [ ] T024 [US1] In `src/engine/game.ts` make `createGame` log the first `season_start`, and make `tick` return `state` unchanged when `isMissionTimeOver(state, config)` (in addition to the existing status and briefing guards)
+- [x] T023 [US1] In `src/engine/time.ts` implement `advanceTime` per R1–R2 and export `seasonDuration(config, season)`, `seasonStartedThisStep(state, dt)` (true when `secondsIntoSeason < dt`) and `isMissionTimeOver(state, config)`; on each rollover set `briefing` and append `{ at, cycle, season, kind: 'season_start', ref: season }` to `log`; clamp at the end of the last winter
+- [x] T024 [US1] In `src/engine/game.ts` make `createGame` log the first `season_start`, and make `tick` return `state` unchanged when `isMissionTimeOver(state, config)` (in addition to the existing status and briefing guards)
 - [ ] T025 [US1] Run `npx vitest run src/engine/time.test.ts src/engine/game.test.ts` (green), refactor, run `npm run check`, commit `feat(us1): seasons, cycles and briefings`, open the PR from `engine/us1-seasons` and merge on green CI
 
 **Checkpoint**: the clock runs, briefings open every season, the mission stops after cycle 4.
