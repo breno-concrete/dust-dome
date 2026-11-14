@@ -48,12 +48,18 @@ export interface Astronaut {
   location: 'inside' | 'outside'
   /** Habitat the astronaut lives in. */
   habitatId: string | null
-  /** 0..1; 1 = lethal. */
+  /**
+   * 0..1. At mission.exposure.warnAt the astronaut stops working and comes back inside; a new job
+   * starts only at or below resumeAt. Never lethal (constitution 3.0.0, II.9).
+   */
   exposure: number
   jobId: string | null
+  /** Brought inside by the player: takes no job until exposure is back to 0. */
+  resting: boolean
 }
 
-export type JobKind = 'build' | 'upgrade' | 'repair' | 'clean'
+/** demolish: removes the structure (or cancels its construction) and refunds what was paid. */
+export type JobKind = 'build' | 'upgrade' | 'repair' | 'clean' | 'demolish'
 
 export interface Job {
   id: string
@@ -105,6 +111,7 @@ export type LogKind =
   | 'short_circuit'
   | 'repaired'
   | 'cleaned'
+  | 'demolished'
   | 'death'
   | 'radiation_storm'
   | 'power_shed'
@@ -116,7 +123,7 @@ export interface LogEntry {
   kind: LogKind
   /** Structure, astronaut or event id the entry is about. */
   ref: string
-  /** Cause key for the debrief texts, e.g. "exposure", "radiation_storm", "cold", "empty_oxygen". */
+  /** Cause key for the debrief texts: "radiation_storm", "cold", "empty_oxygen", "empty_water", "empty_food". */
   cause?: string
 }
 
@@ -162,6 +169,9 @@ export type ActionError =
   | 'not_enough_resources'
   | 'tile_blocked'
   | 'out_of_bounds'
+  | 'not_connected' // a habitat module must share a side with another (build and demolish)
+  | 'last_habitat' // the last habitat module cannot be demolished
+  | 'no_room_for_crew' // demolishing this habitat leaves its occupants without room
   | 'external_jobs_blocked'
   | 'not_allowed'
   | 'not_implemented'

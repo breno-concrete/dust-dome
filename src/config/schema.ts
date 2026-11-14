@@ -65,6 +65,8 @@ export const StructureDefSchema = z.object({
   /** Educational fact sheet shown in the build menu. */
   explain: LocalizedTextSchema,
   level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  /** Seconds one astronaut spends outside to build it (II.6: 30 / 40 / 60 by level). */
+  buildSeconds: z.number().positive(),
   cost: AmountsSchema,
   /** Tiles per side: 1 = 1x1, 2 = 2x2. */
   size: z.union([z.literal(1), z.literal(2)]),
@@ -76,11 +78,16 @@ export const StructureDefSchema = z.object({
   inputs: z.object({ min: AmountsSchema, max: AmountsSchema }).optional(),
   /** Heating demand in "min" mode by cycle and season; replaces power.minKw. */
   heatingKw: CycleSeasonTableSchema.optional(),
-  /** Same table when the thermal insulation upgrade is installed. */
+  /** Same table when the thermal insulation upgrade is installed (any structure that has it). */
   insulatedHeatingKw: CycleSeasonTableSchema.optional(),
   /** People it houses. */
   capacity: z.number().int().nonnegative().optional(),
   upgrades: z.array(z.string()).default([]),
+  /**
+   * A new structure of this type must share a tile side with one of these types, when one
+   * exists (principle V: habitat modules). Demolition may not break this either.
+   */
+  connectsTo: z.array(z.string()).default([]),
   source: DataSourceSchema.optional(),
 })
 
@@ -155,18 +162,24 @@ export const MissionConfigSchema = z.object({
   startingStructures: z.array(
     z.object({ type: z.string(), tile: z.tuple([z.number().int(), z.number().int()]) }),
   ),
+  /** External job times; build times are per structure (StructureDef.buildSeconds). */
   jobs: z.object({
-    buildSeconds: z.number().positive(),
     upgradeSeconds: z.number().positive(),
     repairSeconds: z.number().positive(),
     cleanSeconds: z.number().positive(),
+    demolishSeconds: z.number().positive(),
   }),
+  /** Share of what was paid (cost + installed upgrades) that a demolition gives back. */
+  demolishRefundShare: z.number().min(0).max(1),
   exposure: z.object({
-    /** 100% exposure after this share of the current season spent outside. */
+    /** Exposure grows at a rate that would reach 100% after this share of the season outside. */
     maxShareOfSeason: z.number().positive(),
     /** Recovery inside, relative to the accrual speed. */
     recoveryRate: z.number().positive(),
+    /** At this level the astronaut stops working and comes back inside by themselves. Never lethal. */
     warnAt: z.number().min(0).max(1),
+    /** An astronaut takes a new job only at or below this level. */
+    resumeAt: z.number().min(0).max(1),
   }),
   emptyReserve: z.object({
     graceSeconds: z.number().nonnegative(),

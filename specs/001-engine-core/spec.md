@@ -6,6 +6,11 @@
 
 **Status**: Draft
 
+**Updated**: 2026-11-14, for constitution 3.0.0 (product owners' decisions): power is not a win
+target, exposure never kills (automatic return at the warning level, work again at the resume
+level), build time per structure type, demolition with refund, thermal insulation on any
+structure that takes it. Contract: [contracts/contract-v2.md](contracts/contract-v2.md).
+
 **Input**: User description: "SPECIFY_FEATURE_DIRECTORY=specs/001-engine-core Read specs/001-engine-core/brief.md and the constitution Part II, and specify it."
 
 **Rules of the game**: constitution Part II (II.2–II.10). This spec references those sections
@@ -124,8 +129,8 @@ step, and check production, demand, balance, battery charge, the switched-off ty
 6. **Given** a habitat, a greenhouse or an ice melter, **Then** it draws the heating value of its
    table for the current cycle and season instead of its plain Base draw; at Max, the greenhouse
    and the ice melter add the configured Max add-on.
-7. **Given** a habitat with thermal insulation, **Then** it draws the value of the insulated
-   heating table.
+7. **Given** a habitat or a greenhouse with thermal insulation, **Then** it draws the value of its
+   insulated heating table.
 8. **Given** production is higher than demand, **Then** the surplus charges the batteries
    (1 kW for 1 game second = 1 energy unit, no losses) up to the total capacity of the finished
    battery banks; **Given** demand is higher, **Then** the batteries cover the difference until
@@ -145,8 +150,9 @@ step, and check production, demand, balance, battery charge, the switched-off ty
 The player builds structures on free tiles (a new habitat module must touch the side of an existing
 habitat module, so the habitats form one connected base), installs upgrades, sets the Off / Base /
 Max switch of
-each structure type, repairs broken structures after the bolt minigame and cleans clogged ones.
-Building, upgrading, repairing and cleaning are external jobs: each one takes an astronaut
+each structure type, repairs broken structures after the bolt minigame, cleans clogged ones and
+demolishes structures (or cancels a construction) to get back what they paid. Building,
+upgrading, repairing, cleaning and demolishing are external jobs: each one takes an astronaut
 outside for a while, and there are never more jobs running than astronauts alive (II.6, II.9,
 II.10).
 
@@ -195,12 +201,14 @@ the astronauts and the structures.
 
 **Acceptance Scenarios — jobs**:
 
-14. **Given** a queued job and a free living astronaut inside, **Then** the astronaut takes the
+14. **Given** a queued job and a free living astronaut inside who is not resting and whose
+    exposure is at or below the configured resume level (25%), **Then** the astronaut takes the
     job and goes outside.
 15. **Given** more queued jobs than free living astronauts, **Then** at most one job runs per
     living astronaut and the others wait in the order they were requested.
-16. **Given** a running build job, **When** the configured build time has passed, **Then** the
-    structure becomes active and starts counting for production, power and capacity.
+16. **Given** a running build job, **When** the build time of the structure's type has passed
+    (30 / 40 / 60 s by level), **Then** the structure becomes active and starts counting for
+    production, power and capacity.
 17. **Given** a running upgrade job, **When** it finishes, **Then** the upgrade is installed on
     the structure.
 18. **Given** a running repair job, **When** it finishes, **Then** the damaged or short-circuited
@@ -212,15 +220,33 @@ the astronauts and the structures.
     **Then** the jobs resume.
 21. **Given** a job finishes, **Then** its astronaut goes back inside.
 
+**Acceptance Scenarios — demolition** (II.6):
+
+22. **Given** a finished structure or one under construction, **When** the player demolishes it,
+    **Then** a demolish job joins the queue and nothing is refunded yet.
+23. **Given** a running demolish job, **When** the configured demolish time has passed, **Then**
+    the structure is removed, the configured share (100%) of its cost and of its upgrades returns
+    to the stock whatever its condition, and the log records the demolition; a structure under
+    construction also loses its build job.
+24. **Given** the last habitat module, **When** the player demolishes it, **Then** the action is
+    refused with "last habitat"; **Given** a habitat whose occupants do not fit in the other
+    finished habitats, **Then** it is refused with "no room for crew"; **Given** a habitat whose
+    removal would leave another habitat without a shared side with the rest, **Then** it is
+    refused with "not connected".
+25. **Given** an event is blocking external jobs (winter darkness), **When** the player
+    demolishes, **Then** the action is refused with "external jobs blocked".
+
 ---
 
 ### User Story 5 — Astronauts can die, and the mission is won or lost (Priority: P5)
 
-Astronauts outside build up radiation exposure and recover inside. They die from full exposure,
-from an empty reserve or a cold base, from the extreme cold of the late winters without thermal
-insulation, and from radiation storms without a shelter. When the last astronaut dies the
-mission is lost; when winter of the last cycle ends, the mission is won if the base is ready for
-the colonists and lost otherwise (II.2, II.9).
+Astronauts outside build up radiation exposure and recover inside; exposure never kills,
+because at the warning level the astronaut stops and comes back inside by themselves. Astronauts
+die from an empty reserve or a cold base, from the extreme cold of the late winters without
+thermal insulation, and from radiation storms without a shelter. When the last astronaut dies
+the mission is lost; when winter of the last cycle ends, the mission is won if the base is ready
+for the colonists (reserves and room for everyone; power is not a target) and lost otherwise
+(II.2, II.9).
 
 **Why this priority**: it turns the simulation into a game with stakes and an ending, and it
 gives the debrief every cause of death. It depends on all the previous stories.
@@ -232,12 +258,14 @@ and the mission result.
 
 **Acceptance Scenarios**:
 
-1. **Given** an astronaut outside, **Then** their exposure grows from empty to full in the
-   configured share (25%) of the current season's duration.
+1. **Given** an astronaut outside, **Then** their exposure grows at a rate that would take it
+   from empty to full in the configured share (25%) of the current season's duration.
 2. **Given** an astronaut inside a habitat, **Then** their exposure falls at the configured
    recovery rate (half the speed it grows outside), never below empty.
-3. **Given** an astronaut's exposure becomes full, **Then** the astronaut dies and the log
-   records the cause "exposure".
+3. **Given** an astronaut working outside whose exposure reaches the configured warning level
+   (75%), **Then** they stop and go back inside at once, and their job goes back to the queue with
+   its remaining time (another free astronaut may continue it); exposure never reaches full and
+   nobody dies of it.
 4. **Given** a vital reserve (oxygen, water or food) is at zero, **When** the configured grace
    period has passed, **Then** one astronaut dies, then one more every configured interval while
    the reserve stays at zero; the log records which reserve ran out; the countdown restarts from
@@ -264,10 +292,9 @@ and the mission result.
 11. **Given** the last living astronaut dies, **Then** the mission is lost because the whole crew
     died, and time stops.
 12. **Given** winter of the last cycle ends, **When** at least one astronaut is alive, the
-    oxygen, food and water reserves reach the win targets, the finished habitats house the target
-    number of people and the power demand is fully covered by production plus the batteries,
-    **Then** the mission is won. For example, a base in winter darkness without a reactor, whose
-    batteries still cover the deficit at that moment, meets the power target.
+    oxygen, food and water reserves reach the win targets and the finished habitats house the
+    target number of people, **Then** the mission is won. Power is not a target: for example, a
+    base in deficit at that moment still wins.
 13. **Given** winter of the last cycle ends without all of those targets, **Then** the mission is
     lost with the reason "targets missed".
 14. **Given** any step, **Then** the simulation runs in this fixed order: time, events, power,
@@ -294,8 +321,12 @@ and the mission result.
 - An astronaut who dies during a job leaves the job in the queue with its remaining time; another
   astronaut can finish it.
 - A habitat counts toward capacity, heating and protection only once it is finished.
-- An astronaut whose exposure is at or above the warning level does not start a new job until it
-  falls below it again.
+- An astronaut takes a new job only when their exposure is at or below the resume level, so
+  someone who came back at the warning level rests first.
+- Demolishing a structure drops its other queued jobs; upgrades paid but not installed yet are
+  refunded too, while repair parts already spent are not.
+- A habitat under construction counts for the connection check of a demolition, as it does for a
+  new build.
 - If every switchable type is already off and the habitats still cannot be heated, the base is
   unheated.
 - "Take shelter", for everyone or for one astronaut, with no finished habitat with a radiation
@@ -345,7 +376,8 @@ and the mission result.
   MUST be constant in every season and event.
 - **FR-012**: Each consumer MUST draw according to its type's switch; the habitat, the greenhouse
   and the ice melter MUST use their heating tables by cycle and season, with the insulated table
-  for insulated habitats and the Max add-on for the greenhouse and the ice melter.
+  for any structure that has thermal insulation (habitat, greenhouse) and the Max add-on for the
+  greenhouse and the ice melter.
 - **FR-013**: Surplus MUST charge the batteries up to their total capacity and deficit MUST drain
   them, with no losses.
 - **FR-014**: When the batteries cannot cover the deficit, structure types MUST be switched off in
@@ -373,14 +405,16 @@ and the mission result.
 - **FR-021**: The player MUST be able to clean a clogged structure without spending parts, except
   while a dust storm is active.
 - **FR-022**: Every refused action MUST leave the mission unchanged and return one reason from:
-  not enough resources, tile blocked, out of bounds, not connected, external jobs blocked, not
-  allowed.
-- **FR-023**: Each queued job MUST be taken by a free living astronaut inside (the least exposed
-  first, then in crew order) who goes outside; at most one job per living astronaut may run;
+  not enough resources, tile blocked, out of bounds, not connected, last habitat, no room for
+  crew, external jobs blocked, not allowed.
+- **FR-023**: Each queued job MUST be taken by a free living astronaut inside who is not resting
+  and whose exposure is at or below the configured resume level (the least exposed first, then
+  in crew order), and that astronaut goes outside; at most one job per living astronaut may run;
   the others MUST wait in request order.
-- **FR-024**: Jobs MUST last their configured times (build, upgrade, repair, clean) and then apply
-  their effect: structure finished, upgrade installed, structure repaired or cleaned; the
-  astronaut then goes back inside.
+- **FR-024**: Jobs MUST last their configured times (the build time of the structure's type,
+  upgrade, repair, clean, demolish) and then apply their effect: structure finished, upgrade
+  installed, structure repaired or cleaned, structure removed and refunded; the astronaut then
+  goes back inside.
 - **FR-025**: While an event blocks external jobs, new external jobs MUST be refused, running jobs
   MUST pause with their remaining time and their astronauts MUST go inside; the jobs MUST resume
   when the block ends.
@@ -389,11 +423,19 @@ and the mission result.
   remaining time, and the recalled astronaut MUST rest inside and take no new job until their
   exposure is back to empty. While the radiation alarm is on, both actions take the astronauts
   into habitats with a radiation shelter (FR-030).
+- **FR-039**: The player MUST be able to demolish any finished structure or cancel one under
+  construction through a demolish job (blocked like every external job); when the job ends the
+  structure MUST be removed and the configured share of everything paid for it (cost and
+  upgrades) MUST return to the stock, whatever its condition. Demolishing the last habitat, a
+  habitat whose occupants do not fit elsewhere, or a habitat that would leave another one
+  unconnected MUST be refused.
 
 **Crew, deaths and outcome (US5)**
 
-- **FR-027**: Exposure MUST grow outside and fall inside at the configured rates, stay between
-  empty and full, and kill the astronaut when full.
+- **FR-027**: Exposure MUST grow outside and fall inside at the configured rates and never go
+  below empty. When it reaches the configured warning level, the astronaut's job MUST go back to
+  the queue with its remaining time and the astronaut MUST go inside at once. Exposure MUST never
+  kill.
 - **FR-028**: An empty vital reserve or an unheated base MUST kill one astronaut after the grace
   period and then one more every configured interval while the condition lasts; each condition
   has its own countdown, which restarts when the condition ends.
@@ -404,22 +446,20 @@ and the mission result.
   astronauts outside into sheltered habitats (up to their capacity) and pause their jobs until the
   storm ends.
 - **FR-031**: The habitat modules are connected, so astronauts inside MUST be able to use any
-  finished habitat, up to its capacity (4 per module). When extreme cold or a radiation storm
+  finished habitat, up to its capacity (6 per module in v1). When extreme cold or a radiation storm
   strikes, the astronauts inside MUST move by themselves into finished habitats that protect
   against that danger (thermal insulation for the cold, radiation shelter for the storm) as long
   as there is room; only those who do not fit stay unprotected. The habitat each astronaut is in
   MUST be visible to the screens.
-- **FR-032**: Every death MUST be recorded in the log with its cause (exposure, empty oxygen,
-  empty water, empty food, cold, radiation storm), the game time, the cycle and the season; every
-  finished build, upgrade, repair and cleaning MUST be recorded too, so the debrief can explain
+- **FR-032**: Every death MUST be recorded in the log with its cause (empty oxygen, empty water,
+  empty food, cold, radiation storm), the game time, the cycle and the season; every finished
+  build, upgrade, repair, cleaning and demolition MUST be recorded too, so the debrief can explain
   the mission.
 - **FR-033**: The mission MUST be lost when every astronaut is dead.
 - **FR-034**: When winter of the last cycle ends, the mission MUST be won if at least one astronaut
   is alive, oxygen, food and water reach the win targets (one season for colonists + crew),
-  finished habitat capacity reaches colonists + crew, and the power demand of every structure at
-  the player's current switch settings is fully covered by production plus the batteries (nothing
-  switched off by the brownout and the base heated); otherwise it MUST be lost with the reason
-  "targets missed".
+  and finished habitat capacity reaches colonists + crew; otherwise it MUST be lost with the
+  reason "targets missed". Power MUST NOT be part of the win check.
 - **FR-035**: The win targets MUST be available from the start of the mission so the HUD can show
   them on the vital bars.
 
@@ -444,12 +484,13 @@ and the mission result.
 - **Switch**: one Off / Base / Max setting per switchable structure type.
 - **Power report**: production, demand, balance, battery charge, types switched off by the
   brownout, unheated flag.
-- **Astronaut**: name, alive, inside or outside, current habitat, exposure (empty to full),
-  current job, resting after a recall.
-- **Job**: kind (build, upgrade, repair, clean), target structure, upgrade, astronaut, remaining
-  time, state (queued, running, paused).
+- **Astronaut**: name, alive, inside or outside, current habitat, exposure (empty up to the
+  warning level), current job, resting after a recall.
+- **Job**: kind (build, upgrade, repair, clean, demolish), target structure, upgrade, astronaut,
+  remaining time, state (queued, running, paused).
 - **Log entry**: game time, cycle, season, kind (season start, built, upgrade installed, damaged,
-  clogged, short circuit, repaired, cleaned, death, radiation storm, brownout), what it is about
+  clogged, short circuit, repaired, cleaned, demolished, death, radiation storm, brownout), what
+  it is about
   and the cause.
 - **Win targets**: people to house (colonists + crew), reserves needed, habitat capacity needed.
 
@@ -490,25 +531,25 @@ and the mission result.
 - The brownout starts when the batteries are empty; a switched-off type comes back on by itself
   when production alone can run it, or when the batteries are full again, so switches never
   blink on and off (plan research R6).
-- Astronauts at or above the exposure warning level do not start new jobs, to avoid silent deaths
-  for young players; the warning itself (icon flash, commander line) is shown by the UI.
-- For the win check, "power production ≥ power demand (all habitats heated, no deficit)" (II.2)
-  means production plus the batteries cover the whole demand of the current switch settings at
-  that moment, so nothing is switched off by the brownout and the base is heated. Decided by the
-  tech lead on 2026-11-14; the product owners should confirm it.
-- Story reason for the reserve targets: the base's resource production ends after the four
-  cycles, so the stored oxygen, water and food must carry colonists + crew through one season
-  (II.2). The power target is checked at that same moment, counting the batteries.
+- An astronaut who comes back at the warning level is not resting: they work again once their
+  exposure is at or below the resume level. Only a player recall makes an astronaut rest until
+  their exposure is back to empty, so a recalled astronaut does not walk straight back out. The
+  UI shows the warning (icon flash, commander line).
+- Power is not a win target (constitution 3.0.0, II.2); it only matters through production and
+  heating on the way there. Decided by the product owners on 2026-11-14.
+- Story reason for the reserve targets: the colonists' ship lands when the four cycles end, so the
+  stored oxygen, water and food must carry colonists + crew through one season (II.2).
 - The commander's texts, including the warning before cycle 3, come from the content files and are
   shown by the UI; the engine core only opens a briefing for a cycle and season.
-- There is no saving, loading, undo, demolition or cancellation of jobs in v1.
+- There is no saving, loading or undo in v1. Demolition, which also cancels a construction, is
+  the only way to take back a decision.
 
 ## Dependencies
 
-- **Constitution amendment**: the habitat connection rule (FR-017) changes Principle V
-  ("adjacency has no effect"). It was decided by the tech lead on 2026-11-14 and must be merged
-  as a constitution amendment (`shared/` pull request approved by a second team member, product
-  owner informed) before User Story 4 is implemented.
+- **Constitution 3.0.0**: the habitat connection rule (FR-017, principle V), demolition, the
+  automatic return at the warning level and the win check without power come from the amendment
+  of 2026-11-14 (`shared/` pull request approved by a second team member and a product owner); it
+  must be merged before User Story 4 is implemented.
 - **Events area (Dev A)**: schedules and applies every event (II.11) inside each step, right after
   time: active events with their solar factor and whether they block external jobs, damaged /
   clogged / short-circuited structures, winter darkness, the radiation storm phases, and the effect
@@ -517,8 +558,9 @@ and the mission result.
 - **2D UI (Dev B), scene and repair minigame (Dev C), debrief and sources (Dev A)**: read the
   mission state and call the player actions; the scene only places, hovers, selects and reports
   the minigame result. The scene's placement preview uses the same placement check, so a
-  "not connected" habitat shows as invalid there too. The crew panel needs two new buttons, one per astronaut ("bring inside")
-  and one for everyone; this adds player actions to the contract, announced to the team first.
+  "not connected" habitat shows as invalid there too. The crew panel needs two new buttons, one
+  per astronaut ("bring inside") and one for everyone, and the structure panel a "demolish"
+  button; these player actions are in contract v2 ([contracts/contract-v2.md](contracts/contract-v2.md)).
 
 ## Out of Scope
 

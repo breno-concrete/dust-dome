@@ -29,5 +29,7 @@ GitHub Spec Kit (MIT) for spec-driven development.
 ## AI ("Super Intelligence") use (everyone)
 
 - Repository scaffold, CI and Spec Kit setup generated with Claude (Anthropic).
+- English versions of the product owners' Portuguese game texts in `src/config/*.json` translated
+  with Claude (Anthropic) and reviewed by the team.
 
 <!-- Add where and how AI tools were used. AI images/videos need a visible watermark. -->
