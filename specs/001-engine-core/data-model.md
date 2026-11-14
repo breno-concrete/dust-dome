@@ -97,18 +97,18 @@ state transitions. Fields marked **v2** arrive with the `shared/contract-v2` PR
 | `alive` | `false` is final. |
 | `location` | `inside` / `outside`. |
 | `habitatId` | Habitat the astronaut is in; changes when protection strikes (R15). |
-| `exposure` | `[0, 1]`; 1 = lethal. |
+| `exposure` | `[0, 1]`; at `warnAt` the astronaut comes back inside; never lethal. |
 | `jobId` | Current job, or `null`. |
 | `resting` **v2** | Recalled; takes no job until exposure is back to 0 (R12). |
 
 ```text
-            takes a job (eligible: inside, no job, not resting, exposure < warnAt,
+            takes a job (eligible: inside, no job, not resting, exposure ≤ resumeAt,
             no block, no radiation storm)
  inside ───────────────────────────────────────────────────────────────▶ outside
    ▲                                                                       │
-   │  job done · job paused by a block · bringInside / bringAllInside      │
+   │  job done · paused by a block · exposure at warnAt · bringInside(All)  │
    └───────────────────────────────────────────────────────────────────────┘
- any state ──▶ dead: exposure full · countdown (empty reserve, cold) · extreme cold at
+ any state ──▶ dead: countdown (empty reserve, cold) · extreme cold at
                winter start without room in an insulated habitat · radiation storm active
                while outside or without room in a sheltered habitat
 ```
@@ -143,7 +143,7 @@ state transitions. Fields marked **v2** arrive with the `shared/contract-v2` PR
 - Kinds written by the engine core: `season_start`, `built`, `upgrade_installed`, `repaired`,
   `cleaned`, `death`, `power_shed`. Dev A writes `damaged`, `clogged`, `short_circuit`,
   `radiation_storm`.
-- Death causes: `exposure`, `empty_oxygen`, `empty_water`, `empty_food`, `cold`,
+- Death causes: `empty_oxygen`, `empty_water`, `empty_food`, `cold`,
   `radiation_storm`.
 
 ## WinTargets
