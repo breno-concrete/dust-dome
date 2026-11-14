@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
+    "ci:regression": "node .github/scripts/run-regression.mjs --skip-install && node .github/scripts/report.mjs && node .github/scripts/report.mjs --gate ci-out/errors.json",
     "data:fetch": "node scripts/fetch-donki.ts"
   },
   "dependencies": {

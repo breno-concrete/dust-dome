@@ -1,0 +1,65 @@
+name: Regression
+
+# Re-runs everything on main all the time and turns failures into GitHub issues.
+# Fully deterministic: no LLM, no API keys, no network except npm and the gh CLI.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Every hour, off the hour on purpose (scheduled runs at :00 are the most delayed).
+    # Scheduled workflows only run on the default branch. To turn this off, delete this block.
+    - cron: '17 * * * *'
+
+permissions:
+  contents: read
+  issues: write # only to open, comment on and close the CI issues
+
+concurrency:
+  group: regression
+  cancel-in-progress: false # let a run finish so issues are never half-updated
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      # Runs every step (install, format, lint, typecheck, tests + 1 retry, build)
+      # without stopping at the first failure. Always exits 0: failures are data for the next steps.
+      - name: Run all checks
+        run: node .github/scripts/run-regression.mjs --out ci-out
+
+      - name: Build the structured error log
+        if: always()
+        env:
+          COMMIT: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node .github/scripts/report.mjs --in ci-out --out ci-out/errors.json
+
+      # Only main files issues: a manual run on another branch must not open issues.
+      - name: Open, update and close issues
+        if: always() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node .github/scripts/file-issues.mjs --in ci-out/errors.json --ran ci-out/ran.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ci-out
+          path: ci-out/
+          retention-days: 7
+
+      # Last on purpose: the run is red when something failed, but the issues were already filed.
+      - name: Fail the run if anything failed
+        if: always()
+        run: node .github/scripts/report.mjs --gate ci-out/errors.json

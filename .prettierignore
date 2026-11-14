@@ -6,3 +6,4 @@ src/data/snapshots/*.json
 .specify
 .claude
 specs
+ci-out
