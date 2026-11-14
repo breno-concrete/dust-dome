@@ -162,6 +162,8 @@ Tolerance used everywhere below: `EPS = 1e-9` (floating-point only, not a balanc
   `cleanSeconds`, `demolishSeconds`. A demolish job refunds `demolishRefundShare` of the cost and
   of every paid upgrade (installed or still queued), drops the structure's other jobs and moves
   its occupants into another finished habitat that is not leaving too.
+  Repair parts are not refunded: they pay for the repair attempt, like a failed QTE (decided by
+  Breno, 2026-11-14).
 - **Rationale**: FR-023–FR-025; jobs that cannot run do not block the ones behind them; "lowest
   exposure first" spreads the radiation across the crew.
 - **Alternatives**: strict FIFO (one clean job during a storm would freeze the queue); letting the
