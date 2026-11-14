@@ -1,67 +1,79 @@
-# Quickstart: Events and NASA Data
+# Início rápido: Eventos e dados da NASA
 
-## Prerequisites
+## Pré-requisitos
 
 - Node.js `>=22.18`
-- Dependencies installed with the repository lockfile
-- Working branch with the `data/` prefix
+- Dependências instaladas com o lockfile do repositório
+- Branch de trabalho com o prefixo `data/`
 
-## Focused validation
+## Validação focada
 
-Run the event tests:
+Execute os testes de eventos:
 
 ```powershell
 npx vitest run src\engine\events\events.test.ts
 ```
 
-Expected result: scheduling, dust, darkness, global-storm, and radiation-storm tests pass.
+Resultado esperado: os testes de agendamento, poeira, escuridão, tempestade global e tempestade
+de radiação passam.
 
-Run the DONKI tests:
+Execute os testes do DONKI:
 
 ```powershell
 npx vitest run src\data\donki.test.ts
 ```
 
-Expected result: snapshot parsing, deterministic selection, and empty-data behavior pass.
+Resultado esperado: os testes de análise do snapshot, seleção determinística e comportamento para
+dados vazios passam.
 
-Run screen tests when US4 is implemented:
+Execute os testes das telas quando a US4 estiver implementada:
 
 ```powershell
 npx vitest run src\features\end\EndScreen.test.tsx src\features\sources\SourcesScreen.test.tsx
 ```
 
-Expected result: the debrief accounts for logged outcomes and the sources screen labels science,
-game values, simplifications, and archived DONKI data.
+Resultado esperado: o debrief contabiliza os resultados registrados e a tela de fontes identifica
+ciência, valores do jogo, simplificações e dados DONKI arquivados.
 
-## Data snapshot validation
+## Validação do snapshot de dados
 
-Use the existing script only when refreshing an explicitly approved archive range:
+Use o script existente somente ao atualizar um intervalo de arquivo explicitamente aprovado:
 
 ```powershell
 npm run data:fetch -- 2024-05-01 2024-05-31
 ```
 
-The resulting snapshot must be committed under `src/data/snapshots/`, reviewed for the expected
-SEP fields, and never fetched by the browser at runtime.
+O snapshot resultante deve ser versionado em `src/data/snapshots/`, revisado quanto aos campos SEP
+esperados e nunca buscado pelo navegador em runtime.
 
-## Full validation
+## Validação completa
 
-Before each story PR:
+Antes de cada PR de story:
 
 ```powershell
 npm run check
 ```
 
-Expected result: formatting, lint, type checking, all tests, and build pass. The ownership job is
-verified separately by CI before merge.
+Resultado esperado: formatação, lint, verificação de tipos, todos os testes e o build passam. O
+job de ownership é verificado separadamente pelo CI antes do merge.
 
-## Manual scenario checklist
+## Checklist de cenários manuais
 
-1. Start two missions with the same seed and advance them through the same season; compare event
-   times and targets.
-2. Observe a dust storm and confirm its solar reduction ends when the storm ends.
-3. Confirm damaged, clogged, and short-circuited structures remain in that state until repaired
-   or cleaned.
-4. Reach a radiation warning, shelter the crew, and confirm the storm names an archived DONKI
-   event.
-5. Finish a mission with logged losses and confirm the debrief explains every cause.
+1. Inicie duas missões com a mesma seed e avance-as pela mesma estação; compare os horários e
+   alvos dos eventos.
+2. Observe uma tempestade de poeira e confirme que sua redução solar termina quando a tempestade
+   acaba.
+3. No verão do ciclo 1, confirme que a primeira tempestade local começa 30 s depois do início da
+   estação e que a próxima só começa 30 s depois do fim da anterior (6 tempestades no verão com os
+   valores atuais; 5 densas no ciclo 2).
+4. Na primavera do ciclo 2, confirme que cada redemoinho danifica no máximo um painel e às vezes
+   entope um gerador de oxigênio; um painel ou gerador com filtro nunca é atingido.
+5. No verão do ciclo 3, confirme um curto a cada 45 s, sempre numa mina ou refinaria sem filtro, e
+   que a limpeza fica bloqueada o verão inteiro enquanto construir e reparar continuam.
+6. No inverno do ciclo 2, confirme que os painéis caem a 0 kW desde o primeiro segundo e que os
+   trabalhos externos ficam bloqueados.
+7. Confirme que estruturas danificadas, entupidas e em curto permanecem assim até serem reparadas
+   ou limpas, e que uma mina entupida que entra em curto volta a funcionar normal depois do reparo.
+8. Chegue a um aviso de radiação, abrigue a tripulação e confirme que a tempestade nomeia um
+   evento DONKI arquivado.
+9. Termine uma missão com perdas registradas e confirme que o debrief explica cada causa.

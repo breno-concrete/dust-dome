@@ -1,40 +1,58 @@
-# Events Engine Contract
+# Contrato do engine de eventos
 
-## Function
+## Função
 
 ```ts
 updateEvents(state: GameState, config: GameConfig, dt: number): GameState
 ```
 
-Defined in `src/engine/events/events.ts` and called by `tick()` after time advancement.
+Definida em `src/engine/events/events.ts` e chamada por `tick()` depois do avanço do tempo.
 
-## Inputs
+## Entradas
 
-- `state`: current immutable game state, including `time`, `rng`, structures, crew, jobs,
-  active events, radiation state, and log.
-- `config`: validated game configuration from the PO-owned JSON files.
-- `dt`: elapsed game seconds for the current tick.
+- `state`: estado imutável atual do jogo, incluindo `time`, `rng`, estruturas, tripulação,
+  trabalhos, eventos ativos, estado da radiação e log.
+- `config`: configuração validada do jogo a partir dos arquivos JSON sob responsabilidade dos POs.
+- `dt`: segundos de jogo decorridos no tick atual.
 
-## Outputs
+## Saídas
 
-Returns a new state reference only when event state changes. The function may update:
+Retorna uma nova referência de estado somente quando o estado dos eventos muda. A função pode
+atualizar:
 
 - `rng`;
 - `activeEvents`;
 - `nextEventAt`;
 - `radiationStorm`;
-- structure statuses;
-- crew outcomes required by the existing radiation contract;
-- jobs paused by a radiation warning;
-- event and loss log entries.
+- status das estruturas;
+- resultados da tripulação exigidos pelo contrato existente de radiação;
+- trabalhos pausados por um aviso de radiação;
+- entradas de eventos e perdas no log.
 
-## Invariants
+## Invariantes
 
-- No mutation of the input state.
-- No React, store, fetch, file I/O, timers, or `Math.random`.
-- Same seed, input state, configuration, and `dt` produce the same output.
-- Only rules matching the current cycle and season can schedule.
-- Temporary effects expire; persistent structure statuses remain until their fix.
-- Radiation storms use an archived DONKI citation when available.
-- Missing required contract state is a blocker for a separate `shared/` change, not a local cast or
-  silent fallback.
+- Não alterar o estado de entrada.
+- Não usar React, store, fetch, acesso a arquivos, timers ou `Math.random`.
+- A mesma seed, estado de entrada, configuração e `dt` produzem a mesma saída.
+- Somente regras compatíveis com o ciclo e a estação atuais podem ser agendadas.
+- `nextEventAt[rule.id]` é o início da próxima ocorrência; nas regras com duração, o intervalo
+  conta do fim da ocorrência anterior.
+- Eventos de estação inteira ficam ativos desde o primeiro tick da estação, uma única vez.
+- Ocorrências são aplicadas em ordem cronológica; o resultado não depende do tamanho de `dt`.
+- Efeitos temporários expiram; status persistentes das estruturas permanecem até sua correção.
+- Cada estrutura tem um único status; um evento nunca troca um status mais grave por um mais leve
+  (`short_circuit` > `damaged` > `clogged`).
+- Só estruturas prontas e sem `dust_filters` podem ser alvo; um tipo sem alvo elegível é ignorado.
+- Todo dano, entupimento e curto gera uma entrada de log com a estrutura em `ref` e o id da regra
+  em `cause`.
+- Nenhum número de balanceamento no código: os valores vêm da configuração.
+- Retorna a mesma referência de estado quando nada mudou.
+
+## Fora deste contrato (engine)
+
+`updateEvents` não bloqueia trabalhos, não altera produção e não mata astronautas por frio. O
+engine lê `activeEvents` (`solarFactor`, `blocksExternalJobs`, tempestades ativas) e os status das
+estruturas. Ver a seção "Fora do escopo da US2" em [spec.md](../spec.md).
+- Tempestades de radiação usam uma citação DONKI arquivada quando disponível.
+- Ausência de estado de contrato necessário bloqueia a implementação e exige uma alteração
+  `shared/` separada, não um cast local nem um fallback silencioso.

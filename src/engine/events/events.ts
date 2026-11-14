@@ -7,7 +7,8 @@ import type { EventRule, GameConfig, GameState } from '../types'
 
 /**
  * US1 — scheduling. `nextEventAt[rule.id]` is the game time of a rule's next occurrence,
- * counted from the start of the season and never later than the end of the season.
+ * counted from the start of the season (first occurrence) or from the end of the previous one
+ * (`durationSeconds` + interval), and never later than the end of the season.
  * Rules without `intervalSeconds` last the whole season and are not scheduled here.
  */
 // TODO(Dev A, US2–US3): apply the effects of each occurrence and the radiation storm.
@@ -35,12 +36,17 @@ export function updateEvents(state: GameState, config: GameConfig, _dt: number):
     Object.keys(nextEventAt).length !== Object.keys(state.nextEventAt).length
 
   let rng = state.rng
+  // `from` is when the wait starts: the season start, or the end of the previous occurrence.
   const draw = (rule: EventRule, from: number): number => {
     const [lo, hi] = rule.intervalSeconds!
     const r = nextRange(rng, lo * factor, hi * factor)
     rng = r.rng
     return Math.min(from + r.value, seasonEnd)
   }
+  // The interval counts from the moment an occurrence ends, so a rule with a duration waits
+  // for it first (PO decision T1). Only the first occurrence of the season has nothing to wait for.
+  const drawAfter = (rule: EventRule, startedAt: number): number =>
+    draw(rule, startedAt + (rule.durationSeconds ?? 0))
 
   for (const rule of rules) {
     if (!rule.intervalSeconds) continue
@@ -48,7 +54,7 @@ export function updateEvents(state: GameState, config: GameConfig, _dt: number):
     if (at === undefined) at = draw(rule, seasonStart)
     // Each occurrence that is due schedules the next one. Time stuck at the end of the
     // season is not an occurrence: the season ends first.
-    while (at <= elapsed && at < seasonEnd) at = draw(rule, at)
+    while (at <= elapsed && at < seasonEnd) at = drawAfter(rule, at)
     if (at !== state.nextEventAt[rule.id]) {
       nextEventAt[rule.id] = at
       changed = true
