@@ -6,6 +6,8 @@ import type {
   Astronaut,
   GameConfig,
   GameState,
+  Job,
+  JobKind,
   SeasonId,
   Stock,
   StructureInstance,
@@ -90,6 +92,61 @@ export function withEvents(
     ...e,
   }))
   return { ...state, activeEvents: [...state.activeEvents, ...added] }
+}
+
+export interface JobSpec {
+  kind: JobKind
+  structureId: string
+  upgradeId?: UpgradeId
+  status?: Job['status']
+  /** The astronaut doing an active job; they are put outside with this job. */
+  astronautId?: string | null
+  /** Defaults to the configured time of the job (the structure's build time for a build). */
+  remainingSeconds?: number
+}
+
+function configuredSeconds(state: GameState, config: GameConfig, spec: JobSpec): number {
+  const { jobs } = config.mission
+  switch (spec.kind) {
+    case 'build': {
+      const type = state.structures.find((s) => s.id === spec.structureId)?.type
+      const def = config.structures.find((d) => d.id === type)
+      if (!def) throw new Error(`no structure ${spec.structureId}`)
+      return def.buildSeconds
+    }
+    case 'upgrade':
+      return jobs.upgradeSeconds
+    case 'repair':
+      return jobs.repairSeconds
+    case 'clean':
+      return jobs.cleanSeconds
+    case 'demolish':
+      return jobs.demolishSeconds
+  }
+}
+
+/** Adds jobs at the end of the queue (queued unless the spec says otherwise). */
+export function withJobs(state: GameState, config: GameConfig, specs: JobSpec[]): GameState {
+  let nextId = state.nextId
+  let crew = state.crew
+  const added: Job[] = specs.map((spec) => {
+    const job: Job = {
+      id: `j${nextId++}`,
+      kind: spec.kind,
+      structureId: spec.structureId,
+      ...(spec.upgradeId ? { upgradeId: spec.upgradeId } : {}),
+      astronautId: spec.astronautId ?? null,
+      remainingSeconds: spec.remainingSeconds ?? configuredSeconds(state, config, spec),
+      status: spec.status ?? 'queued',
+    }
+    if (job.astronautId) {
+      crew = crew.map((a) =>
+        a.id === job.astronautId ? { ...a, location: 'outside', jobId: job.id } : a,
+      )
+    }
+    return job
+  })
+  return { ...state, crew, jobs: [...state.jobs, ...added], nextId }
 }
 
 /** Patches astronauts by index in crew order. */

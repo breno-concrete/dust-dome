@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { config } from '../config/loadConfig'
 import { createGame } from './game'
 import { footprint, placementError } from './placement'
+import { onlyStructures } from './testState'
+import type { StructureStatus } from './types'
 
 describe('placement', () => {
   const game = createGame(config, 1)
@@ -27,9 +29,35 @@ describe('placement', () => {
     expect(placementError(game, config, 'solar_panel', [x + 1, y + 1])).toBe('tile_blocked')
   })
 
-  it.todo('rejects with not_connected a habitat that shares no side with an existing habitat')
-  it.todo('a corner contact does not count as connected')
-  it.todo('accepts a habitat that shares a side, even with a habitat still under construction')
-  it.todo('places the first habitat anywhere when none exists')
-  it.todo('other structure types may go on any free tile')
+  // US4 (Breno) — constitution V, research R10
+  const oneHabitat = (status: StructureStatus = 'active') =>
+    onlyStructures(game, config, [{ type: 'habitat', tile: [0, 0], status }])
+
+  it('rejects with not_connected a habitat that shares no side with an existing habitat', () => {
+    expect(placementError(oneHabitat(), config, 'habitat', [6, 6])).toBe('not_connected')
+  })
+
+  it('a corner contact does not count as connected', () => {
+    // The 2x2 at [0,0] ends at tile [1,1]; a 2x2 at [2,2] only touches that corner.
+    expect(placementError(oneHabitat(), config, 'habitat', [2, 2])).toBe('not_connected')
+  })
+
+  it('accepts a habitat that shares a side, even with a habitat still under construction', () => {
+    expect(placementError(oneHabitat(), config, 'habitat', [2, 0])).toBeNull()
+    expect(placementError(oneHabitat(), config, 'habitat', [1, 2])).toBeNull()
+    expect(placementError(oneHabitat('building'), config, 'habitat', [0, 2])).toBeNull()
+  })
+
+  it('places the first habitat anywhere when none exists', () => {
+    const noHabitat = onlyStructures(game, config, [{ type: 'solar_panel', tile: [0, 0] }])
+    expect(placementError(noHabitat, config, 'habitat', [8, 8])).toBeNull()
+  })
+
+  it('other structure types may go on any free tile', () => {
+    const loose = config.structures.filter((d) => d.connectsTo.length === 0)
+    expect(loose.length).toBeGreaterThan(0)
+    for (const def of loose) {
+      expect(placementError(oneHabitat(), config, def.id, [8, 8])).toBeNull()
+    }
+  })
 })
