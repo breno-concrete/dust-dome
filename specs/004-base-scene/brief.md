@@ -28,6 +28,12 @@ minigame that repairs broken structures.
 Everything that decides what the scene shows lives in pure functions with Vitest tests
 (`iso.ts`, `visualState.ts`). The R3F components only draw what those functions return.
 
+For manual visual verification in `npm run dev`, `src/features/scene/DevVisualInspector.tsx`
+provides a **dev-only** floating panel (strictly gated by `import.meta.env.DEV && !import.meta.env.VITEST`
+so it is stripped from production builds and Vitest). **Any upcoming scene features (US3, US4,
+and future visual/audio/marker states) should add their manual test toggles to `DevVisualInspector.tsx`**
+rather than waiting for live game events or mixing debug UI into production code.
+
 ## User stories (one PR each, tests first)
 
 | # | Story | Target | Tests to turn green |

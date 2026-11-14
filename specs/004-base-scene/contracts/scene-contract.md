@@ -29,3 +29,9 @@
 ## Component Exports
 - `src/features/scene/Scene.tsx`: `export default function Scene()` (lazy-loaded by `src/app/App.tsx`).
 - `src/features/repair/RepairQte.tsx`: `export function RepairQte()`.
+
+## Dev-Only Visual Inspector (Dev/Prod Barrier)
+- **Module**: `src/features/scene/DevVisualInspector.tsx` and `src/features/scene/DevVisualInspector.module.css`.
+- **Strict Build Barrier**: `Scene.tsx` imports only `type` definitions statically and lazy-loads `DevVisualInspector` strictly behind `import.meta.env.DEV && !import.meta.env.VITEST`. Production builds (`npm run build`) eliminate the branch and exclude the dev panel and its CSS from the production bundle.
+- **State Boundary**: Overrides live purely in local React state inside `Scene.tsx` (`devOverrides`) and never mutate `GameState` or call forbidden store actions.
+- **Rule for Future Changes**: All upcoming scene/QTE/audio/marker additions (e.g., US3, US4, or new visual states) **MUST** register their manual test controls inside `DevVisualInspector.tsx` so developers can test them immediately without waiting for the game loop, while keeping production UI completely clean.

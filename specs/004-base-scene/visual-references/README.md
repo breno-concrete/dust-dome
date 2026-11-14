@@ -69,3 +69,22 @@ Arquivo: `img1 - lote4.png`.
    - Uniforme espacial em tons bege/areia com listras decorativas em vermelho marciano.
 2. **Aplicação**:
    - Servirá como referência estrita de fenótipo para os diálogos narrativos do Dev B (`specs/003-game-ui`) e para o avatar dos briefings sazonais da Comandante Vega.
+
+---
+
+## 🖥️ Lote 5: Layout Completo dos Menus e Alvo da Modelagem 3D Final
+
+Arquivo: `img1 - lote5.jpg`.
+
+### O que extrair e aplicar
+1. **Layout e Composição da Interface 2D (Expectativa do Time)**:
+   - **HUD Superior**: Barra de status compacta com indicador de Sol/Estação/Tempo (`SOL 014 · Ano 01 · Primavera`), controles de velocidade (`Pausa`, `1×`), carteira de materiais (`Hematita`, `Regolito`, `Ferro`) com ícones minimalistas e balanço de energia destacado (`+18 kW`).
+   - **Painel Lateral Esquerdo (Suporte à Vida & Tripulação)**: Cartões flutuantes em tons de areia/bege suave (`#f5f1ea`) com cantos arredondados (`border-radius`), barras de progresso horizontais com percentuais para Alimentos, Água e Oxigênio, e status individual dos 4 astronautas com avatar, cargo e saúde/exposição.
+   - **Barra de Ações Inferior**: Botões de decisão centralizados e acessíveis (`Visão geral`, `Controle de energia [P]`, `Construir [B]` em tom terracota de destaque).
+   - **Controles de Câmera/Navegação**: Controles de zoom flutuantes no canto inferior direito (`- 100% +`).
+2. **Alvo Visual da Modelagem 3D (Cena Isométrica Final)**:
+   - **Padrão Estético Oficial**: A modelagem vista na imagem representa a meta e o resultado final esperado para o jogo no Three.js / React Three Fiber.
+   - **Módulos da Base**: Estruturas cúbicas com chanfros superiores em branco espacial (`#f0f3f6`), frisos em laranja/vermelho de segurança e cúpulas/observatórios no teto.
+   - **Tanques Industriais e Torres**: Silos cilíndricos brancos verticais conectados em pares e torre treliçada com antena parabólica/radar direcional.
+   - **Matrizes Solares**: Painéis fotovoltaicos azuis escuros em planos inclinados com moldura branca, agrupados em baterias simétricas.
+   - **Integração com Terreno**: Terreno em areia/terracota suave com crateras rasas, montanhas e rochas facetadas ao fundo, transmitindo uma atmosfera marciana aconchegante, limpa e convidativa para o público jovem.

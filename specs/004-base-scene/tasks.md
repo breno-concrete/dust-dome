@@ -82,14 +82,16 @@ description: "Task list for 004 Isometric Base Scene and Repair QTE"
 
 > **NOTE: Write failing tests FIRST for the existing `it.todo` items and structure visual cues, verify red, then implement.**
 
-- [ ] T010 [US2] Convert `it.todo` tests (`an unheated base shows frost on the habitats`, `the radiation alarm tints the scene during the warning phase`) and add tests for per-structure visual state & non-color cue mapping (`building`, `active`, `damaged`, `clogged`, `short_circuit`, `frost`) in `src/features/scene/visualState.test.ts`
+- [x] T010 [US2] Convert `it.todo` tests (`an unheated base shows frost on the habitats`, `the radiation alarm tints the scene during the warning phase`) and add tests for per-structure visual state & non-color cue mapping (`building`, `active`, `damaged`, `clogged`, `short_circuit`, `frost`) in `src/features/scene/visualState.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Extend `VisualState` (`frost: boolean` from `game.power.unheated`, `radiationTint: boolean` from `game.radiationStorm?.phase === 'warning'`) and add pure `structureVisualState(structure, visual)` returning `status`, `color`, and `nonColorCue` (`'none' | 'construction' | 'damage' | 'dust' | 'sparks' | 'frost'`) in `src/features/scene/visualState.ts`
-- [ ] T012 [US2] Render non-color visual cues (construction scaffolding/outline, damage smoke/tilt, dust overlay, short-circuit sparks, and habitat frost geometry/material) in `src/features/scene/StructureModel.tsx`
-- [ ] T013 [US2] Render scene-level dust haze (fog/particles), winter darkness lighting, and radiation storm warning tint driven by `visualState(game, config)` in `src/features/scene/Scene.tsx`
-- [ ] T014 [US2] Run `npx vitest run src/features/scene/visualState.test.ts` and `npm run check` to verify US2 passes all checks
+- [x] T011 [US2] Extend `VisualState` (`frost: boolean` from `game.power.unheated`, `radiationTint: boolean` from `game.radiationStorm?.phase === 'warning'`) and add pure `structureVisualState(structure, visual)` returning `status`, `color`, and `nonColorCue` (`'none' | 'construction' | 'damage' | 'dust' | 'sparks' | 'frost'`) in `src/features/scene/visualState.ts`
+- [x] T012 [US2] Render non-color visual cues (construction scaffolding/outline, damage smoke/tilt, dust overlay, short-circuit sparks, and habitat frost geometry/material) in `src/features/scene/StructureModel.tsx`
+- [x] T013 [US2] Render scene-level dust haze (fog/particles), winter darkness lighting, and radiation storm warning tint driven by `visualState(game, config)` in `src/features/scene/Scene.tsx` (plus dev-only `src/features/scene/DevVisualInspector.tsx` gated by `import.meta.env.DEV && !import.meta.env.VITEST` for instant visual testing of weather, frost, radiation, and structure statuses)
+- [x] T014 [US2] Run `npx vitest run src/features/scene/visualState.test.ts` and `npm run check` to verify US2 passes all checks
+
+> **Dev Panel Convention**: Keep extending `src/features/scene/DevVisualInspector.tsx` (never production components) when adding new visual, QTE, astronaut-marker, or audio features in US3/US4 so they can be tested immediately in `npm run dev` while remaining excluded from `npm run build`.
 
 **Checkpoint**: User Story 2 is independently testable and ready for its PR (`scene/us2-visual-states`).
 

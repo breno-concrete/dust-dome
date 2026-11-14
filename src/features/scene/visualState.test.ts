@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { config } from '../../config/loadConfig'
 import { createGame } from '../../engine/game'
-import type { ActiveEvent } from '../../engine/types'
-import { visualState } from './visualState'
+import type { ActiveEvent, StructureInstance } from '../../engine/types'
+import { STATUS_COLOR, structureVisualState, visualState } from './visualState'
 
 const storm: ActiveEvent = {
   id: 'e1',
@@ -12,6 +12,15 @@ const storm: ActiveEvent = {
   solarFactor: 0.2,
   blocksExternalJobs: false,
 }
+
+const makeStructure = (overrides: Partial<StructureInstance> = {}): StructureInstance => ({
+  id: 's1',
+  type: 'solar_panel',
+  tile: [2, 2],
+  status: 'active',
+  upgrades: [],
+  ...overrides,
+})
 
 describe('visualState', () => {
   const game = createGame(config, 1)
@@ -40,7 +49,75 @@ describe('visualState', () => {
     expect(dusty.light).toBeLessThan(clear.light)
   })
 
-  // US2 (Dev C)
-  it.todo('an unheated base shows frost on the habitats')
-  it.todo('the radiation alarm tints the scene during the warning phase')
+  it('an unheated base shows frost on the habitats', () => {
+    const heated = visualState(game, config)
+    const unheated = visualState({ ...game, power: { ...game.power, unheated: true } }, config)
+    expect(heated.frost).toBe(false)
+    expect(unheated.frost).toBe(true)
+
+    const habitat = makeStructure({ type: 'habitat', status: 'active' })
+    const solar = makeStructure({ type: 'solar_panel', status: 'active' })
+    expect(structureVisualState(habitat, unheated).nonColorCue).toBe('frost')
+    expect(structureVisualState(solar, unheated).nonColorCue).toBe('none')
+  })
+
+  it('the radiation alarm tints the scene during the warning phase', () => {
+    const calm = visualState(game, config)
+    const warning = visualState(
+      {
+        ...game,
+        radiationStorm: { phase: 'warning', phaseEndsAt: 10, basedOn: null },
+      },
+      config,
+    )
+    const activeStorm = visualState(
+      {
+        ...game,
+        radiationStorm: { phase: 'active', phaseEndsAt: 40, basedOn: null },
+      },
+      config,
+    )
+    expect(calm.radiationTint).toBe(false)
+    expect(warning.radiationTint).toBe(true)
+    expect(activeStorm.radiationTint).toBe(false)
+  })
+
+  it('maps damaged, clogged, short-circuited, building and active structures to distinct colors and non-color cues', () => {
+    const clear = visualState(game, config)
+
+    const active = structureVisualState(makeStructure({ status: 'active' }), clear)
+    expect(active).toMatchObject({
+      status: 'active',
+      color: STATUS_COLOR.active,
+      nonColorCue: 'none',
+    })
+
+    const building = structureVisualState(makeStructure({ status: 'building' }), clear)
+    expect(building).toMatchObject({
+      status: 'building',
+      color: STATUS_COLOR.building,
+      nonColorCue: 'construction',
+    })
+
+    const damaged = structureVisualState(makeStructure({ status: 'damaged' }), clear)
+    expect(damaged).toMatchObject({
+      status: 'damaged',
+      color: STATUS_COLOR.damaged,
+      nonColorCue: 'damage',
+    })
+
+    const clogged = structureVisualState(makeStructure({ status: 'clogged' }), clear)
+    expect(clogged).toMatchObject({
+      status: 'clogged',
+      color: STATUS_COLOR.clogged,
+      nonColorCue: 'dust',
+    })
+
+    const shortCircuit = structureVisualState(makeStructure({ status: 'short_circuit' }), clear)
+    expect(shortCircuit).toMatchObject({
+      status: 'short_circuit',
+      color: STATUS_COLOR.short_circuit,
+      nonColorCue: 'sparks',
+    })
+  })
 })
