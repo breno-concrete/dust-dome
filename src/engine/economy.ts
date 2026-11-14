@@ -21,7 +21,7 @@ interface Process {
 }
 
 /** How much of its normal output a structure gives in this condition. */
-function conditionFactor(status: StructureStatus, damage: MissionConfig['damage']): number {
+export function conditionFactor(status: StructureStatus, damage: MissionConfig['damage']): number {
   switch (status) {
     case 'active':
       return 1
