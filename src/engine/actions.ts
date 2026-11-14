@@ -1,7 +1,7 @@
 // Owner: Breno. Player actions. Each returns an ActionResult and never throws.
 // Validation order and refusals: research R9. bringInside / bringAllInside: US5 (R12).
 import { isHousing, occupantsOf, roomIn } from './habitats'
-import { dustStormActive, externalJobsBlocked, jobSeconds } from './jobs'
+import { beingDemolished, dustStormActive, externalJobsBlocked, jobSeconds } from './jobs'
 import { placementError, sideGroups } from './placement'
 import type {
   ActionError,
@@ -34,8 +34,6 @@ const defOf = (config: GameConfig, type: StructureTypeId) =>
 const structureOf = (state: GameState, id: string) => state.structures.find((s) => s.id === id)
 const hasJob = (state: GameState, structureId: string, test: (j: Job) => boolean) =>
   state.jobs.some((j) => j.structureId === structureId && test(j))
-const beingDemolished = (state: GameState, structureId: string) =>
-  hasJob(state, structureId, (j) => j.kind === 'demolish')
 
 function canAfford(state: GameState, cost: Record<string, number>): boolean {
   return Object.entries(cost).every(([res, amount]) => (state.stock[res] ?? 0) >= amount - EPS)
@@ -214,7 +212,18 @@ export function demolish(state: GameState, config: GameConfig, structureId: stri
       )
     if (linked(rest) > linked(staying)) return refuse(state, 'not_connected')
   }
-  return ok(queueJob(state, config, 'demolish', target))
+  // Cancelling a construction: the build stops now, so only one astronaut goes outside.
+  const buildJob = state.jobs.find((j) => j.structureId === target.id && j.kind === 'build')
+  const stopped: GameState = buildJob
+    ? {
+        ...state,
+        jobs: state.jobs.filter((j) => j.id !== buildJob.id),
+        crew: state.crew.map((a) =>
+          a.jobId === buildJob.id ? { ...a, location: 'inside', jobId: null } : a,
+        ),
+      }
+    : state
+  return ok(queueJob(stopped, config, 'demolish', target))
 }
 
 export function dismissBriefing(state: GameState): ActionResult {

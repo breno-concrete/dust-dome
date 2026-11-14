@@ -389,6 +389,17 @@ describe('demolish', () => {
     }
     expect(after.crew.every((a) => a.location === 'inside' && a.jobId === null)).toBe(true)
   })
+
+  it('cancelling a construction stops its build job, so only one astronaut goes outside', () => {
+    const s = spring()
+    let site = okState(build(s, config, 'solar_panel', [0, 0]))
+    site = updateJobs(site, config, 0) // the builder is already outside
+    const cancelled = okState(demolish(site, config, last(site).id))
+    expect(cancelled.jobs.map((j) => j.kind)).toEqual(['demolish'])
+    expect(cancelled.crew.every((a) => a.location === 'inside' && a.jobId === null)).toBe(true)
+    const working = updateJobs(cancelled, config, 0)
+    expect(working.crew.filter((a) => a.location === 'outside')).toHaveLength(1)
+  })
 })
 
 describe('dismissBriefing', () => {

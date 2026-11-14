@@ -1,5 +1,6 @@
 // Owner: Breno. Grid rules (constitution V). Pure; the scene uses it through
 // selectors in src/app/selectors.ts to show a valid/invalid placement preview.
+import { beingDemolished } from './jobs'
 import type {
   ActionError,
   GameConfig,
@@ -46,7 +47,9 @@ export function placementError(
 
   // Principle V (R10): e.g. a new habitat module must share a side with an existing one.
   const linksTo = config.structures.find((d) => d.id === type)?.connectsTo ?? []
-  const anchors = state.structures.filter((s) => linksTo.includes(s.type))
+  const anchors = state.structures.filter(
+    (s) => linksTo.includes(s.type) && !beingDemolished(state, s.id),
+  )
   if (
     anchors.length > 0 &&
     !anchors.some((s) => sharesSide(wanted, footprint(config, s.type, s.tile)))

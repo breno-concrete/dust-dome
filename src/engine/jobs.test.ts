@@ -173,6 +173,27 @@ describe('updateJobs', () => {
     expect(s.crew.every((a) => a.habitatId === second.id)).toBe(true)
   })
 
+  it('the occupants never move into a habitat that is also being demolished', () => {
+    // Three habitats in an L; the crew lives in the corner one. Corner and right are leaving.
+    const base = onlyStructures(gameAt(config, 1, 'spring'), config, [
+      { type: 'habitat', tile: [0, 0] },
+      { type: 'habitat', tile: [2, 0] },
+      { type: 'habitat', tile: [0, 2] },
+    ])
+    const [corner, right, below] = base.structures
+    const housed = withCrew(
+      base,
+      base.crew.map((_, i) => ({ habitatId: corner.id, resting: i > 0 })),
+    )
+    let s = withJobs(housed, config, [
+      { kind: 'demolish', structureId: corner.id, status: 'active', astronautId: base.crew[0].id },
+      { kind: 'demolish', structureId: right.id },
+    ])
+    s = updateJobs(s, config, times.demolishSeconds)
+    expect(s.structures.map((x) => x.id)).toEqual([right.id, below.id])
+    expect(s.crew.every((a) => a.habitatId === below.id)).toBe(true)
+  })
+
   it('an upgrade job adds the upgrade to the structure', () => {
     const { s, panel } = panelWith('active', [{ kind: 'upgrade', upgradeId: 'dust_filters' }])
     let after = updateJobs(s, config, 0)

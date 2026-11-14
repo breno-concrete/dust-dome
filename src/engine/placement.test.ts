@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { config } from '../config/loadConfig'
 import { createGame } from './game'
 import { footprint, placementError } from './placement'
-import { onlyStructures } from './testState'
+import { onlyStructures, withJobs } from './testState'
 import type { StructureStatus } from './types'
 
 describe('placement', () => {
@@ -46,6 +46,17 @@ describe('placement', () => {
     expect(placementError(oneHabitat(), config, 'habitat', [2, 0])).toBeNull()
     expect(placementError(oneHabitat(), config, 'habitat', [1, 2])).toBeNull()
     expect(placementError(oneHabitat('building'), config, 'habitat', [0, 2])).toBeNull()
+  })
+
+  it('a habitat being demolished does not count as a connection', () => {
+    const two = onlyStructures(game, config, [
+      { type: 'habitat', tile: [0, 0] },
+      { type: 'habitat', tile: [2, 0] },
+    ])
+    const leaving = withJobs(two, config, [{ kind: 'demolish', structureId: two.structures[1].id }])
+    // [4,0] only touches the habitat at [2,0], which is on its way out.
+    expect(placementError(leaving, config, 'habitat', [4, 0])).toBe('not_connected')
+    expect(placementError(leaving, config, 'habitat', [0, 2])).toBeNull()
   })
 
   it('places the first habitat anywhere when none exists', () => {

@@ -19,6 +19,11 @@ export function externalJobsBlocked(state: GameState): boolean {
   return state.activeEvents.some((e) => e.blocksExternalJobs)
 }
 
+/** A demolish job is waiting or running: for the grid and habitat rules it is already gone. */
+export function beingDemolished(state: GameState, structureId: string): boolean {
+  return state.jobs.some((j) => j.kind === 'demolish' && j.structureId === structureId)
+}
+
 export function dustStormActive(state: GameState): boolean {
   return state.activeEvents.some((e) => e.kind === 'dust_storm' || e.kind === 'global_dust_storm')
 }
@@ -167,7 +172,9 @@ function removeStructure(state: GameState, config: GameConfig, target: Structure
   }
   for (const a of s.crew.filter((x) => x.habitatId === target.id)) {
     const home = a.alive
-      ? s.structures.find((x) => isHousing(config, x) && roomIn(s, config, x) > 0)
+      ? s.structures.find(
+          (x) => isHousing(config, x) && roomIn(s, config, x) > 0 && !beingDemolished(s, x.id),
+        )
       : undefined
     s = {
       ...s,
