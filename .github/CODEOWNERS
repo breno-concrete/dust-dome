@@ -6,8 +6,7 @@
 # Who is who:
 #   breno-concrete = Breno, tech lead / engine     caio-nascime = events, NASA data, debrief
 #   jvsauma        = 2D UI / UI kit                pedrolmelo   = isometric scene, repair QTE
-#   athyelbrito    = game product owner
-# The science product owner joins later: add their username to the /src/config/*.json line.
+#   athyelbrito    = game product owner            Straus23     = science product owner
 
 # Repo plumbing, dependencies, agent and Spec Kit setup
 /.github/                @breno-concrete @caio-nascime
@@ -25,7 +24,7 @@
 /src/app/                @breno-concrete @jvsauma @pedrolmelo
 
 # Game content and balance (numbers and texts) belong to the POs
-/src/config/*.json       @athyelbrito
+/src/config/*.json       @athyelbrito @Straus23
 
 # Shared visual building blocks used by every screen
 /src/ui-kit/             @jvsauma @caio-nascime
