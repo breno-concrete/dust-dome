@@ -43,6 +43,8 @@ const ALWAYS_ALLOWED = ['CREDITS.md']
 
 function areaFor(branch) {
   if (branch.startsWith('shared/')) return 'shared'
+  // Sprint review PR (develop -> main): every story PR inside it already passed this check.
+  if (branch === 'develop') return 'sprint'
   // POs editing on github.com get branches like "maria-patch-1".
   if (/(^|-)patch-\d+$/.test(branch)) return 'content'
   const prefix = branch.split('/')[0]
@@ -73,6 +75,11 @@ if (area === null) {
     `Branch "${branch}" has no known area prefix. Use one of: ${Object.keys(AREAS).join('/, ')}/, shared/`,
   )
   process.exit(1)
+}
+
+if (area === 'sprint') {
+  console.log(`develop -> main sprint review: ${files.length} file(s); each story PR was checked.`)
+  process.exit(0)
 }
 
 if (area === 'shared') {
