@@ -35,6 +35,17 @@ export function conditionFactor(status: StructureStatus, damage: MissionConfig['
   }
 }
 
+/**
+ * Floating point leaves crumbs: 8 + x − x can end as 7.999999999999999, which the HUD shows as 7.
+ * A value this close to a whole number is snapped to it. Far below any real per-step amount.
+ */
+const CRUMB = 1e-9
+
+function snap(n: number): number {
+  const whole = Math.round(n)
+  return Math.abs(n - whole) < CRUMB ? whole : n
+}
+
 /** Runs one process at the fraction its scarcest input allows; never leaves a stock below 0. */
 function runProcess(stock: Stock, p: Process) {
   const inputs = Object.entries(p.inputs)
@@ -89,5 +100,6 @@ export function applyProduction(state: GameState, config: GameConfig, dt: number
     stock[r] = Math.max(0, (stock[r] ?? 0) - n * living * perSeason)
   }
 
+  for (const r of Object.keys(stock)) stock[r] = snap(stock[r])
   return { ...state, stock }
 }
