@@ -1,4 +1,4 @@
-// Owner: Breno. Game clock: seasons and cycles (constitution II.3).
+// Owner: Breno. Game clock: seasons and cycles (constitution II.3). Smoke test: do not merge.
 import type { GameConfig, GameState } from './types'
 
 // TODO(Breno, US1): season rollover with remainder, winter -> next cycle,
