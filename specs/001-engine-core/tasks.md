@@ -117,19 +117,19 @@ consumption (FR-006–FR-010; R3, R4).
 
 ### Tests for User Story 2 ⚠️ (write first, must fail)
 
-- [ ] T026 [US2] Create branch `engine/us2-economy`, then in `src/engine/economy.test.ts` turn "produces each structure output per second = per-season amount / season duration" into a test: a state with only one mine (`onlyStructures`), crew alive, apply one full season of 1 s steps → hematite and regolith grew by `outputs.min` within 1 %
-- [ ] T027 [US2] In `src/engine/economy.test.ts` turn "uses the min or max amounts from the power mode of the structure type" into a test (same state, `powerModes.mine = 'max'` → `outputs.max`)
-- [ ] T028 [US2] In `src/engine/economy.test.ts` turn "produces nothing when the type is off or shed by the brownout" into a test (`powerModes` off, and separately `power.shed` containing the type)
-- [ ] T029 [US2] In `src/engine/economy.test.ts` turn "consumes inputs and stops producing when an input runs out" into a test: an iron refinery with less hematite than one step needs → hematite ends at exactly 0, iron grows in proportion to the hematite used, no stock below 0
-- [ ] T030 [US2] In `src/engine/economy.test.ts` turn "applies damaged x damagedFactor, clogged x cloggedFactor, short_circuit x 0" into a test, including that the factor also scales a converter's inputs (R4)
-- [ ] T031 [US2] In `src/engine/economy.test.ts` turn "ignores structures that are still being built" into a test
-- [ ] T032 [US2] In `src/engine/economy.test.ts` turn "living astronauts consume oxygen, water and food per season" into a test (one full season with no producers → each vital stock dropped by `needs × living crew`; a dead astronaut consumes nothing)
-- [ ] T033 [US2] In `src/engine/economy.test.ts` add the test "converters that share an input are served in reverse brownout order" (repair workshop and steel factory with iron for only one of them: the one later in `mission.brownoutOrder` gets it first)
-- [ ] T034 [US2] Run `npx vitest run src/engine/economy.test.ts`, confirm red for the right reason, commit `test(us2): production and consumption (red)`
+- [x] T026 [US2] Create branch `engine/us2-economy`, then in `src/engine/economy.test.ts` turn "produces each structure output per second = per-season amount / season duration" into a test: a state with only one mine (`onlyStructures`), crew alive, apply one full season of 1 s steps → hematite and regolith grew by `outputs.min` within 1 %
+- [x] T027 [US2] In `src/engine/economy.test.ts` turn "uses the min or max amounts from the power mode of the structure type" into a test (same state, `powerModes.mine = 'max'` → `outputs.max`)
+- [x] T028 [US2] In `src/engine/economy.test.ts` turn "produces nothing when the type is off or shed by the brownout" into a test (`powerModes` off, and separately `power.shed` containing the type)
+- [x] T029 [US2] In `src/engine/economy.test.ts` turn "consumes inputs and stops producing when an input runs out" into a test: an iron refinery with less hematite than one step needs → hematite ends at exactly 0, iron grows in proportion to the hematite used, no stock below 0
+- [x] T030 [US2] In `src/engine/economy.test.ts` turn "applies damaged x damagedFactor, clogged x cloggedFactor, short_circuit x 0" into a test, including that the factor also scales a converter's inputs (R4)
+- [x] T031 [US2] In `src/engine/economy.test.ts` turn "ignores structures that are still being built" into a test
+- [x] T032 [US2] In `src/engine/economy.test.ts` turn "living astronauts consume oxygen, water and food per season" into a test (one full season with no producers → each vital stock dropped by `needs × living crew`; a dead astronaut consumes nothing)
+- [x] T033 [US2] In `src/engine/economy.test.ts` add the test "converters that share an input are served in reverse brownout order" (repair workshop and steel factory with iron for only one of them: the one later in `mission.brownoutOrder` gets it first)
+- [x] T034 [US2] Run `npx vitest run src/engine/economy.test.ts`, confirm red for the right reason, commit `test(us2): production and consumption (red)`
 
 ### Implementation for User Story 2
 
-- [ ] T035 [US2] In `src/engine/economy.ts` implement `applyProduction(state, config, dt)` per R3–R4: per-step amount `= perSeason × dt / seasonDuration`; skip `building`, `off` and shed types; condition factor from `mission.damage` scales inputs and outputs (`short_circuit` = 0); process producers without inputs, then converters by type in reverse `mission.brownoutOrder` then creation order (fraction `f = min(1, available / need)`), then crew consumption from `mission.needs`; clamp every stock at 0
+- [x] T035 [US2] In `src/engine/economy.ts` implement `applyProduction(state, config, dt)` per R3–R4: per-step amount `= perSeason × dt / seasonDuration`; skip `building`, `off` and shed types; condition factor from `mission.damage` scales inputs and outputs (`short_circuit` = 0); process producers without inputs, then converters by type in reverse `mission.brownoutOrder` then creation order (fraction `f = min(1, available / need)`), then crew consumption from `mission.needs`; clamp every stock at 0
 - [ ] T036 [US2] Run `npx vitest run src/engine/economy.test.ts` (green), refactor, `npm run check`, commit `feat(us2): production and consumption`, open the PR from `engine/us2-economy`, merge on green
 
 **Checkpoint**: reserves rise and fall through the seasons.
@@ -145,25 +145,25 @@ consumption (FR-006–FR-010; R3, R4).
 
 ### Tests for User Story 3 ⚠️ (write first, must fail)
 
-- [ ] T037 [US3] Create branch `engine/us3-power`, then in `src/engine/power.test.ts` turn "solar panels produce kwBySeason x the active events solarFactor" into a test, including two active events whose factors multiply
-- [ ] T038 [US3] In `src/engine/power.test.ts` turn "solar panels produce 0 in winter from seasons.winterDarknessFromCycle" into a test (winter of that cycle → 0; winter of cycle 1 → `kwBySeason.winter`)
-- [ ] T039 [US3] In `src/engine/power.test.ts` turn "a damaged panel produces x damagedFactor" into a test
-- [ ] T040 [US3] In `src/engine/power.test.ts` turn "the reactor produces its constant kW in every season and event" into a test (all four seasons, cycle 3, with darkness and a storm active)
-- [ ] T041 [US3] In `src/engine/power.test.ts` turn "consumers draw 0 (off), minKw (min) or maxKw (max)" into a test, plus "structures under construction and short-circuited structures draw nothing"
-- [ ] T042 [US3] In `src/engine/power.test.ts` turn "heatingKw by cycle and season replaces minKw; max adds maxKw - minKw" into a test (greenhouse or ice melter at min and max, habitat always at min)
-- [ ] T043 [US3] In `src/engine/power.test.ts` turn "an insulated habitat uses insulatedHeatingKw" into a test (upgrade found through `upgrades.json` `effect: "insulation"`)
-- [ ] T044 [US3] In `src/engine/power.test.ts` turn "surplus charges batteries up to their capacity; deficit drains them" into a test (capacity = sum of finished battery banks' `capacityEu`; a bank under construction stores nothing; charge stays within `[0, capacity]`)
-- [ ] T045 [US3] In `src/engine/power.test.ts` turn "with batteries empty, sheds types in mission.brownoutOrder until demand fits" into a test
-- [ ] T046 [US3] In `src/engine/power.test.ts` turn "never sheds habitats and flags unheated when even their heating cannot be met" into a test
-- [ ] T047 [US3] In `src/engine/power.test.ts` add tests "a shed type comes back when production alone covers it", "every shed type comes back when the batteries are full", "a step with batteries above empty does not shed" and "logs power_shed only when the shed set changes" (R6)
-- [ ] T048 [P] [US3] In `src/engine/game.test.ts` add the test "createGame already has a power report" (production and demand of the starting base are above 0, batteries unchanged)
-- [ ] T049 [US3] Run `npx vitest run src/engine/power.test.ts src/engine/game.test.ts`, confirm red, commit `test(us3): power, heating, batteries and brownout (red)`
+- [X] T037 [US3] Create branch `engine/us3-power`, then in `src/engine/power.test.ts` turn "solar panels produce kwBySeason x the active events solarFactor" into a test, including two active events whose factors multiply
+- [X] T038 [US3] In `src/engine/power.test.ts` turn "solar panels produce 0 in winter from seasons.winterDarknessFromCycle" into a test (winter of that cycle → 0; winter of cycle 1 → `kwBySeason.winter`)
+- [X] T039 [US3] In `src/engine/power.test.ts` turn "a damaged panel produces x damagedFactor" into a test
+- [X] T040 [US3] In `src/engine/power.test.ts` turn "the reactor produces its constant kW in every season and event" into a test (all four seasons, cycle 3, with darkness and a storm active)
+- [X] T041 [US3] In `src/engine/power.test.ts` turn "consumers draw 0 (off), minKw (min) or maxKw (max)" into a test, plus "structures under construction and short-circuited structures draw nothing"
+- [X] T042 [US3] In `src/engine/power.test.ts` turn "heatingKw by cycle and season replaces minKw; max adds maxKw - minKw" into a test (greenhouse or ice melter at min and max, habitat always at min)
+- [X] T043 [US3] In `src/engine/power.test.ts` turn "an insulated habitat uses insulatedHeatingKw" into a test (upgrade found through `upgrades.json` `effect: "insulation"`)
+- [X] T044 [US3] In `src/engine/power.test.ts` turn "surplus charges batteries up to their capacity; deficit drains them" into a test (capacity = sum of finished battery banks' `capacityEu`; a bank under construction stores nothing; charge stays within `[0, capacity]`)
+- [X] T045 [US3] In `src/engine/power.test.ts` turn "with batteries empty, sheds types in mission.brownoutOrder until demand fits" into a test
+- [X] T046 [US3] In `src/engine/power.test.ts` turn "never sheds habitats and flags unheated when even their heating cannot be met" into a test
+- [X] T047 [US3] In `src/engine/power.test.ts` add tests "a shed type comes back when production alone covers it", "every shed type comes back when the batteries are full", "a step with batteries above empty does not shed" and "logs power_shed only when the shed set changes" (R6)
+- [X] T048 [P] [US3] In `src/engine/game.test.ts` add the test "createGame already has a power report" (production and demand of the starting base are above 0, batteries unchanged)
+- [X] T049 [US3] Run `npx vitest run src/engine/power.test.ts src/engine/game.test.ts`, confirm red, commit `test(us3): power, heating, batteries and brownout (red)`
 
 ### Implementation for User Story 3
 
-- [ ] T050 [US3] In `src/engine/power.ts` implement `computePower(state, config, dt)` per R5–R7 and export `demandAtSwitches(state, config)` (demand before any brownout) and `batteryCapacity(state, config)`; keep `power.shed` between steps, clear it when the batteries are full, restore in reverse order while production alone covers, shed in `mission.brownoutOrder` when the batteries are empty, set `unheated`, integrate `batteryEu` with `dt`, append `power_shed` to `log` only on a change
-- [ ] T051 [US3] In `src/engine/game.ts` pass `dt` to `computePower` in `tick`, and make `createGame` compute the initial report with `computePower(state, config, 0)`
-- [ ] T052 [US3] Run `npx vitest run src/engine/power.test.ts src/engine/game.test.ts` (green), refactor, `npm run check`, commit `feat(us3): power, heating, batteries and brownout`, open the PR from `engine/us3-power`, merge on green
+- [X] T050 [US3] In `src/engine/power.ts` implement `computePower(state, config, dt)` per R5–R7 and export `demandAtSwitches(state, config)` (demand before any brownout) and `batteryCapacity(state, config)`; keep `power.shed` between steps, clear it when the batteries are full, restore in reverse order while production alone covers, shed in `mission.brownoutOrder` when the batteries are empty, set `unheated`, integrate `batteryEu` with `dt`, append `power_shed` to `log` only on a change
+- [X] T051 [US3] In `src/engine/game.ts` pass `dt` to `computePower` in `tick`, and make `createGame` compute the initial report with `computePower(state, config, 0)`
+- [X] T052 [US3] Run `npx vitest run src/engine/power.test.ts src/engine/game.test.ts` (green), refactor, `npm run check`, commit `feat(us3): power, heating, batteries and brownout`, open the PR from `engine/us3-power`, merge on green
 
 **Checkpoint**: the HUD power meter moves; winter without enough power sheds and then unheats.
 
