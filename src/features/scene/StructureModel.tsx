@@ -281,6 +281,72 @@ const GREENHOUSE_GEO = {
   ),
 }
 
+// Shared datum & static procedural geometries for Solar Panel (1x1 footprint <= 0.88 x 0.88)
+const SOLAR_BASE_Y = 0.022
+
+function makeTriangularPlateShape(radius: number) {
+  const s = new Shape()
+  for (let i = 0; i < 3; i++) {
+    const a = (i * 2 * Math.PI) / 3 - Math.PI / 2
+    const x = Math.cos(a) * radius
+    const y = Math.sin(a) * radius
+    if (i === 0) s.moveTo(x, y)
+    else s.lineTo(x, y)
+  }
+  s.closePath()
+  return s
+}
+
+function makeHollowRectFrameShape(outerW: number, outerH: number, border: number) {
+  const hw = outerW / 2
+  const hh = outerH / 2
+  const outer = new Shape()
+  outer.moveTo(-hw, -hh)
+  outer.lineTo(hw, -hh)
+  outer.lineTo(hw, hh)
+  outer.lineTo(-hw, hh)
+  outer.closePath()
+
+  const hole = new Shape()
+  const iw = hw - border
+  const ih = hh - border
+  hole.moveTo(-iw, -ih)
+  hole.lineTo(-iw, ih)
+  hole.lineTo(iw, ih)
+  hole.lineTo(iw, -ih)
+  hole.closePath()
+  outer.holes.push(hole)
+  return outer
+}
+
+const SOLAR_GEO = {
+  triBase: new ExtrudeGeometry(makeTriangularPlateShape(0.19), {
+    depth: 0.026,
+    bevelEnabled: true,
+    bevelThickness: 0.01,
+    bevelSize: 0.014,
+    bevelSegments: 1,
+  }),
+  panelFrame: new ExtrudeGeometry(makeHollowRectFrameShape(0.73, 0.59, 0.042), {
+    depth: 0.026,
+    bevelEnabled: true,
+    bevelThickness: 0.01,
+    bevelSize: 0.01,
+    bevelSegments: 1,
+  }),
+  powerCable: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(0.055, SOLAR_BASE_Y + 0.08, -0.15),
+      new Vector3(0.075, SOLAR_BASE_Y + 0.22, -0.11),
+      new Vector3(0.045, SOLAR_BASE_Y + 0.36, -0.03),
+    ]),
+    6,
+    0.015,
+    6,
+    false,
+  ),
+}
+
 const DEFAULT_VISUAL: VisualState = {
   light: 1,
   dustHaze: 0,
@@ -424,28 +490,12 @@ function StructureMesh({
 
     case 'solar_panel':
       return (
-        <group position={[0, 0.12, 0]}>
-          {/* Support mast */}
-          <mesh position={[0, 0.22, 0]}>
-            <cylinderGeometry args={[0.06, 0.09, 0.44, 6]} />
-            <meshStandardMaterial color={METAL_DARK} flatShading />
-          </mesh>
-          {/* Tilted low-poly solar array */}
-          <mesh position={[0, 0.44, 0]} rotation={[0.45, 0, 0]}>
-            <boxGeometry args={[0.76, 0.05, 0.68]} />
-            <meshStandardMaterial
-              color={SOLAR_BLUE}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          {/* Safety-orange frame accent */}
-          <mesh position={[0, 0.46, -0.3]} rotation={[0.45, 0, 0]}>
-            <boxGeometry args={[0.78, 0.06, 0.06]} />
-            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
-          </mesh>
-        </group>
+        <SolarPanelMesh
+          hullColor={hullColor}
+          secondaryColor={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+        />
       )
 
     case 'battery':
@@ -856,6 +906,120 @@ function NonColorCueOverlay({
           ))}
         </group>
       )}
+    </group>
+  )
+}
+
+function SolarPanelMesh({
+  hullColor,
+  secondaryColor,
+  emissive,
+  emissiveIntensity,
+}: {
+  hullColor: string
+  secondaryColor: string
+  emissive: string
+  emissiveIntensity: number
+}) {
+  return (
+    <group position={[0, 0.12, 0]}>
+      {/* Chamfered triangular mounting baseplate */}
+      <mesh
+        geometry={SOLAR_GEO.triBase}
+        position={[0, SOLAR_BASE_Y + 0.036, -0.04]}
+        rotation={[Math.PI / 2, 0, Math.PI]}
+      >
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Rear power junction box & status strip */}
+      <mesh position={[0, SOLAR_BASE_Y + 0.062, -0.17]}>
+        <boxGeometry args={[0.19, 0.088, 0.13]} />
+        <meshStandardMaterial color={secondaryColor} flatShading />
+      </mesh>
+      <mesh position={[0, SOLAR_BASE_Y + 0.072, -0.24]}>
+        <boxGeometry args={[0.11, 0.026, 0.016]} />
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+
+      {/* Articulated main mast, rear diagonal brace & power conduit */}
+      <mesh position={[0, SOLAR_BASE_Y + 0.19, -0.02]}>
+        <cylinderGeometry args={[0.048, 0.068, 0.34, 6]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <mesh position={[0, SOLAR_BASE_Y + 0.18, -0.09]} rotation={[0.53, 0, 0]}>
+        <cylinderGeometry args={[0.022, 0.026, 0.28, 6]} />
+        <meshStandardMaterial color={secondaryColor} flatShading />
+      </mesh>
+      <mesh geometry={SOLAR_GEO.powerCable}>
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Safety-orange articulated pivot knuckle */}
+      <mesh position={[0, SOLAR_BASE_Y + 0.37, -0.02]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.048, 0.048, 0.2, 6]} />
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+
+      {/* Tilted photovoltaic array wing */}
+      <group position={[0, SOLAR_BASE_Y + 0.405, 0.01]} rotation={[0.48, 0, 0]}>
+        {/* Outer beveled white hull frame */}
+        <mesh
+          geometry={SOLAR_GEO.panelFrame}
+          position={[0, 0.013, 0]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
+          <meshStandardMaterial
+            color={hullColor}
+            emissive={emissive}
+            emissiveIntensity={emissiveIntensity}
+            flatShading
+          />
+        </mesh>
+
+        {/* Recessed dark-blue photovoltaic cell plate */}
+        <mesh position={[0, 0.002, 0]}>
+          <boxGeometry args={[0.66, 0.022, 0.52]} />
+          <meshStandardMaterial
+            color={SOLAR_BLUE}
+            emissive={emissive}
+            emissiveIntensity={emissiveIntensity}
+            metalness={0.25}
+            roughness={0.45}
+            flatShading
+          />
+        </mesh>
+
+        {/* Crisp 3x2 internal cell grid dividers */}
+        {([-0.11, 0.11] as const).map((gx, idx) => (
+          <mesh key={idx} position={[gx, 0.013, 0]}>
+            <boxGeometry args={[0.018, 0.014, 0.51]} />
+            <meshStandardMaterial color={hullColor} flatShading />
+          </mesh>
+        ))}
+        <mesh position={[0, 0.013, 0]}>
+          <boxGeometry args={[0.65, 0.014, 0.02]} />
+          <meshStandardMaterial color={hullColor} flatShading />
+        </mesh>
+
+        {/* Safety-orange upper edge trim */}
+        <mesh position={[0, 0.018, -0.285]}>
+          <boxGeometry args={[0.745, 0.022, 0.036]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+
+        {/* Underside structural spine, cross-ribs & pivot clevis */}
+        <mesh position={[0, -0.018, 0]}>
+          <boxGeometry args={[0.56, 0.022, 0.085]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {([-0.18, 0.18] as const).map((rx, idx) => (
+          <mesh key={idx} position={[rx, -0.016, 0]}>
+            <boxGeometry args={[0.045, 0.018, 0.44]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+      </group>
     </group>
   )
 }
