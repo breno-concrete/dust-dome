@@ -1,9 +1,9 @@
 {
   "crew": 4,
-  "colonists": 12,
+  "colonists": 32,
   "needs": {
     "oxygen": 1,
-    "water": 2,
+    "water": 1,
     "food": 1
   },
   "grid": {
@@ -34,6 +34,10 @@
     {
       "type": "ice_melter",
       "tile": [6, 3]
+    },
+    {
+      "type": "greenhouse",
+      "tile": [3, 5]
     }
   ],
   "jobs": {

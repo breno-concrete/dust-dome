@@ -233,7 +233,7 @@
     "cycles": [4],
     "season": "summer",
     "effects": {
-      "solarFactor": 0.15,
+      "solarFactor": 0.2,
       "shortCircuitEverySeconds": 45,
       "shortCircuit": ["mine", "iron_refinery"]
     },

@@ -27,7 +27,7 @@
     },
     "effect": "radiation_shelter",
     "cost": {
-      "regolith": 30,
+      "regolith": 60,
       "iron": 15
     }
   },

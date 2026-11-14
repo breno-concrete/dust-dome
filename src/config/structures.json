@@ -6,8 +6,8 @@
       "pt": "Módulo habitacional"
     },
     "explain": {
-      "en": "Home for 4 astronauts. Its walls keep the heat in and the radiation out.",
-      "pt": "Casa para 4 astronautas. As paredes guardam o calor e barram a radiação."
+      "en": "A safe home where up to 6 people can breathe, sleep and stay warm. Its thick walls keep the air in and the icy Martian cold out. In real life, NASA designs pressurized habitats with special shields to protect astronauts.",
+      "pt": "É a casa protegida onde até 6 pessoas podem respirar, dormir e se aquecer em segurança. Suas paredes grossas mantêm o ar lá dentro e bloqueiam o frio gelado de Marte. Na vida real, a NASA projeta habitats pressurizados com escudos especiais para proteger os astronautas."
     },
     "level": 1,
     "cost": {
@@ -73,7 +73,7 @@
         "winter": 9
       }
     },
-    "capacity": 4,
+    "capacity": 6,
     "upgrades": ["thermal_insulation", "radiation_shelter"]
   },
   {
@@ -287,10 +287,10 @@
     },
     "outputs": {
       "min": {
-        "iron": 12
+        "iron": 18
       },
       "max": {
-        "iron": 24
+        "iron": 36
       }
     },
     "upgrades": ["dust_filters"]
@@ -358,7 +358,34 @@
         "autumn": 9,
         "winter": 10
       }
-    }
+    },
+    "insulatedHeatingKw": {
+      "1": {
+        "spring": 5,
+        "summer": 5,
+        "autumn": 5.5,
+        "winter": 6.5
+      },
+      "2": {
+        "spring": 5,
+        "summer": 5,
+        "autumn": 6,
+        "winter": 7
+      },
+      "3": {
+        "spring": 5,
+        "summer": 5,
+        "autumn": 7,
+        "winter": 7.5
+      },
+      "4": {
+        "spring": 5,
+        "summer": 5,
+        "autumn": 7,
+        "winter": 7.5
+      }
+    },
+    "upgrades": ["thermal_insulation"]
   },
   {
     "id": "repair_workshop",
@@ -408,7 +435,7 @@
       "en": "Mixes iron with carbon from the air to make steel.",
       "pt": "Mistura ferro com carbono do ar para fazer aço."
     },
-    "level": 2,
+    "level": 3,
     "cost": {
       "regolith": 30,
       "iron": 45
