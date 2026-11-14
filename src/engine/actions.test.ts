@@ -11,6 +11,7 @@ import {
   setPowerMode,
   startRepair,
 } from './actions'
+import { updateCrew } from './crew'
 import { createGame } from './game'
 import { updateJobs } from './jobs'
 import {
@@ -18,6 +19,7 @@ import {
   onlyStructures,
   withCrew,
   withEvents,
+  withJobs,
   withStock,
   withStructures,
 } from './testState'
@@ -273,20 +275,132 @@ describe('clean', () => {
 })
 
 // US5 (Breno) — constitution II.9, II.11
-describe('bringInside', () => {
-  it.todo(
-    'brings one astronaut inside at once; their job goes back to the queue with its remaining time',
+/** A spring base where the first `working` astronauts are outside cleaning clogged panels. */
+function working(base: GameState, count: number, remainingSeconds = 6): GameState {
+  let s = withStructures(
+    base,
+    config,
+    Array.from({ length: count }, (_, i) => ({
+      type: 'solar_panel',
+      tile: [i, 0] as const,
+      status: 'clogged' as const,
+    })),
   )
-  it.todo('a recalled astronaut rests (takes no job) until their exposure is back to 0')
-  it.todo('during a radiation storm, goes into a sheltered habitat with room')
-  it.todo('rejects with not_allowed for an unknown, dead or already-inside astronaut')
+  const panels = s.structures.slice(-count)
+  s = withJobs(
+    s,
+    config,
+    panels.map((p, i) => ({
+      kind: 'clean' as const,
+      structureId: p.id,
+      status: 'active' as const,
+      astronautId: s.crew[i].id,
+      remainingSeconds,
+    })),
+  )
+  return s
+}
+
+const inStorm = (s: GameState, phase: 'warning' | 'active' = 'warning'): GameState => ({
+  ...s,
+  radiationStorm: { phase, phaseEndsAt: s.time.elapsed + 10, basedOn: null },
+})
+
+/** Adds a habitat with a radiation shelter next to the starting one. */
+function withShelter(s: GameState): { s: GameState; shelter: StructureInstance } {
+  const out = withStructures(s, config, [
+    { type: 'habitat', tile: [5, 7], upgrades: ['radiation_shelter'] },
+  ])
+  return { s: out, shelter: last(out) }
+}
+
+describe('bringInside', () => {
+  it('brings one astronaut inside at once; their job goes back to the queue with its remaining time', () => {
+    const s = working(spring(), 1, 6)
+    const a = s.crew[0]
+    const after = okState(bringInside(s, config, a.id))
+    expect(after.crew[0]).toMatchObject({
+      location: 'inside',
+      jobId: null,
+      resting: true,
+      habitatId: a.habitatId,
+    })
+    expect(after.jobs[0]).toMatchObject({
+      status: 'queued',
+      astronautId: null,
+      remainingSeconds: 6,
+    })
+  })
+
+  it('a recalled astronaut rests (takes no job) until their exposure is back to 0', () => {
+    // Only the recalled astronaut is alive, with exposure low enough to work again.
+    const s = withCrew(working(spring(), 1), [
+      { exposure: 0.1 },
+      { alive: false },
+      { alive: false },
+      { alive: false },
+    ])
+    const recalled = okState(bringInside(s, config, s.crew[0].id))
+    expect(updateJobs(recalled, config, 0).jobs[0].status).toBe('queued')
+
+    const rested = updateCrew(recalled, config, 1000)
+    expect(rested.crew[0]).toMatchObject({ exposure: 0, resting: false })
+    expect(updateJobs(rested, config, 0).jobs[0]).toMatchObject({
+      status: 'active',
+      astronautId: s.crew[0].id,
+    })
+  })
+
+  it('during a radiation storm, goes into a sheltered habitat with room', () => {
+    const { s, shelter } = withShelter(working(spring(), 1))
+    const after = okState(bringInside(inStorm(s), config, s.crew[0].id))
+    expect(after.crew[0]).toMatchObject({ location: 'inside', habitatId: shelter.id, jobId: null })
+    expect(after.jobs[0]).toMatchObject({ status: 'queued', astronautId: null })
+
+    const noShelter = inStorm(working(spring(), 1))
+    expectRefused(bringInside(noShelter, config, noShelter.crew[0].id), noShelter, 'not_allowed')
+  })
+
+  it('rejects with not_allowed for an unknown, dead or already-inside astronaut', () => {
+    const s = withCrew(working(spring(), 2), [{}, { alive: false }])
+    expectRefused(bringInside(s, config, 'nobody'), s, 'not_allowed')
+    expectRefused(bringInside(s, config, s.crew[1].id), s, 'not_allowed')
+    expectRefused(bringInside(s, config, s.crew[2].id), s, 'not_allowed')
+  })
 })
 
 describe('bringAllInside', () => {
-  it.todo('moves every astronaut outside into a habitat with a radiation shelter')
-  it.todo('pauses active jobs, which resume after the storm')
-  it.todo('brings every astronaut outside inside at once')
-  it.todo('rejects with not_allowed when nobody is outside')
+  it('moves every astronaut outside into a habitat with a radiation shelter', () => {
+    const { s, shelter } = withShelter(working(spring(), 2))
+    const after = okState(bringAllInside(inStorm(s), config))
+    for (const a of after.crew.slice(0, 2)) {
+      expect(a).toMatchObject({ location: 'inside', habitatId: shelter.id, jobId: null })
+    }
+  })
+
+  it('pauses active jobs, which resume after the storm', () => {
+    const { s } = withShelter(working(spring(), 2, 6))
+    const sheltered = okState(bringAllInside(inStorm(s), config))
+    const during = updateJobs(sheltered, config, 1)
+    expect(during.jobs.every((j) => j.status !== 'active' && j.remainingSeconds === 6)).toBe(true)
+
+    const after = updateJobs({ ...during, radiationStorm: null }, config, 0)
+    expect(after.jobs.every((j) => j.status === 'active' && j.remainingSeconds === 6)).toBe(true)
+  })
+
+  it('brings every astronaut outside inside at once', () => {
+    const s = working(spring(), 3)
+    const after = okState(bringAllInside(s, config))
+    expect(after.crew.every((a) => a.location === 'inside' && a.jobId === null)).toBe(true)
+    expect(after.crew.slice(0, 3).every((a) => a.resting)).toBe(true)
+    expect(after.crew[3].resting).toBe(false)
+    expect(after.jobs.every((j) => j.status === 'queued' && j.astronautId === null)).toBe(true)
+  })
+
+  it('rejects with not_allowed when nobody is outside', () => {
+    const s = spring()
+    expectRefused(bringAllInside(s, config), s, 'not_allowed')
+  })
 })
 
 describe('any action', () => {

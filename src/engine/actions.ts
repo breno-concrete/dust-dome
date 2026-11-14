@@ -1,11 +1,12 @@
 // Owner: Breno. Player actions. Each returns an ActionResult and never throws.
 // Validation order and refusals: research R9. bringInside / bringAllInside: US5 (R12).
-import { isHousing, occupantsOf, roomIn } from './habitats'
+import { isHousing, occupantsOf, protects, roomIn } from './habitats'
 import { beingDemolished, dustStormActive, externalJobsBlocked, jobSeconds } from './jobs'
 import { placementError, sideGroups } from './placement'
 import type {
   ActionError,
   ActionResult,
+  Astronaut,
   GameConfig,
   GameState,
   Job,
@@ -26,7 +27,6 @@ const refuse = (state: GameState, reason: ActionError): ActionResult => ({
   reason,
   state,
 })
-const notYet = (state: GameState): ActionResult => refuse(state, 'not_implemented')
 const over = (state: GameState) => state.status !== 'running'
 
 const defOf = (config: GameConfig, type: StructureTypeId) =>
@@ -160,26 +160,75 @@ export function clean(state: GameState, config: GameConfig, structureId: string)
   return ok(queueJob(state, config, 'clean', target))
 }
 
+const isOutside = (a: Astronaut) => a.alive && a.location === 'outside'
+
+/** A sheltered habitat with room for one more, during a radiation storm (R12). */
+function shelterWithRoom(state: GameState, config: GameConfig): StructureInstance | undefined {
+  return state.structures.find(
+    (x) => protects(config, x, 'radiation_shelter') && roomIn(state, config, x) > 0,
+  )
+}
+
+/**
+ * R12: the astronaut goes inside at once and their job goes back to the queue with its remaining
+ * time. No radiation storm: into their habitat, resting until exposure is 0. Storm (warning or
+ * active): into `home`, a sheltered habitat; jobs wait for the storm to end (jobs.ts).
+ */
+function recall(state: GameState, astronautId: string, home: string | null): GameState {
+  const a = state.crew.find((x) => x.id === astronautId)
+  if (!a) return state
+  const storm = state.radiationStorm !== null
+  return {
+    ...state,
+    crew: state.crew.map((x): Astronaut =>
+      x.id === a.id
+        ? {
+            ...x,
+            location: 'inside',
+            jobId: null,
+            habitatId: storm ? (home ?? x.habitatId) : x.habitatId,
+            resting: !storm,
+          }
+        : x,
+    ),
+    jobs: state.jobs.map((j): Job =>
+      j.id === a.jobId ? { ...j, status: 'queued', astronautId: null } : j,
+    ),
+  }
+}
+
 /**
  * The player brings one astronaut inside: their job goes back to the queue with its remaining
- * time and they rest (no job) until their exposure is back to 0.
+ * time and they rest (no job) until their exposure is back to 0. During a radiation storm they
+ * go into a habitat with a radiation shelter instead, and are refused if none has room.
  */
 export function bringInside(
   state: GameState,
-  _config: GameConfig,
-  _astronautId: string,
+  config: GameConfig,
+  astronautId: string,
 ): ActionResult {
-  if (over(state)) return refuse(state, 'not_allowed')
-  return notYet(state)
+  const a = state.crew.find((x) => x.id === astronautId)
+  if (over(state) || !a || !isOutside(a)) return refuse(state, 'not_allowed')
+  if (!state.radiationStorm) return ok(recall(state, a.id, null))
+  const shelter = shelterWithRoom(state, config)
+  if (!shelter) return refuse(state, 'not_allowed')
+  return ok(recall(state, a.id, shelter.id))
 }
 
 /**
  * Everyone inside ("Take shelter" during the radiation alarm): astronauts outside move into
- * habitats with a radiation shelter, up to their capacity; their jobs pause until the storm ends.
+ * habitats with a radiation shelter, up to their capacity (the rest go to their own habitat);
+ * their jobs pause until the storm ends. Without a storm, everyone outside comes in to rest.
  */
-export function bringAllInside(state: GameState, _config: GameConfig): ActionResult {
-  if (over(state)) return refuse(state, 'not_allowed')
-  return notYet(state)
+export function bringAllInside(state: GameState, config: GameConfig): ActionResult {
+  const outside = state.crew.filter(isOutside)
+  if (over(state) || outside.length === 0) return refuse(state, 'not_allowed')
+  let s = state
+  for (const a of outside) {
+    const home = s.radiationStorm ? (shelterWithRoom(s, config)?.id ?? null) : null
+    s = recall(s, a.id, home)
+  }
+  return ok(s)
 }
 
 /**
