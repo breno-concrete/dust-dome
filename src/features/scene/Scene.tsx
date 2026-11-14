@@ -5,12 +5,13 @@
 // hoverAt, placeAt, selectStructure.
 import { MapControls } from '@react-three/drei'
 import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { placementPreview, structureDef } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import { Button } from '../../ui-kit/Button'
 import { useT } from '../../ui-kit/i18n'
+import type { DevVisualOverrides } from './DevVisualInspector'
 import {
   cameraPositionForStep,
   rotateStep,
@@ -20,12 +21,40 @@ import {
 } from './iso'
 import styles from './Scene.module.css'
 import { StructureModel } from './StructureModel'
-import { visualState } from './visualState'
+import { visualState, type VisualState } from './visualState'
 
 const grid = config.mission.grid
 const GROUND = '#b5532f'
 const SURROUND_TERRAIN = '#944222'
 const CLIFF_OCHRE = '#c76538'
+
+// Strict dev/prod barrier: Vite replaces import.meta.env.DEV with false in production builds,
+// so DevVisualInspector is neither rendered nor bundled into the production Scene chunk.
+const DevVisualInspector =
+  import.meta.env.DEV && !import.meta.env.VITEST
+    ? lazy(() => import('./DevVisualInspector'))
+    : null
+
+const INITIAL_DEV_OVERRIDES: DevVisualOverrides = {
+  weather: 'auto',
+  frost: false,
+  radiationTint: false,
+  structureStatus: 'auto',
+}
+
+function applyDevVisualOverrides(base: VisualState, dev: DevVisualOverrides): VisualState {
+  let next = { ...base }
+  if (dev.weather === 'summer') {
+    next = { ...next, light: 1, dustHaze: 0, dark: false }
+  } else if (dev.weather === 'dust_storm') {
+    next = { ...next, light: 0.45, dustHaze: 0.85, dark: false }
+  } else if (dev.weather === 'winter_dark') {
+    next = { ...next, light: 0.15, dustHaze: 0, dark: true }
+  }
+  if (dev.frost) next.frost = true
+  if (dev.radiationTint) next.radiationTint = true
+  return next
+}
 
 const strings = {
   rotateLeft: { en: 'Rotate ↺ (Q)', pt: 'Girar ↺ (Q)' },
@@ -41,6 +70,7 @@ export default function Scene() {
   const placing = useGameStore((s) => s.placing)
   const selectStructure = useGameStore((s) => s.selectStructure)
   const [rotationStep, setRotationStep] = useState<RotationStep>(0)
+  const [devOverrides, setDevOverrides] = useState<DevVisualOverrides>(INITIAL_DEV_OVERRIDES)
   const t = useT()
 
   useEffect(() => {
@@ -57,7 +87,11 @@ export default function Scene() {
   }, [])
 
   if (!game) return null
-  const look = visualState(game, config)
+  const baseLook = visualState(game, config)
+  const look =
+    import.meta.env.DEV && !import.meta.env.VITEST
+      ? applyDevVisualOverrides(baseLook, devOverrides)
+      : baseLook
   // Derived in render: a store selector must never return a new object (infinite re-render).
   const preview = placementPreview({ game, placing, hoverTile })
 
@@ -132,10 +166,19 @@ export default function Scene() {
         {game.structures.map((s) => {
           const size = structureDef(s.type)?.size ?? 1
           const [x, , z] = tileCenter(s.tile, size, grid)
+          const shouldOverrideStatus =
+            import.meta.env.DEV &&
+            !import.meta.env.VITEST &&
+            devOverrides.structureStatus !== 'auto' &&
+            (selectedId === null || selectedId === s.id)
+          const renderedStructure =
+            shouldOverrideStatus && devOverrides.structureStatus !== 'auto'
+              ? { ...s, status: devOverrides.structureStatus }
+              : s
           return (
             <StructureModel
               key={s.id}
-              structure={s}
+              structure={renderedStructure}
               size={size}
               position={[x, 0, z]}
               selected={s.id === selectedId}
@@ -161,6 +204,16 @@ export default function Scene() {
 
         <MapControls enableRotate={false} enablePan={false} minZoom={25} maxZoom={90} />
       </Canvas>
+
+      {DevVisualInspector && (
+        <Suspense fallback={null}>
+          <DevVisualInspector
+            overrides={devOverrides}
+            onChange={setDevOverrides}
+            selectedId={selectedId}
+          />
+        </Suspense>
+      )}
 
       <div className={styles.cameraControls}>
         <Button
@@ -244,3 +297,4 @@ function DustHazeClouds({ intensity }: { intensity: number }) {
     </group>
   )
 }
+
