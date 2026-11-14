@@ -65,6 +65,22 @@ describe('config rules', () => {
     }
   })
 
+  it('every structure takes time to build (II.6)', () => {
+    for (const s of config.structures)
+      expect(s.buildSeconds, `"${s.id}" buildSeconds`).toBeGreaterThan(0)
+  })
+
+  it('connectsTo only lists structure types that exist (principle V)', () => {
+    for (const s of config.structures) {
+      for (const t of s.connectsTo) expect(structureIds.has(t), `"${s.id}" -> "${t}"`).toBe(true)
+    }
+  })
+
+  it('a tired astronaut rests below the level that sent them inside (II.9)', () => {
+    const { warnAt, resumeAt } = config.mission.exposure
+    expect(resumeAt).toBeLessThan(warnAt)
+  })
+
   it('season lengths follow the real sols (principle II)', () => {
     const { seasons } = config.seasons
     expect(seasons.map((s) => s.id)).toEqual([...SEASONS])

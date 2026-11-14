@@ -25,6 +25,14 @@ describe('store', () => {
     expect(useGameStore.getState().game?.time.elapsed).toBe(2)
   })
 
+  it('demolish() and bringInside() go through the engine and report a refusal', () => {
+    useGameStore.getState().demolish('no-such-structure')
+    expect(useGameStore.getState().lastError).not.toBeNull()
+    useGameStore.getState().start(42)
+    useGameStore.getState().bringInside('no-such-astronaut')
+    expect(useGameStore.getState().lastError).not.toBeNull()
+  })
+
   it('placeAt() does nothing when no structure is being placed', () => {
     const before = useGameStore.getState().game
     useGameStore.getState().placeAt([0, 0])

@@ -10,6 +10,7 @@
       "pt": "É a casa protegida onde até 6 pessoas podem respirar, dormir e se aquecer em segurança. Suas paredes grossas mantêm o ar lá dentro e bloqueiam o frio gelado de Marte. Na vida real, a NASA projeta habitats pressurizados com escudos especiais para proteger os astronautas."
     },
     "level": 1,
+    "buildSeconds": 30,
     "cost": {
       "hematite": 40,
       "regolith": 30
@@ -74,6 +75,7 @@
       }
     },
     "capacity": 6,
+    "connectsTo": ["habitat"],
     "upgrades": ["thermal_insulation", "radiation_shelter"]
   },
   {
@@ -87,6 +89,7 @@
       "pt": "Transforma luz do sol em eletricidade. Menos sol no inverno e nas tempestades de poeira, menos energia."
     },
     "level": 1,
+    "buildSeconds": 30,
     "cost": {
       "hematite": 15
     },
@@ -114,6 +117,7 @@
       "pt": "Guarda a eletricidade que sobra para os dias escuros e de poeira."
     },
     "level": 1,
+    "buildSeconds": 30,
     "cost": {
       "hematite": 20
     },
@@ -135,6 +139,7 @@
       "pt": "Escava hematita e regolito do chão."
     },
     "level": 1,
+    "buildSeconds": 30,
     "cost": {
       "hematite": 25
     },
@@ -168,6 +173,7 @@
       "pt": "Separa o gás carbônico do ar de Marte em oxigênio, como o MOXIE da NASA no rover Perseverance."
     },
     "level": 1,
+    "buildSeconds": 30,
     "cost": {
       "hematite": 30
     },
@@ -204,6 +210,7 @@
       "pt": "Escava o gelo enterrado sob a poeira e derrete em água. Um radar achou geleiras assim em Hellas."
     },
     "level": 1,
+    "buildSeconds": 30,
     "cost": {
       "hematite": 20
     },
@@ -266,6 +273,7 @@
       "pt": "Aquece a hematita para tirar o ferro."
     },
     "level": 2,
+    "buildSeconds": 40,
     "cost": {
       "hematite": 50,
       "regolith": 20
@@ -306,6 +314,7 @@
       "pt": "Uma bolha quente onde as plantas crescem com água e luz."
     },
     "level": 2,
+    "buildSeconds": 40,
     "cost": {
       "regolith": 15,
       "iron": 20
@@ -398,6 +407,7 @@
       "pt": "Transforma ferro em parafusos e placas para consertos."
     },
     "level": 2,
+    "buildSeconds": 40,
     "cost": {
       "iron": 25
     },
@@ -436,6 +446,7 @@
       "pt": "Mistura ferro com carbono do ar para fazer aço."
     },
     "level": 3,
+    "buildSeconds": 60,
     "cost": {
       "regolith": 30,
       "iron": 45
@@ -475,6 +486,7 @@
       "pt": "Gera energia constante de dia e de noite, em qualquer tempestade. A NASA projeta um reator de 40 kW assim."
     },
     "level": 3,
+    "buildSeconds": 60,
     "cost": {
       "regolith": 40,
       "steel": 30

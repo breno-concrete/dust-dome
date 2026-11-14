@@ -13,6 +13,10 @@ describe('createGame', () => {
     expect(game.structures.every((s) => s.status === 'active')).toBe(true)
   })
 
+  it('starts every astronaut ready to work (not resting)', () => {
+    expect(game.crew.every((a) => a.resting === false)).toBe(true)
+  })
+
   it('starts the crew inside the first habitat', () => {
     expect(game.crew).toHaveLength(config.mission.crew)
     const habitat = game.structures.find((s) => s.type === 'habitat')

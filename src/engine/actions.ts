@@ -53,8 +53,37 @@ export function clean(state: GameState, _config: GameConfig, _structureId: strin
   return notYet(state)
 }
 
-/** Radiation alarm: every astronaut outside goes into a sheltered habitat; jobs pause. */
-export function shelterAll(state: GameState, _config: GameConfig): ActionResult {
+/**
+ * The player brings one astronaut inside: their job goes back to the queue with its remaining
+ * time and they rest (no job) until their exposure is back to 0.
+ */
+export function bringInside(
+  state: GameState,
+  _config: GameConfig,
+  _astronautId: string,
+): ActionResult {
+  return notYet(state)
+}
+
+/**
+ * Everyone inside ("Take shelter" during the radiation alarm): astronauts outside move into
+ * habitats with a radiation shelter, up to their capacity; their jobs pause until the storm ends.
+ */
+export function bringAllInside(state: GameState, _config: GameConfig): ActionResult {
+  return notYet(state)
+}
+
+/**
+ * Queues a demolish job (mission.jobs.demolishSeconds, one astronaut outside) for a structure,
+ * or cancels one under construction. When the job ends the structure is removed and
+ * demolishRefundShare of its cost and installed upgrades returns to the stock. Refuses
+ * last_habitat, no_room_for_crew, not_connected and external_jobs_blocked.
+ */
+export function demolish(
+  state: GameState,
+  _config: GameConfig,
+  _structureId: string,
+): ActionResult {
   return notYet(state)
 }
 

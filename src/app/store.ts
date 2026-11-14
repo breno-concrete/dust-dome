@@ -49,6 +49,13 @@ export interface GameStore {
   openQte: (structureId: string) => void
   finishQte: (success: boolean) => void
   clean: (structureId: string) => void
+  /** Demolish a structure or cancel its construction (refund when the job ends). */
+  demolish: (structureId: string) => void
+  /** Crew panel: bring one astronaut inside. */
+  bringInside: (astronautId: string) => void
+  /** Crew panel "everyone inside" and the radiation alarm's "Take shelter". */
+  bringAllInside: () => void
+  /** @deprecated Same as bringAllInside; kept so the UI built on contract v1 keeps working. */
   shelterAll: () => void
   dismissBriefing: () => void
 }
@@ -119,7 +126,10 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (id) withGame((g) => actions.startRepair(g, config, id, success))
     },
     clean: (structureId) => withGame((g) => actions.clean(g, config, structureId)),
-    shelterAll: () => withGame((g) => actions.shelterAll(g, config)),
+    demolish: (structureId) => withGame((g) => actions.demolish(g, config, structureId)),
+    bringInside: (astronautId) => withGame((g) => actions.bringInside(g, config, astronautId)),
+    bringAllInside: () => withGame((g) => actions.bringAllInside(g, config)),
+    shelterAll: () => get().bringAllInside(),
     dismissBriefing: () => withGame((g) => actions.dismissBriefing(g)),
   }
 })
