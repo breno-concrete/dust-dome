@@ -161,9 +161,9 @@ consumption (FR-006–FR-010; R3, R4).
 
 ### Implementation for User Story 3
 
-- [ ] T050 [US3] In `src/engine/power.ts` implement `computePower(state, config, dt)` per R5–R7 and export `demandAtSwitches(state, config)` (demand before any brownout) and `batteryCapacity(state, config)`; keep `power.shed` between steps, clear it when the batteries are full, restore in reverse order while production alone covers, shed in `mission.brownoutOrder` when the batteries are empty, set `unheated`, integrate `batteryEu` with `dt`, append `power_shed` to `log` only on a change
-- [ ] T051 [US3] In `src/engine/game.ts` pass `dt` to `computePower` in `tick`, and make `createGame` compute the initial report with `computePower(state, config, 0)`
-- [ ] T052 [US3] Run `npx vitest run src/engine/power.test.ts src/engine/game.test.ts` (green), refactor, `npm run check`, commit `feat(us3): power, heating, batteries and brownout`, open the PR from `engine/us3-power`, merge on green
+- [X] T050 [US3] In `src/engine/power.ts` implement `computePower(state, config, dt)` per R5–R7 and export `demandAtSwitches(state, config)` (demand before any brownout) and `batteryCapacity(state, config)`; keep `power.shed` between steps, clear it when the batteries are full, restore in reverse order while production alone covers, shed in `mission.brownoutOrder` when the batteries are empty, set `unheated`, integrate `batteryEu` with `dt`, append `power_shed` to `log` only on a change
+- [X] T051 [US3] In `src/engine/game.ts` pass `dt` to `computePower` in `tick`, and make `createGame` compute the initial report with `computePower(state, config, 0)`
+- [X] T052 [US3] Run `npx vitest run src/engine/power.test.ts src/engine/game.test.ts` (green), refactor, `npm run check`, commit `feat(us3): power, heating, batteries and brownout`, open the PR from `engine/us3-power`, merge on green
 
 **Checkpoint**: the HUD power meter moves; winter without enough power sheds and then unheats.
 

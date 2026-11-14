@@ -37,7 +37,7 @@ export function createGame(config: GameConfig, seed: number): GameState {
     resting: false,
   }))
 
-  return {
+  const game: GameState = {
     seed,
     rng: seedToRng(seed),
     time: { cycle: 1, season: config.seasons.seasons[0].id, secondsIntoSeason: 0, elapsed: 0 },
@@ -60,6 +60,8 @@ export function createGame(config: GameConfig, seed: number): GameState {
     lostReason: null,
     nextId,
   }
+  // The HUD has a power report before the first step (R7).
+  return computePower(game, config, 0)
 }
 
 /**
