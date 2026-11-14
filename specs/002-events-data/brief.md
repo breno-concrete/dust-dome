@@ -1,49 +1,51 @@
-# Brief — 002 Events and NASA data
+# Brief — 002 Eventos e dados da NASA
 
-**Owner:** Dev A · **Branch prefix:** `data/` · **Spec folder:** `specs/002-events-data/`
-**Rules of the game:** constitution II.11, II.12 (debrief), II.13
+**Responsável:** DEV A · **Prefixo da branch:** `data/` · **Pasta da spec:** `specs/002-events-data/`
+**Regras do jogo:** constituição II.11, II.12 (debrief), II.13
 
-## Goal
+## Objetivo
 
-Make Mars fight back with real science: dust devils, dust storms, clogging, short-circuits,
-winter darkness and solar radiation storms based on real NASA DONKI events. Then explain the
-mission in the debrief and show every source honestly.
+Fazer Marte reagir com ciência real: redemoinhos de poeira, tempestades de poeira, entupimentos,
+curtos-circuitos, escuridão do inverno e tempestades de radiação solar baseadas em eventos reais
+da NASA DONKI. Depois, explicar a missão no debrief e mostrar cada fonte de forma honesta.
 
-## Owned paths
+## Caminhos sob responsabilidade
 
 `src/engine/events/`, `src/data/`, `scripts/`, `src/features/sources/`, `src/features/end/`.
 
-## Consumes
+## Consome
 
-- `events.json` and `mission.json` (radiationStorm) from the POs.
-- `GameState` (`types.ts`): writes `activeEvents`, `nextEventAt`, `radiationStorm`, structure
-  `status`, `log`. Needs a new field? Send a contract change request to Breno.
-- `state.rng` with the helpers in `src/engine/rng.ts` (never `Math.random`).
+- `events.json` e `mission.json` (`radiationStorm`) dos POs.
+- `GameState` (`types.ts`): escreve em `activeEvents`, `nextEventAt`, `radiationStorm`, `status`
+  das estruturas e `log`. Precisa de um campo novo? Envie uma solicitação de mudança de contrato
+  ao Breno.
+- `state.rng` com os helpers de `src/engine/rng.ts` (nunca `Math.random`).
 
-## Provides (contract)
+## Fornece (contrato)
 
-- `updateEvents(state, config, dt)` in `src/engine/events/events.ts`, called by `tick()`.
-- `sepEvents()` / `pickSepEvent()` in `src/data/donki.ts`.
+- `updateEvents(state, config, dt)` em `src/engine/events/events.ts`, chamado por `tick()`.
+- `sepEvents()` / `pickSepEvent()` em `src/data/donki.ts`.
 
-## User stories (one PR each, tests first)
+## User stories (uma PR por story, testes primeiro)
 
-| # | Story | Target | Tests to turn green |
+| # | Story | Alvo | Testes a fazer passar |
 |---|---|---|---|
-| US1 | Seeded scheduling of each season's events; events end with the season | 12:00 | `events.test.ts` › scheduling |
-| US2 | Dust effects: damage, clogging, storms, global storm short-circuits, darkness | 14:00 | `events.test.ts` › dust events |
-| US3 | Radiation storm with warning, active phase and the real DONKI event | 16:00 | `events.test.ts` › radiation storm, `donki.test.ts` |
-| US4 | Debrief from the log causes, and the sources screen | 19:00 | new tests in `src/features/end/`, `src/features/sources/` |
+| US1 | Agendamento com seed dos eventos de cada estação; eventos terminam com a estação | 12:00 | `events.test.ts` › scheduling |
+| US2 | Efeitos da poeira: dano, entupimento, tempestades, curtos-circuitos da tempestade global, escuridão | 14:00 | `events.test.ts` › dust events |
+| US3 | Tempestade de radiação com aviso, fase ativa e evento DONKI real | 16:00 | `events.test.ts` › radiation storm, `donki.test.ts` |
+| US4 | Debrief a partir das causas do log e tela de fontes | 19:00 | novos testes em `src/features/end/`, `src/features/sources/` |
 
-## Out of scope
+## Fora do escopo
 
-Time, production, power, crew deaths (Breno); HUD and alerts UI (Dev B); scene effects (Dev C).
+Tempo, produção, energia, mortes da tripulação (Breno); HUD e interface de alertas (DEV B);
+efeitos da cena (DEV C).
 
-## Done when
+## Considerado concluído quando
 
-Every season of every cycle fires its events deterministically from the seed, the radiation
-storm cites a real DONKI event, and the debrief explains every loss in plain words.
+Cada estação de cada ciclo dispara seus eventos deterministicamente a partir da seed, a tempestade
+de radiação cita um evento DONKI real e o debrief explica cada perda em palavras simples.
 
-## Start
+## Início
 
 ```
 /speckit-specify SPECIFY_FEATURE_DIRECTORY=specs/002-events-data Read specs/002-events-data/brief.md and the constitution Part II, and specify it.

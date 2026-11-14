@@ -1,71 +1,74 @@
-# Implementation Plan: Events and NASA Data
+# Plano de implementação: Eventos e dados da NASA
 
-**Branch**: `data/002-events-data` | **Date**: 2026-11-14 | **Spec**: [spec.md](./spec.md)
+**Branch**: `data/002-events-data` | **Data**: 2026-11-14 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `/specs/002-events-data/spec.md`
+**Entrada**: Especificação da feature em `/specs/002-events-data/spec.md`
 
-## Summary
+## Resumo
 
-Implement the seeded Mars climate event loop, archived NASA DONKI event selection, and the
-mission debrief and sources experience. The event engine will remain a pure state transition
-called by `tick()` after time advancement, use only `state.rng` for scheduling and targets, and
-apply configured effects to the existing `GameState` fields. The data layer will read committed
-DONKI snapshots offline, while debrief and source presentation will consume the existing store
-contract and configuration metadata.
+Implementar o loop de eventos climáticos de Marte com seed, a seleção de eventos NASA DONKI
+arquivados e a experiência de debrief e fontes da missão. O motor de eventos continuará sendo
+uma transição pura de estado chamada por `tick()` depois do avanço do tempo, usando apenas
+`state.rng` para agendamento e alvos e aplicando efeitos configurados aos campos existentes de
+`GameState`. A camada de dados lerá snapshots DONKI versionados offline, enquanto a apresentação
+do debrief e das fontes consumirá o contrato existente da store e os metadados da configuração.
 
-## Technical Context
+## Contexto técnico
 
-**Language/Version**: TypeScript, repository TypeScript 7.0.2
+**Linguagem/versão**: TypeScript, TypeScript 7.0.2 do repositório
 
-**Primary Dependencies**: Vitest for engine/data tests, React and Testing Library for screens,
-Zod for the existing configuration schema, and Zustand for the game store. No new dependencies.
+**Dependências principais**: Vitest para testes do motor/dados, React e Testing Library para as
+telas, Zod para o schema de configuração existente e Zustand para a store do jogo. Nenhuma nova
+dependência.
 
-**Storage**: Static JSON configuration in `src/config/*.json` and committed DONKI snapshots in
-`src/data/snapshots/`; no runtime database or network access.
+**Armazenamento**: Configuração JSON estática em `src/config/*.json` e snapshots DONKI versionados
+em `src/data/snapshots/`; sem banco de dados ou acesso à rede em runtime.
 
-**Testing**: Focused Vitest unit tests for `src/engine/events/events.test.ts` and
-`src/data/donki.test.ts`; jsdom Testing Library tests for the end and sources screens; final
-validation with `npm run check`.
+**Testes**: Testes unitários focados do Vitest para `src/engine/events/events.test.ts` e
+`src/data/donki.test.ts`; testes da Testing Library em jsdom para as telas de fim e fontes;
+validação final com `npm run check`.
 
-**Target Platform**: Desktop and mobile browsers, with offline-capable committed data.
+**Plataforma-alvo**: Navegadores desktop e mobile, com dados versionados disponíveis offline.
 
-**Project Type**: Vite React web application with a pure simulation engine.
+**Tipo de projeto**: Aplicação web React com Vite e motor de simulação puro.
 
-**Performance Goals**: Event updates remain bounded by configured rules, active events, and base
-structures for each one-second game tick; no event processing may require network or file I/O.
+**Metas de desempenho**: As atualizações de eventos devem permanecer limitadas pelas regras
+configuradas, eventos ativos e estruturas da base a cada tick de um segundo do jogo; nenhum
+processamento de eventos pode exigir I/O de rede ou arquivo.
 
-**Constraints**: Preserve the existing `GameState` contract, seeded determinism, pure engine
-functions, ownership boundaries, English player-facing text, and the existing JSON configuration
-model. All balance values remain in `src/config/*.json`.
+**Restrições**: Preservar o contrato existente de `GameState`, o determinismo por seed, as
+funções puras do motor, os limites de ownership, o texto voltado ao jogador em inglês e o modelo
+de configuração JSON existente. Todos os valores de balanceamento permanecem em
+`src/config/*.json`.
 
-**Scale/Scope**: Four cycles, four seasons per cycle, a 12x12 base, the configured structures
-and crew, one radiation storm per eligible cycle, and the four user stories in the feature spec.
+**Escala/escopo**: Quatro ciclos, quatro estações por ciclo, base 12x12, estruturas e tripulação
+configuradas, uma tempestade de radiação por ciclo elegível e as quatro user stories da spec.
 
-## Constitution Check
+## Verificação da constituição
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: Deve passar antes da pesquisa da Fase 0. Reavaliar após o design da Fase 1.*
 
-- **Ownership**: PASS. Implementation paths are limited to `src/engine/events/`, `src/data/`,
-  `scripts/`, `src/features/sources/`, and `src/features/end/`. Documentation remains inside
-  `specs/002-events-data/`.
-- **Pure engine**: PASS. `updateEvents` receives state, config, and elapsed time; it will not
-  fetch, read files, use timers, or call `Math.random`.
-- **Seeded mission**: PASS. Scheduling and target selection consume the existing RNG helpers and
-  write the returned RNG state.
-- **Real science**: PASS. DONKI data is an offline snapshot, and each event/source retains its
-  source kind and URL.
-- **Test-first**: PASS. Existing `it.todo` cases are the agreed test plan and will be implemented
-  story by story before production code.
-- **Contracts**: PASS with no contract edit planned. Existing `GameState`, `ActiveEvent`, and
-  `RadiationStorm` fields cover the feature; any missing field must become a separate `shared/`
-  contract change.
-- **No dependencies/config changes**: PASS. The plan adds no packages and does not alter project
-  configuration.
-- **PR scope**: PASS. Each user story is intended to be a separate small PR.
+- **Ownership**: PASSA. Os caminhos de implementação estão limitados a `src/engine/events/`,
+  `src/data/`, `scripts/`, `src/features/sources/` e `src/features/end/`. A documentação fica
+  em `specs/002-events-data/`.
+- **Motor puro**: PASSA. `updateEvents` recebe estado, configuração e tempo decorrido; não fará
+  fetch, leitura de arquivos, uso de timers ou chamada a `Math.random`.
+- **Missão com seed**: PASSA. O agendamento e a seleção de alvos usam os helpers RNG existentes
+  e gravam o estado RNG retornado.
+- **Ciência real**: PASSA. Os dados DONKI são snapshots offline e cada evento/fonte mantém seu
+  tipo de fonte e URL.
+- **Test-first**: PASSA. Os casos `it.todo` existentes são o plano de testes acordado e serão
+  implementados story por story antes do código de produção.
+- **Contratos**: PASSA sem edição planejada de contratos. Os campos existentes de `GameState`,
+  `ActiveEvent` e `RadiationStorm` cobrem a feature; qualquer campo ausente deve virar uma
+  alteração separada em `shared/`.
+- **Sem dependências/alterações de configuração**: PASSA. O plano não adiciona pacotes nem
+  altera a configuração do projeto.
+- **Escopo de PR**: PASSA. Cada user story será uma PR pequena separada.
 
-## Project Structure
+## Estrutura do projeto
 
-### Documentation (this feature)
+### Documentação desta feature
 
 ```text
 specs/002-events-data/
@@ -81,10 +84,10 @@ specs/002-events-data/
 │   └── events-engine.md
 ├── checklists/
 │   └── requirements.md
-└── tasks.md                 # Created by /speckit-tasks
+└── tasks.md                 # Criado por /speckit-tasks
 ```
 
-### Source Code
+### Código-fonte
 
 ```text
 src/
@@ -106,16 +109,17 @@ src/
 │       ├── SourcesScreen.tsx
 │       └── SourcesScreen.test.tsx
 └── config/
-    └── *.json              # Existing PO-owned balance and source metadata
+    └── *.json              # Balanceamento e metadados de fonte dos POs
 
 scripts/
 └── fetch-donki.ts
 ```
 
-**Structure Decision**: Keep the existing single Vite React project. The pure event engine and
-DONKI parser remain separate from React screens; screens use store-provided game state and
-feature-local presentation helpers. No new top-level source areas are introduced.
+**Decisão de estrutura**: Manter o projeto único existente com Vite e React. O motor puro de
+eventos e o parser DONKI permanecem separados das telas React; as telas usam o estado fornecido
+pela store e helpers de apresentação da própria feature. Nenhuma nova área de código de alto
+nível será criada.
 
-## Complexity Tracking
+## Registro de complexidade
 
-No constitution violations require justification.
+Nenhuma violação da constituição precisa de justificativa.

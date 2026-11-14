@@ -1,67 +1,68 @@
-# Quickstart: Events and NASA Data
+# Início rápido: Eventos e dados da NASA
 
-## Prerequisites
+## Pré-requisitos
 
 - Node.js `>=22.18`
-- Dependencies installed with the repository lockfile
-- Working branch with the `data/` prefix
+- Dependências instaladas com o lockfile do repositório
+- Branch de trabalho com o prefixo `data/`
 
-## Focused validation
+## Validação focada
 
-Run the event tests:
+Executar os testes de eventos:
 
 ```powershell
 npx vitest run src\engine\events\events.test.ts
 ```
 
-Expected result: scheduling, dust, darkness, global-storm, and radiation-storm tests pass.
+Resultado esperado: testes de agendamento, poeira, escuridão, tempestade global e tempestade de
+radiação passam.
 
-Run the DONKI tests:
+Executar os testes DONKI:
 
 ```powershell
 npx vitest run src\data\donki.test.ts
 ```
 
-Expected result: snapshot parsing, deterministic selection, and empty-data behavior pass.
+Resultado esperado: passam os testes de leitura do snapshot, seleção determinística e dados vazios.
 
-Run screen tests when US4 is implemented:
+Executar os testes de tela quando a US4 estiver implementada:
 
 ```powershell
 npx vitest run src\features\end\EndScreen.test.tsx src\features\sources\SourcesScreen.test.tsx
 ```
 
-Expected result: the debrief accounts for logged outcomes and the sources screen labels science,
-game values, simplifications, and archived DONKI data.
+Resultado esperado: o debrief contabiliza os resultados registrados e a tela de fontes rotula
+ciência, valores do jogo, simplificações e dados DONKI arquivados.
 
-## Data snapshot validation
+## Validação do snapshot de dados
 
-Use the existing script only when refreshing an explicitly approved archive range:
+Usar o script existente somente ao atualizar um intervalo arquivado explicitamente aprovado:
 
 ```powershell
 npm run data:fetch -- 2024-05-01 2024-05-31
 ```
 
-The resulting snapshot must be committed under `src/data/snapshots/`, reviewed for the expected
-SEP fields, and never fetched by the browser at runtime.
+O snapshot resultante deve ser versionado em `src/data/snapshots/`, revisado quanto aos campos SEP
+esperados e nunca buscado pelo navegador em runtime.
 
-## Full validation
+## Validação completa
 
-Before each story PR:
+Antes de cada PR de story:
 
 ```powershell
 npm run check
 ```
 
-Expected result: formatting, lint, type checking, all tests, and build pass. The ownership job is
-verified separately by CI before merge.
+Resultado esperado: formatação, lint, verificação de tipos, todos os testes e build passam. O job
+de ownership é verificado separadamente pelo CI antes do merge.
 
-## Manual scenario checklist
+## Checklist de cenários manuais
 
-1. Start two missions with the same seed and advance them through the same season; compare event
-   times and targets.
-2. Observe a dust storm and confirm its solar reduction ends when the storm ends.
-3. Confirm damaged, clogged, and short-circuited structures remain in that state until repaired
-   or cleaned.
-4. Reach a radiation warning, shelter the crew, and confirm the storm names an archived DONKI
-   event.
-5. Finish a mission with logged losses and confirm the debrief explains every cause.
+1. Iniciar duas missões com a mesma seed e avançá-las pela mesma estação; comparar horários e
+   alvos dos eventos.
+2. Observar uma tempestade de poeira e confirmar que sua redução solar termina com a tempestade.
+3. Confirmar que estruturas danificadas, entupidas e em curto-circuito permanecem assim até serem
+   reparadas ou limpas.
+4. Alcançar um aviso de radiação, abrigar a tripulação e confirmar que a tempestade nomeia um
+   evento DONKI arquivado.
+5. Terminar uma missão com perdas no log e confirmar que o debrief explica cada causa.

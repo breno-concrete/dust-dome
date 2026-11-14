@@ -1,36 +1,36 @@
-# Specification Quality Checklist: Events and NASA Data
+# Checklist de qualidade da especificação: Eventos e dados da NASA
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning
-**Created**: 2026-11-14
+**Objetivo**: Validar a completude e a qualidade da especificação antes de avançar para o plano
+**Criado em**: 2026-11-14
 **Feature**: [spec.md](../spec.md)
 
-## Content Quality
+## Qualidade do conteúdo
 
-- [x] No implementation details (languages, frameworks, APIs)
-- [x] Focused on user value and mission learning needs
-- [x] Written for non-technical stakeholders while retaining testable behavior
-- [x] All mandatory sections completed
+- [x] Não há detalhes de implementação (linguagens, frameworks ou APIs)
+- [x] O foco está no valor para o jogador e nas necessidades de aprendizado da missão
+- [x] O texto é adequado para stakeholders não técnicos, mantendo o comportamento testável
+- [x] Todas as seções obrigatórias estão preenchidas
 
-## Requirement Completeness
+## Completude dos requisitos
 
-- [x] No `[NEEDS CLARIFICATION]` markers remain
-- [x] Requirements are testable and unambiguous
-- [x] Success criteria are measurable
-- [x] Success criteria are technology-agnostic except for repository-required validation
-- [x] All acceptance scenarios are defined
-- [x] Edge cases are identified
-- [x] Scope is clearly bounded by the brief and ownership rules
-- [x] Dependencies and assumptions are identified
+- [x] Não há marcadores `[NEEDS CLARIFICATION]`
+- [x] Os requisitos são testáveis e inequívocos
+- [x] Os critérios de sucesso são mensuráveis
+- [x] Os critérios de sucesso são independentes de tecnologia, exceto pela validação exigida pelo repositório
+- [x] Todos os cenários de aceitação estão definidos
+- [x] Casos extremos estão identificados
+- [x] O escopo está claramente limitado pelo brief e pelas regras de ownership
+- [x] Dependências e suposições estão identificadas
 
-## Feature Readiness
+## Prontidão da feature
 
-- [x] All functional requirements have clear acceptance criteria
-- [x] User scenarios cover scheduling, environmental effects, radiation, debrief, and sources
-- [x] Feature meets the measurable outcomes defined in Success Criteria
-- [x] Implementation details are limited to necessary project contracts and ownership constraints
+- [x] Todos os requisitos funcionais têm critérios de aceitação claros
+- [x] Os cenários cobrem agendamento, efeitos ambientais, radiação, debrief e fontes
+- [x] A feature atende aos resultados mensuráveis definidos nos critérios de sucesso
+- [x] Detalhes de implementação estão limitados aos contratos e regras de ownership necessários
 
-## Notes
+## Observações
 
-- The specification is ready for `/speckit-plan`.
-- The existing brief remains the source for story targets and owned paths.
-- Contract changes must be handled through a separate `shared/` request.
+- A especificação está pronta para `/speckit-plan`.
+- O brief existente continua sendo a fonte dos alvos das stories e dos caminhos sob responsabilidade.
+- Mudanças de contrato devem ser tratadas por uma solicitação separada em `shared/`.

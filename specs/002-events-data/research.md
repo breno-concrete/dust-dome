@@ -1,75 +1,76 @@
-# Research: Events and NASA Data
+# Pesquisa: Eventos e dados da NASA
 
-## Decision: Reuse the existing pure engine boundary
+## Decisão: Reutilizar o limite existente do motor puro
 
-- **Decision**: Implement all simulation behavior in `src/engine/events/events.ts` through
-  `updateEvents(state, config, dt)`.
-- **Rationale**: `src/engine/game.ts` already calls this function after `advanceTime` and before
-  power, production, jobs, crew, and outcome. This preserves the documented tick order and keeps
-  event effects observable by the systems that consume `GameState`.
-- **Alternatives considered**: Adding event logic to `game.ts` would bypass the owned event module;
-  putting it in the store would violate the pure-engine boundary and make deterministic tests
-  depend on React state.
+- **Decisão**: Implementar todo o comportamento de simulação em
+  `src/engine/events/events.ts`, por meio de `updateEvents(state, config, dt)`.
+- **Justificativa**: `src/engine/game.ts` já chama essa função depois de `advanceTime` e antes de
+  energia, produção, trabalhos, tripulação e resultado. Isso preserva a ordem documentada do
+  tick e mantém os efeitos de eventos observáveis pelos sistemas que consomem `GameState`.
+- **Alternativas consideradas**: Adicionar a lógica de eventos a `game.ts` ignoraria o módulo de
+  eventos sob responsabilidade do DEV A; colocá-la na store violaria o limite do motor puro e
+  faria os testes determinísticos dependerem do estado React.
 
-## Decision: Use `state.rng` for every random choice
+## Decisão: Usar `state.rng` para toda escolha aleatória
 
-- **Decision**: Use `nextRange` for interval selection and `nextIndex` for structure and DONKI
-  selection, writing every returned RNG value back into the next state.
-- **Rationale**: `src/engine/rng.ts` is the established seeded generator and the constitution
-  requires identical seeds to produce identical missions.
-- **Alternatives considered**: `Math.random` is prohibited; deriving a new random generator from
-  elapsed time would break replayability.
+- **Decisão**: Usar `nextRange` para selecionar intervalos e `nextIndex` para selecionar
+  estruturas e eventos DONKI, gravando cada valor RNG retornado no próximo estado.
+- **Justificativa**: `src/engine/rng.ts` é o gerador seedado estabelecido e a constituição exige
+  que seeds idênticas produzam missões idênticas.
+- **Alternativas consideradas**: `Math.random` é proibido; derivar um novo gerador do tempo
+  decorrido quebraria a reprodutibilidade.
 
-## Decision: Treat configured event rules as the source of balance
+## Decisão: Tratar as regras configuradas como fonte do balanceamento
 
-- **Decision**: Read cycle, season, interval, duration, and effects from `GameConfig.events` and
-  radiation settings from `GameConfig.mission.radiationStorm`.
-- **Rationale**: `src/config/schema.ts` already models the full event configuration, including
-  cycle-four interval scaling, status effects, source metadata, and radiation timing.
-- **Alternatives considered**: Hard-coding the canon's numbers in TypeScript would prevent PO
-  tuning and violate the configuration ownership rule.
+- **Decisão**: Ler ciclo, estação, intervalo, duração e efeitos de `GameConfig.events` e as
+  configurações de radiação de `GameConfig.mission.radiationStorm`.
+- **Justificativa**: `src/config/schema.ts` já modela a configuração completa de eventos, incluindo
+  escala do intervalo no ciclo quatro, efeitos de status, metadados de fonte e timing da radiação.
+- **Alternativas consideradas**: Codificar números do cânone diretamente em TypeScript impediria o
+  ajuste pelos POs e violaria a regra de ownership da configuração.
 
-## Decision: Keep persistent and temporary effects separate
+## Decisão: Manter efeitos persistentes e temporários separados
 
-- **Decision**: Store active temporary effects in `activeEvents`; store persistent structure
-  statuses and log entries on their existing state fields. Clear temporary effects at event or
-  season boundaries without clearing damage, clogging, or short-circuit statuses.
-- **Rationale**: `visualState.ts` already derives dust and light from `activeEvents`, while
-  structure status is the existing contract consumed by production, repair, and scene code.
-- **Alternatives considered**: Encoding all effects as permanent statuses would make storm
-  duration and season cleanup incorrect.
+- **Decisão**: Armazenar efeitos temporários ativos em `activeEvents`; armazenar status
+  persistentes das estruturas e entradas do log nos campos existentes do estado. Limpar efeitos
+  temporários no fim do evento ou da estação sem limpar danos, entupimentos ou curtos-circuitos.
+- **Justificativa**: `visualState.ts` já deriva poeira e luz de `activeEvents`, enquanto o status
+  da estrutura é o contrato existente consumido pelo código de produção, reparo e cena.
+- **Alternativas consideradas**: Codificar todos os efeitos como status permanentes faria a duração
+  da tempestade e a limpeza da estação ficarem incorretas.
 
-## Decision: Use committed DONKI snapshots, never runtime NASA access
+## Decisão: Usar snapshots DONKI versionados, nunca acesso à NASA em runtime
 
-- **Decision**: Complete `sepEvents()` by reading the committed snapshot format described in
-  `src/data/snapshots/README.md`, and keep `pickSepEvent()` deterministic and null-safe.
-- **Rationale**: The game must work offline and the constitution explicitly restricts NASA I/O to
-  `src/data/`. The source metadata already identifies NASA DONKI as the real basis.
-- **Alternatives considered**: Fetching DONKI during a mission would make behavior non-reproducible,
-  require network access, and incorrectly present archived data as live.
+- **Decisão**: Completar `sepEvents()` usando o formato de snapshot descrito em
+  `src/data/snapshots/README.md` e manter `pickSepEvent()` determinístico e seguro para valores
+  nulos.
+- **Justificativa**: O jogo precisa funcionar offline e a constituição restringe a I/O da NASA à
+  `src/data/`. Os metadados de fonte já identificam NASA DONKI como a base real.
+- **Alternativas consideradas**: Buscar DONKI durante a missão tornaria o comportamento
+  não reproduzível, exigiria rede e apresentaria dados arquivados incorretamente como atuais.
 
-## Decision: Derive the debrief from `GameState.log`
+## Decisão: Derivar o debrief de `GameState.log`
 
-- **Decision**: Add feature-local pure helpers for grouping log entries, resolving cause text,
-  and collecting sources; render the results in the existing end and sources screens.
-- **Rationale**: `LogEntry` already records cycle, season, kind, reference, and optional cause,
-  which is the authoritative record of what happened. A helper makes behavior testable without
-  mounting the whole application.
-- **Alternatives considered**: Reconstructing losses from current structures or stock would omit
-  historical events and could invent causes.
+- **Decisão**: Adicionar helpers puros da feature para agrupar entradas do log, resolver textos de
+  causa e coletar fontes; renderizar os resultados nas telas existentes de fim e fontes.
+- **Justificativa**: `LogEntry` já registra ciclo, estação, tipo, referência e causa opcional, sendo
+  o registro autoritativo do que aconteceu. Um helper permite testar o comportamento sem montar
+  toda a aplicação.
+- **Alternativas consideradas**: Reconstituir perdas a partir das estruturas ou do estoque atual
+  omitiria eventos históricos e poderia inventar causas.
 
-## Decision: No new contract fields in this plan
+## Decisão: Nenhum campo novo de contrato neste plano
 
-- **Decision**: Use `activeEvents`, `nextEventAt`, `radiationStorm`, structure status, and `log`
-  as currently defined. If implementation proves a field is missing, stop and request a
-  `shared/` contract PR.
-- **Rationale**: The brief explicitly assigns those existing fields to DEV A and requires contract
-  changes to be coordinated with Breno.
-- **Alternatives considered**: Editing `src/engine/types.ts`, `src/config/schema.ts`, or
-  `src/app/store.ts` from the data branch would violate ownership and CI rules.
+- **Decisão**: Usar `activeEvents`, `nextEventAt`, `radiationStorm`, status de estrutura e `log`
+  como já definidos. Se a implementação provar que falta um campo, parar e solicitar uma PR de
+  contrato em `shared/`.
+- **Justificativa**: O brief atribui explicitamente esses campos ao DEV A e exige que mudanças de
+  contrato sejam coordenadas com Breno.
+- **Alternativas consideradas**: Editar `src/engine/types.ts`, `src/config/schema.ts` ou
+  `src/app/store.ts` na branch de dados violaria ownership e as regras do CI.
 
-## Research conclusion
+## Conclusão da pesquisa
 
-No unresolved `NEEDS CLARIFICATION` items remain. The repository already supplies the required
-engine, configuration, RNG, store, test, and snapshot boundaries; implementation work is
-behavioral completion of the existing TODOs.
+Não há itens `NEEDS CLARIFICATION` pendentes. O repositório já fornece os limites necessários do
+motor, configuração, RNG, store, testes e snapshots; o trabalho de implementação é completar
+comportamentalmente os TODOs existentes.
