@@ -41,15 +41,17 @@
     }
   ],
   "jobs": {
-    "buildSeconds": 15,
     "upgradeSeconds": 15,
     "repairSeconds": 5,
-    "cleanSeconds": 10
+    "cleanSeconds": 10,
+    "demolishSeconds": 15
   },
+  "demolishRefundShare": 1,
   "exposure": {
     "maxShareOfSeason": 0.25,
     "recoveryRate": 0.5,
-    "warnAt": 0.75
+    "warnAt": 0.75,
+    "resumeAt": 0.25
   },
   "emptyReserve": {
     "graceSeconds": 15,

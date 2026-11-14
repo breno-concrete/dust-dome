@@ -149,14 +149,15 @@ state transitions. Fields marked **v2** arrive with the `shared/contract-v2` PR
 ## WinTargets
 
 - `people = colonists + crew`; `reserves[x] = needs[x] × people`; `habitatCapacity = people`.
-- Checked when winter of the last cycle ends, together with the power target (R16).
+- Checked when winter of the last cycle ends (R16). Since constitution 3.0.0 power is not a
+  target.
 
 ## Config fields the engine reads
 
 | File | Fields |
 |---|---|
 | `resources.json` | `id`, `kind`, `start` |
-| `structures.json` | `id`, `cost`, `size`, `power`, `switchable`, `inputs`, `outputs`, `heatingKw`, `insulatedHeatingKw`, `capacity`, `upgrades`, **v2** `connectsTo` |
+| `structures.json` | `id`, `cost`, `size`, `power`, `switchable`, `inputs`, `outputs`, `heatingKw`, `insulatedHeatingKw`, `capacity`, `upgrades`, **v2** `buildSeconds`, `connectsTo` |
 | `upgrades.json` | `id`, `effect`, `cost` |
 | `seasons.json` | `cycles`, `seasons[].id`, `seasons[].durationSeconds`, `winterDarknessFromCycle` |
-| `mission.json` | `crew`, `colonists`, `needs`, `grid`, `startingStructures`, `jobs`, `exposure`, `emptyReserve`, `damage`, `repair`, `brownoutOrder`, `insulationRequiredFromCycle` |
+| `mission.json` | `crew`, `colonists`, `needs`, `grid`, `startingStructures`, `jobs` (**v2** `demolishSeconds`, no `buildSeconds`), **v2** `demolishRefundShare`, `exposure` (**v2** `resumeAt`), `emptyReserve`, `damage`, `repair`, `brownoutOrder`, `insulationRequiredFromCycle` |

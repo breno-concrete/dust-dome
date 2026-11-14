@@ -4,7 +4,13 @@ import { describe, it } from 'vitest'
 describe('updateCrew', () => {
   it.todo('exposure fills to 1 after maxShareOfSeason of the current season spent outside')
   it.todo('exposure recovers inside a habitat at recoveryRate of the fill speed')
-  it.todo('an astronaut at exposure 1 dies (log cause "exposure")')
+  it.todo(
+    'at warnAt the astronaut stops working and comes back inside; the job returns to the queue with its remaining time',
+  )
+  it.todo('exposure never kills: no astronaut stays outside past warnAt')
+  it.todo(
+    'when a radiation storm hits, everyone not in a sheltered habitat (after moving into one with room) dies, cause "radiation_storm"',
+  )
   it.todo(
     'an empty vital reserve kills one astronaut after graceSeconds, then one every deathEverySeconds',
   )

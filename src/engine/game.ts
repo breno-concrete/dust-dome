@@ -34,6 +34,7 @@ export function createGame(config: GameConfig, seed: number): GameState {
     habitatId: firstHabitat,
     exposure: 0,
     jobId: null,
+    resting: false,
   }))
 
   return {

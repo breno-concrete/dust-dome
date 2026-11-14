@@ -26,4 +26,8 @@ describe('placement', () => {
     const [x, y] = habitat.tile
     expect(placementError(game, config, 'solar_panel', [x + 1, y + 1])).toBe('tile_blocked')
   })
+
+  it.todo(
+    'a new habitat must share a tile side with an existing habitat (not_connected); a corner does not count',
+  )
 })
