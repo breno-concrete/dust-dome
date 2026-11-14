@@ -61,6 +61,22 @@ export default function Scene() {
   // Derived in render: a store selector must never return a new object (infinite re-render).
   const preview = placementPreview({ game, placing, hoverTile })
 
+  const skyColor = look.radiationTint
+    ? '#421414'
+    : look.dark
+      ? '#070818'
+      : look.dustHaze > 0.1
+        ? '#7a3c1e'
+        : '#2a1a16'
+  const ambientColor = look.radiationTint
+    ? '#ff7a70'
+    : look.dark
+      ? '#5c66b8'
+      : look.dustHaze > 0.1
+        ? '#e0915a'
+        : '#ffd9c4'
+  const sunColor = look.radiationTint ? '#ff5a4d' : look.dark ? '#7c88e0' : '#fff2e2'
+
   const onGroundMove = (e: ThreeEvent<PointerEvent>) =>
     hoverAt(worldToTile(e.point.x, e.point.z, grid))
   const onGroundLeave = () => hoverAt(null)
@@ -72,18 +88,34 @@ export default function Scene() {
 
   return (
     <div className={styles.wrapper}>
+      {look.radiationTint && (
+        <div className={styles.radiationTint} data-testid="radiation-warning-tint" />
+      )}
       <Canvas
         orthographic
         camera={{ position: cameraPositionForStep(0), zoom: 42, near: -100, far: 200 }}
       >
-        <color attach="background" args={[look.dark ? '#05070d' : '#2a1a16']} />
-        <ambientLight intensity={0.25 + 0.6 * look.light} />
-        <directionalLight position={[8, 12, 4]} intensity={1.4 * look.light} />
+        <color attach="background" args={[skyColor]} />
+        {look.dustHaze > 0 && (
+          <fog
+            attach="fog"
+            args={[
+              '#b85d32',
+              Math.max(4, 18 - look.dustHaze * 12),
+              Math.max(22, 65 - look.dustHaze * 40),
+            ]}
+          />
+        )}
+        <ambientLight color={ambientColor} intensity={0.28 + 0.62 * look.light} />
+        <directionalLight color={sunColor} position={[8, 12, 4]} intensity={1.4 * look.light} />
 
         <CameraRig step={rotationStep} />
 
         {/* Surrounding Hellas Planitia crater floor and faceted rock plateaus (Lote 3) */}
         <SurroundingTerrain />
+
+        {/* Atmospheric dust haze clouds during local or global dust storms (Lote 3) */}
+        {look.dustHaze > 0 && <DustHazeClouds intensity={look.dustHaze} />}
 
         {/* Interactive 12x12 outpost buildable grid */}
         <mesh
@@ -108,6 +140,7 @@ export default function Scene() {
               position={[x, 0, z]}
               selected={s.id === selectedId}
               onSelect={selectStructure}
+              visual={look}
             />
           )
         })}
@@ -185,6 +218,29 @@ function SurroundingTerrain() {
         <dodecahedronGeometry args={[1.3, 0]} />
         <meshStandardMaterial color={SURROUND_TERRAIN} flatShading />
       </mesh>
+    </group>
+  )
+}
+
+const DUST_CLOUD_POSITIONS: ReadonlyArray<readonly [number, number, number, number]> = [
+  [-6.2, 1.8, -5.5, 1.3],
+  [5.8, 2.2, -4.8, 1.5],
+  [-4.5, 2.0, 5.6, 1.4],
+  [6.0, 1.7, 5.2, 1.2],
+  [0.5, 2.6, -6.4, 1.6],
+  [-0.8, 2.4, 6.2, 1.4],
+]
+
+function DustHazeClouds({ intensity }: { intensity: number }) {
+  const opacity = Math.min(0.55, 0.15 + intensity * 0.4)
+  return (
+    <group>
+      {DUST_CLOUD_POSITIONS.map(([x, y, z, radius], idx) => (
+        <mesh key={idx} position={[x, y, z]} scale={[1.5, 0.55, 1.2]} raycast={() => null}>
+          <dodecahedronGeometry args={[radius, 0]} />
+          <meshStandardMaterial color={CLIFF_OCHRE} transparent opacity={opacity} flatShading />
+        </mesh>
+      ))}
     </group>
   )
 }
