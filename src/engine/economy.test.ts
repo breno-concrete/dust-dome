@@ -186,4 +186,22 @@ describe('applyProduction', () => {
     }
     expect(after.stock.iron).toBe(0)
   })
+
+  // Bug seen on screen: oxygen made = oxygen breathed, but the HUD showed 7 instead of 8
+  // because 8 + x - x drifted to 7.99999999999995 over many frame-sized steps.
+  it('a stock where production equals consumption stays on its whole number', () => {
+    const made = def('oxygen_generator').outputs!.min.oxygen
+    const before = withStock(base(one('oxygen_generator'), { oxygen_generator: 'min' }), {
+      oxygen: 8,
+    })
+    const living = before.crew.filter((a) => a.alive).length
+    const balanced = {
+      ...config,
+      mission: { ...config.mission, needs: { ...needs, oxygen: made / living } },
+    }
+    let s = before
+    // Uneven steps, like real frames at different speeds.
+    for (let i = 0; i < 3000; i++) s = applyProduction(s, balanced, 0.01 + (i % 7) * 0.037)
+    expect(s.stock.oxygen).toBe(8)
+  })
 })
