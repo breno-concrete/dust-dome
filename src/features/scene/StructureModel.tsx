@@ -8,6 +8,7 @@ import {
   CatmullRomCurve3,
   ExtrudeGeometry,
   LatheGeometry,
+  Quaternion,
   Shape,
   TubeGeometry,
   Vector2,
@@ -394,6 +395,131 @@ const BATTERY_GEO = {
   ),
 }
 
+// Shared helper to place any strut/conveyor/boom accurately between two 3D endpoints
+const UP_AXIS = new Vector3(0, 1, 0)
+
+function makeStrutTransform(
+  a: readonly [number, number, number],
+  b: readonly [number, number, number],
+) {
+  const va = new Vector3(a[0], a[1], a[2])
+  const vb = new Vector3(b[0], b[1], b[2])
+  const dir = vb.clone().sub(va)
+  const length = dir.length()
+  const mid = va.clone().add(vb).multiplyScalar(0.5)
+  const quat = new Quaternion().setFromUnitVectors(UP_AXIS, dir.normalize())
+  return {
+    position: [mid.x, mid.y, mid.z] as const,
+    quaternion: quat,
+    length,
+  }
+}
+
+// Shared datum & static procedural geometries for Mine (2x2 footprint <= 1.76 x 1.76)
+const MINE_BASE_Y = 0.022
+const MINE_PIT_X = -0.36
+const MINE_PIT_Z = -0.34
+const MINE_TOWER_X = 0.16
+const MINE_TOWER_Z = -0.32
+const MINE_TOWER_TOP_Y = MINE_BASE_Y + 0.84
+const MINE_BOOM_TIP: readonly [number, number, number] = [MINE_PIT_X, MINE_TOWER_TOP_Y + 0.28, MINE_PIT_Z]
+
+const MINE_TRUSS_STRUTS = (() => {
+  const bx = 0.19
+  const tx = 0.12
+  const y0 = MINE_BASE_Y
+  const y1 = MINE_TOWER_TOP_Y
+  const ym = (y0 + y1) * 0.5
+  const xm = (bx + tx) * 0.5
+
+  const corners: ReadonlyArray<readonly [number, number]> = [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+  ]
+
+  const legs = corners.map(([sx, sz]) =>
+    makeStrutTransform(
+      [MINE_TOWER_X + sx * bx, y0, MINE_TOWER_Z + sz * bx],
+      [MINE_TOWER_X + sx * tx, y1, MINE_TOWER_Z + sz * tx],
+    ),
+  )
+
+  const midRings = corners.map(([sx, sz], i) => {
+    const [nx, nz] = corners[(i + 1) % 4]!
+    return makeStrutTransform(
+      [MINE_TOWER_X + sx * xm, ym, MINE_TOWER_Z + sz * xm],
+      [MINE_TOWER_X + nx * xm, ym, MINE_TOWER_Z + nz * xm],
+    )
+  })
+
+  const diagBraces = corners.map(([sx, sz], i) => {
+    const [nx, nz] = corners[(i + 1) % 4]!
+    return makeStrutTransform(
+      [MINE_TOWER_X + sx * bx, y0 + 0.03, MINE_TOWER_Z + sz * bx],
+      [MINE_TOWER_X + nx * xm, ym, MINE_TOWER_Z + nz * xm],
+    )
+  })
+
+  const upperBraces = corners.map(([sx, sz], i) => {
+    const [nx, nz] = corners[(i + 1) % 4]!
+    return makeStrutTransform(
+      [MINE_TOWER_X + sx * xm, ym, MINE_TOWER_Z + sz * xm],
+      [MINE_TOWER_X + nx * tx, y1 - 0.02, MINE_TOWER_Z + nz * tx],
+    )
+  })
+
+  // Boom starts at front face of hoist house; stay anchors above the gantry pylon so it never intersects the boom
+  const boomArm = makeStrutTransform(
+    [MINE_TOWER_X - 0.08, y1 + 0.1, MINE_TOWER_Z],
+    MINE_BOOM_TIP,
+  )
+
+  const boomStay = makeStrutTransform(
+    [MINE_TOWER_X + 0.08, y1 + 0.34, MINE_TOWER_Z + 0.02],
+    [MINE_BOOM_TIP[0], MINE_BOOM_TIP[1] + 0.055, MINE_BOOM_TIP[2]],
+  )
+
+  return { legs, midRings, diagBraces, upperBraces, boomArm, boomStay }
+})()
+
+const MINE_GEO = {
+  // Continuous 2-step collar profile (outer-bottom -> top -> inner-floor so normals face up/out)
+  pitCollar: latheOctagon(
+    [
+      [0.31, 0],
+      [0.27, 0.045],
+      [0.21, 0.045],
+      [0.18, 0.01],
+    ],
+    8,
+  ),
+  hopperBody: new LatheGeometry(
+    [
+      new Vector2(0.08, 0),
+      new Vector2(0.24, 0.22),
+      new Vector2(0.24, 0.27),
+      new Vector2(0.2, 0.27),
+      new Vector2(0.06, 0.04),
+    ],
+    4,
+    Math.PI / 4,
+  ),
+  // Hollow orange hopper lip so the open ore mouth & interior are clearly visible
+  hopperRim: (() => {
+    const g = new ExtrudeGeometry(makeHollowRectFrameShape(0.36, 0.36, 0.045), {
+      depth: 0.032,
+      bevelEnabled: true,
+      bevelThickness: 0.008,
+      bevelSize: 0.008,
+      bevelSegments: 1,
+    })
+    g.rotateX(-Math.PI / 2)
+    return g
+  })(),
+}
+
 const DEFAULT_VISUAL: VisualState = {
   light: 1,
   dustHaze: 0,
@@ -558,28 +684,13 @@ function StructureMesh({
 
     case 'mine':
       return (
-        <group position={[0, 0.12, 0]}>
-          {/* Excavated Martian rock berm (2x2) */}
-          <mesh position={[-0.25, 0.26, -0.2]}>
-            <dodecahedronGeometry args={[0.52, 0]} />
-            <meshStandardMaterial color={MARS_ROCK} flatShading />
-          </mesh>
-          {/* Headframe gantry */}
-          <mesh position={[0.25, 0.52, 0.15]}>
-            <boxGeometry args={[0.55, 0.85, 0.55]} />
-            <meshStandardMaterial
-              color={secondaryColor}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          {/* Crane boom */}
-          <mesh position={[0.1, 0.98, 0.15]} rotation={[0, 0, 0.25]}>
-            <boxGeometry args={[0.85, 0.12, 0.16]} />
-            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
-          </mesh>
-        </group>
+        <MineMesh
+          hullColor={hullColor}
+          secondaryColor={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          nightGlow={nightGlow}
+        />
       )
 
     case 'oxygen_generator':
@@ -929,6 +1040,295 @@ function NonColorCueOverlay({
           ))}
         </group>
       )}
+    </group>
+  )
+}
+
+function MineMesh({
+  hullColor,
+  secondaryColor,
+  emissive,
+  emissiveIntensity,
+  nightGlow,
+}: {
+  hullColor: string
+  secondaryColor: string
+  emissive: string
+  emissiveIntensity: number
+  nightGlow: boolean
+}) {
+  // Faceted Martian rock outcrops framing the -X/-Z pit rim (inside ±0.84)
+  const pitRocks = [
+    { pos: [-0.64, MINE_BASE_Y + 0.11, -0.48] as const, r: 0.18, s: [1.05, 0.85, 1.1] as const, c: MARS_ROCK },
+    { pos: [-0.66, MINE_BASE_Y + 0.09, -0.16] as const, r: 0.16, s: [0.95, 0.72, 1.2] as const, c: '#7a3419' },
+    { pos: [-0.14, MINE_BASE_Y + 0.08, -0.64] as const, r: 0.13, s: [1.15, 0.7, 0.95] as const, c: '#7a3419' },
+    { pos: [-0.54, MINE_BASE_Y + 0.07, 0.04] as const, r: 0.13, s: [1.0, 0.65, 1.05] as const, c: MARS_ROCK },
+    { pos: [-0.58, MINE_BASE_Y + 0.08, -0.66] as const, r: 0.13, s: [1.0, 0.72, 0.95] as const, c: '#b5532f' },
+  ] as const
+
+  const hopperX = 0.5
+  const hopperZ = 0.3
+  const convStartX = -0.22
+  const convStartY = MINE_BASE_Y + 0.155
+  const convEndX = 0.34
+  const convEndY = MINE_BASE_Y + 0.555
+  const convDx = convEndX - convStartX
+  const convDy = convEndY - convStartY
+  const convLen = Math.hypot(convDx, convDy)
+  const convPitch = Math.atan2(convDy, convDx)
+  const conveyorSteps = [0.22, 0.48, 0.74] as const
+
+  return (
+    <group position={[0, 0.12, 0]}>
+      {/* Excavated dark pit floor & continuous stepped collar (-X/-Z) */}
+      <mesh position={[MINE_PIT_X, MINE_BASE_Y + 0.006, MINE_PIT_Z]}>
+        <cylinderGeometry args={[0.185, 0.195, 0.012, 8]} />
+        <meshStandardMaterial color="#1a110e" flatShading />
+      </mesh>
+      <mesh
+        geometry={MINE_GEO.pitCollar}
+        position={[MINE_PIT_X, MINE_BASE_Y, MINE_PIT_Z]}
+      >
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Faceted Martian rock berm framing the excavation (Lote 3) */}
+      {pitRocks.map((rk, idx) => (
+        <mesh
+          key={idx}
+          position={rk.pos}
+          scale={rk.s}
+          rotation={[0.2 * idx, 0.8 * idx, 0.15 * idx]}
+        >
+          <dodecahedronGeometry args={[rk.r, 0]} />
+          <meshStandardMaterial color={rk.c} flatShading />
+        </mesh>
+      ))}
+
+      {/* Shaft winch floodlight station on the back pit collar (clear of bucket) */}
+      <group position={[MINE_PIT_X - 0.04, MINE_BASE_Y, MINE_PIT_Z - 0.28]}>
+        <mesh position={[0, 0.11, 0]}>
+          <boxGeometry args={[0.2, 0.22, 0.12]} />
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+        <mesh position={[0, 0.24, 0]}>
+          <boxGeometry args={[0.22, 0.04, 0.14]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+        <mesh position={[0, 0.16, 0.068]}>
+          <boxGeometry args={[0.14, 0.05, 0.02]} />
+          <meshStandardMaterial
+            color={WARM_WINDOW_LIGHT}
+            emissive={WARM_WINDOW_LIGHT}
+            emissiveIntensity={nightGlow ? 0.95 : 0.45}
+            flatShading
+          />
+        </mesh>
+      </group>
+
+      {/* Open 4-leg tapered steel headframe lattice tower */}
+      {MINE_TRUSS_STRUTS.legs.map((s, idx) => (
+        <mesh key={`leg-${idx}`} position={s.position} quaternion={s.quaternion}>
+          <cylinderGeometry args={[0.02, 0.026, s.length, 6]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+      ))}
+      {MINE_TRUSS_STRUTS.midRings.map((s, idx) => (
+        <mesh key={`ring-${idx}`} position={s.position} quaternion={s.quaternion}>
+          <cylinderGeometry args={[0.014, 0.014, s.length, 4]} />
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+      ))}
+      {MINE_TRUSS_STRUTS.diagBraces.map((s, idx) => (
+        <mesh key={`d1-${idx}`} position={s.position} quaternion={s.quaternion}>
+          <cylinderGeometry args={[0.01, 0.01, s.length, 4]} />
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+      ))}
+      {MINE_TRUSS_STRUTS.upperBraces.map((s, idx) => (
+        <mesh key={`d2-${idx}`} position={s.position} quaternion={s.quaternion}>
+          <cylinderGeometry args={[0.01, 0.01, s.length, 4]} />
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+      ))}
+
+      {/* Headframe crown deck, machinery cabin & elevated gantry pylon */}
+      <mesh position={[MINE_TOWER_X, MINE_TOWER_TOP_Y + 0.02, MINE_TOWER_Z]}>
+        <boxGeometry args={[0.29, 0.04, 0.29]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <mesh position={[MINE_TOWER_X + 0.01, MINE_TOWER_TOP_Y + 0.11, MINE_TOWER_Z]}>
+        <boxGeometry args={[0.23, 0.14, 0.22]} />
+        <meshStandardMaterial
+          color={hullColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          flatShading
+        />
+      </mesh>
+      <mesh position={[MINE_TOWER_X + 0.01, MINE_TOWER_TOP_Y + 0.195, MINE_TOWER_Z]}>
+        <boxGeometry args={[0.18, 0.032, 0.17]} />
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+      {/* Raised A-frame tension pylon so stay cable clears the boom completely */}
+      <mesh position={[MINE_TOWER_X + 0.08, MINE_TOWER_TOP_Y + 0.27, MINE_TOWER_Z + 0.02]}>
+        <boxGeometry args={[0.045, 0.15, 0.1]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Crane boom, overhead tension stay, pulley sheave & suspended ore skip */}
+      <mesh
+        position={MINE_TRUSS_STRUTS.boomArm.position}
+        quaternion={MINE_TRUSS_STRUTS.boomArm.quaternion}
+      >
+        <boxGeometry args={[0.068, MINE_TRUSS_STRUTS.boomArm.length, 0.084]} />
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+      <mesh
+        position={MINE_TRUSS_STRUTS.boomStay.position}
+        quaternion={MINE_TRUSS_STRUTS.boomStay.quaternion}
+      >
+        <cylinderGeometry args={[0.012, 0.012, MINE_TRUSS_STRUTS.boomStay.length, 4]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      {/* Top sheave bracket & wheel */}
+      <mesh position={[MINE_BOOM_TIP[0], MINE_BOOM_TIP[1] + 0.035, MINE_BOOM_TIP[2]]}>
+        <boxGeometry args={[0.04, 0.055, 0.065]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <mesh position={MINE_BOOM_TIP} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.052, 0.052, 0.04, 8]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      {/* Hoist cable & suspended ore skip bucket over shaft */}
+      <mesh
+        position={[
+          MINE_BOOM_TIP[0],
+          (MINE_BOOM_TIP[1] + MINE_BASE_Y + 0.4) * 0.5,
+          MINE_BOOM_TIP[2],
+        ]}
+      >
+        <cylinderGeometry
+          args={[0.009, 0.009, MINE_BOOM_TIP[1] - (MINE_BASE_Y + 0.4), 4]}
+        />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <group position={[MINE_BOOM_TIP[0], MINE_BASE_Y + 0.32, MINE_BOOM_TIP[2]]}>
+        <mesh>
+          <cylinderGeometry args={[0.105, 0.075, 0.15, 6]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+        <mesh position={[0, 0.075, 0]}>
+          <octahedronGeometry args={[0.08, 0]} />
+          <meshStandardMaterial color="#7a3419" flatShading />
+        </mesh>
+      </group>
+
+      {/* Ore grizzly intake boot at start of conveyor (+Z corridor, clear of tower) */}
+      <group position={[-0.32, MINE_BASE_Y, hopperZ]}>
+        <mesh position={[0, 0.07, 0]}>
+          <boxGeometry args={[0.24, 0.14, 0.24]} />
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+        <mesh position={[0, 0.155, 0]}>
+          <boxGeometry args={[0.26, 0.03, 0.26]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 0.19, 0]}>
+          <dodecahedronGeometry args={[0.09, 0]} />
+          <meshStandardMaterial color="#7a3419" flatShading />
+        </mesh>
+      </group>
+
+      {/* Upright axis-aligned inclined ore conveyor from intake boot into hopper mouth */}
+      <group
+        position={[(convStartX + convEndX) * 0.5, (convStartY + convEndY) * 0.5, hopperZ]}
+        rotation={[0, 0, convPitch]}
+      >
+        {/* Belt bed */}
+        <mesh>
+          <boxGeometry args={[convLen, 0.04, 0.14]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Twin safety-orange side skirt rails */}
+        {([-0.078, 0.078] as const).map((rz, idx) => (
+          <mesh key={idx} position={[0, 0.02, rz]}>
+            <boxGeometry args={[convLen, 0.045, 0.022]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+        ))}
+        {/* Ore chunks riding up the belt */}
+        {conveyorSteps.map((t, idx) => (
+          <mesh
+            key={`ore-${idx}`}
+            position={[(t - 0.5) * convLen, 0.042, idx % 2 === 0 ? -0.015 : 0.018]}
+            rotation={[idx * 0.5, idx * 0.7, 0]}
+          >
+            <octahedronGeometry args={[0.042, 0]} />
+            <meshStandardMaterial color={idx % 2 === 0 ? '#7a3419' : MARS_ROCK} flatShading />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Mid conveyor A-frame support trestle seated cleanly under the belt */}
+      <group position={[(convStartX + convEndX) * 0.5, MINE_BASE_Y, hopperZ]}>
+        {([-0.075, 0.075] as const).map((tz, idx) => (
+          <mesh key={idx} position={[0, 0.155, tz]}>
+            <boxGeometry args={[0.036, 0.31, 0.03]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+        ))}
+        <mesh position={[0, 0.295, 0]}>
+          <boxGeometry args={[0.042, 0.032, 0.18]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+      </group>
+
+      {/* Ore crusher hopper & braced steel frame (+X/+Z) */}
+      <group position={[hopperX, MINE_BASE_Y, hopperZ]}>
+        {(
+          [
+            [-0.14, -0.14],
+            [0.14, -0.14],
+            [-0.14, 0.14],
+            [0.14, 0.14],
+          ] as const
+        ).map(([lx, lz], idx) => (
+          <mesh key={idx} position={[lx, 0.14, lz]}>
+            <boxGeometry args={[0.038, 0.28, 0.038]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+        {/* Horizontal structural leg tie-bars */}
+        {([-0.14, 0.14] as const).map((zPos, idx) => (
+          <mesh key={`hx-${idx}`} position={[0, 0.11, zPos]}>
+            <boxGeometry args={[0.28, 0.025, 0.025]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+        {([-0.14, 0.14] as const).map((xPos, idx) => (
+          <mesh key={`hz-${idx}`} position={[xPos, 0.11, 0]}>
+            <boxGeometry args={[0.025, 0.025, 0.28]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+        <mesh geometry={MINE_GEO.hopperBody} position={[0, 0.2, 0]}>
+          <meshStandardMaterial color={hullColor} flatShading />
+        </mesh>
+        <mesh geometry={MINE_GEO.hopperRim} position={[0, 0.47, 0]}>
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+        {/* Collected hematite ore mound nested inside the open hopper */}
+        <mesh position={[0, 0.42, 0]}>
+          <dodecahedronGeometry args={[0.115, 0]} />
+          <meshStandardMaterial color="#7a3419" flatShading />
+        </mesh>
+        {/* Side chute/breaker control box */}
+        <mesh position={[0.18, 0.3, 0]}>
+          <boxGeometry args={[0.06, 0.14, 0.12]} />
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+      </group>
     </group>
   )
 }
