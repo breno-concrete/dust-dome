@@ -31,8 +31,8 @@ description: "Task list for 004 Isometric Base Scene and Repair QTE"
 
 **Purpose**: Verify existing scaffolding, owned directories, and baseline test suite before starting US1.
 
-- [ ] T001 Verify baseline tests and tooling run cleanly with `npx vitest run src/features/scene/ src/features/repair/`
-- [ ] T002 [P] Ensure asset directories exist at `public/models/` and `public/audio/` with `.gitkeep` or initial CC0 assets
+- [x] T001 Verify baseline tests and tooling run cleanly with `npx vitest run src/features/scene/ src/features/repair/`
+- [x] T002 [P] Ensure asset directories exist at `public/models/` and `public/audio/` with `.gitkeep` or initial CC0 assets
 
 ---
 
@@ -42,7 +42,7 @@ description: "Task list for 004 Isometric Base Scene and Repair QTE"
 
 **⚠️ CRITICAL**: No user story work should introduce forbidden imports or non-primitive selectors.
 
-- [ ] T003 Audit existing selectors and imports in `src/features/scene/Scene.tsx` and `src/features/repair/RepairQte.tsx` against `specs/004-base-scene/contracts/scene-contract.md`
+- [x] T003 Audit existing selectors and imports in `src/features/scene/Scene.tsx` and `src/features/repair/RepairQte.tsx` against `specs/004-base-scene/contracts/scene-contract.md`
 
 **Checkpoint**: Baseline verified and ownership/contract boundaries confirmed.
 
@@ -58,15 +58,15 @@ description: "Task list for 004 Isometric Base Scene and Repair QTE"
 
 > **NOTE: Convert `it.todo` and write failing tests FIRST, verify they fail (red), then implement.**
 
-- [ ] T004 [US1] Implement failing test for `rotating the camera in 90° steps keeps tile picking correct` and camera rotation step helpers (`0 | 1 | 2 | 3` wrapping, camera orbit position) in `src/features/scene/iso.test.ts`
+- [x] T004 [US1] Implement failing test for `rotating the camera in 90° steps keeps tile picking correct` and camera rotation step helpers (`0 | 1 | 2 | 3` wrapping, camera orbit position) in `src/features/scene/iso.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Add pure 90° camera rotation step helpers (`RotationStep` `0 | 1 | 2 | 3`, `rotateStep`, `cameraPositionForStep`) in `src/features/scene/iso.ts`
-- [ ] T006 [P] [US1] Create `src/features/scene/StructureModel.tsx` mapping all 11 structure IDs (`habitat`, `solar_panel`, `battery`, `mine`, `oxygen_generator`, `ice_melter`, `iron_refinery`, `greenhouse`, `repair_workshop`, `steel_factory`, `nuclear_reactor`) to distinct low-poly 3D models sized to `1×1` or `2×2` footprints (supporting optional `.glb` in `public/models/` with lightweight procedural geometry)
-- [ ] T007 [US1] Update `src/features/scene/Scene.tsx` to integrate 90° camera rotation controls (buttons/keys), bounded orthographic zoom (`minZoom`/`maxZoom`), `StructureModel` rendering, accurate pointer-leave (`hoverAt(null)`), valid/invalid placement preview, and structure selection highlight
-- [ ] T008 [P] [US1] Document any third-party low-poly `.glb` models added to `public/models/` (with license and no NASA logos/insignia) in `CREDITS.md` (Scene section)
-- [ ] T009 [US1] Run `npx vitest run src/features/scene/iso.test.ts` and `npm run check` to verify US1 passes all checks
+- [x] T005 [US1] Add pure 90° camera rotation step helpers (`RotationStep` `0 | 1 | 2 | 3`, `rotateStep`, `cameraPositionForStep`) in `src/features/scene/iso.ts`
+- [x] T006 [P] [US1] Create `src/features/scene/StructureModel.tsx` mapping all 11 structure IDs (`habitat`, `solar_panel`, `battery`, `mine`, `oxygen_generator`, `ice_melter`, `iron_refinery`, `greenhouse`, `repair_workshop`, `steel_factory`, `nuclear_reactor`) to distinct low-poly 3D models sized to `1×1` or `2×2` footprints (supporting optional `.glb` in `public/models/` with lightweight procedural geometry)
+- [x] T007 [US1] Update `src/features/scene/Scene.tsx` to integrate 90° camera rotation controls (buttons/keys), bounded orthographic zoom (`minZoom`/`maxZoom`), `StructureModel` rendering, accurate pointer-leave (`hoverAt(null)`), valid/invalid placement preview, and structure selection highlight
+- [x] T008 [P] [US1] Document any third-party low-poly `.glb` models added to `public/models/` (with license and no NASA logos/insignia) in `CREDITS.md` (Scene section)
+- [x] T009 [US1] Run `npx vitest run src/features/scene/iso.test.ts` and `npm run check` to verify US1 passes all checks
 
 **Checkpoint**: User Story 1 is independently playable and ready for its PR (`scene/us1-models-camera`).
 
