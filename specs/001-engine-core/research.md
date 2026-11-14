@@ -157,8 +157,11 @@ Tolerance used everywhere below: `EPS = 1e-9` (floating-point only, not a balanc
   3. **Assignment**: jobs in creation order; each `queued` job that can run now (clean jobs wait
      during a dust storm, nothing starts during a block or a radiation storm) takes the eligible
      astronaut with the lowest exposure (ties: crew order). Eligible = alive, inside, no job, not
-     resting, exposure < `exposure.warnAt`. The astronaut goes outside.
-  Durations: `mission.jobs.buildSeconds`, `upgradeSeconds`, `repairSeconds`, `cleanSeconds`.
+     resting, exposure ≤ `exposure.resumeAt` (constitution 3.0.0). The astronaut goes outside.
+  Durations: the structure's `buildSeconds`, `mission.jobs.upgradeSeconds`, `repairSeconds`,
+  `cleanSeconds`, `demolishSeconds`. A demolish job refunds `demolishRefundShare` of the cost and
+  of every paid upgrade (installed or still queued), drops the structure's other jobs and moves
+  its occupants into another finished habitat that is not leaving too.
 - **Rationale**: FR-023–FR-025; jobs that cannot run do not block the ones behind them; "lowest
   exposure first" spreads the radiation across the crew.
 - **Alternatives**: strict FIFO (one clean job during a storm would freeze the queue); letting the

@@ -152,14 +152,23 @@ function applied(s: StructureInstance, job: Job): StructureInstance {
   }
 }
 
-/** Demolition (II.6): refund, drop the structure and its other jobs, move its occupants. */
+/**
+ * Demolition (II.6): refund everything paid (cost, installed upgrades and upgrades already paid
+ * but still in the queue), drop the structure and its other jobs, move its occupants.
+ */
 function removeStructure(state: GameState, config: GameConfig, target: StructureInstance) {
+  const dropped = state.jobs.filter((j) => j.structureId === target.id)
+  const waiting = dropped.flatMap((j) =>
+    j.kind === 'upgrade' && j.upgradeId && !target.upgrades.includes(j.upgradeId)
+      ? [j.upgradeId]
+      : [],
+  )
   const share = config.mission.demolishRefundShare
   const stock = { ...state.stock }
-  for (const [res, amount] of Object.entries(paidFor(config, target))) {
+  const paid = paidFor(config, { ...target, upgrades: [...target.upgrades, ...waiting] })
+  for (const [res, amount] of Object.entries(paid)) {
     stock[res] = (stock[res] ?? 0) + share * amount
   }
-  const dropped = state.jobs.filter((j) => j.structureId === target.id)
   let crew = state.crew
   for (const j of dropped) crew = goInside(crew, j.astronautId)
 

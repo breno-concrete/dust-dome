@@ -157,6 +157,23 @@ describe('updateJobs', () => {
     expect(after.log.at(-1)).toMatchObject({ kind: 'demolished', ref: panel.id })
   })
 
+  it('a paid upgrade still waiting to be installed is refunded too when the structure is demolished', () => {
+    const { s, panel } = panelWith('active', [
+      { kind: 'upgrade', upgradeId: 'dust_filters', remainingSeconds: times.demolishSeconds * 10 },
+      { kind: 'demolish' },
+    ])
+    const after = updateJobs(updateJobs(s, config, 0), config, times.demolishSeconds)
+    expect(after.structures.find((x) => x.id === panel.id)).toBeUndefined()
+    expect(after.jobs).toEqual([])
+    const share = config.mission.demolishRefundShare
+    const filters = config.upgrades.find((u) => u.id === 'dust_filters')!.cost
+    const paid: Record<string, number> = { ...defOf('solar_panel').cost }
+    for (const [res, amount] of Object.entries(filters)) paid[res] = (paid[res] ?? 0) + amount
+    for (const [res, amount] of Object.entries(paid)) {
+      expect(after.stock[res]).toBeCloseTo(s.stock[res] + share * amount)
+    }
+  })
+
   it('demolishing a habitat moves its occupants into another habitat', () => {
     const base = onlyStructures(gameAt(config, 1, 'spring'), config, [
       { type: 'habitat', tile: [0, 0] },
