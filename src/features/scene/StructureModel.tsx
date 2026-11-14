@@ -347,6 +347,53 @@ const SOLAR_GEO = {
   ),
 }
 
+// Shared datum & static procedural geometries for Battery Bank (1x1 footprint <= 0.88 x 0.88)
+const BAT_BASE_Y = 0.022
+
+const BATTERY_GEO = {
+  rackTray: new ExtrudeGeometry(makeChamferedRectShape(0.32, 0.27, 0.04), {
+    depth: 0.035,
+    bevelEnabled: true,
+    bevelThickness: 0.008,
+    bevelSize: 0.01,
+    bevelSegments: 1,
+  }),
+  cellBody: latheOctagon([
+    [0, 0],
+    [0.105, 0],
+    [0.114, 0.028],
+    [0.114, 0.355],
+    [0.088, 0.395],
+    [0.088, 0.435],
+    [0, 0.435],
+  ]),
+  cellBand: latheOctagon([
+    [0.11, 0.25],
+    [0.124, 0.258],
+    [0.124, 0.295],
+    [0.11, 0.303],
+  ]),
+  busbar: new ExtrudeGeometry(makeChamferedRectShape(0.23, 0.18, 0.032), {
+    depth: 0.034,
+    bevelEnabled: true,
+    bevelThickness: 0.008,
+    bevelSize: 0.01,
+    bevelSegments: 1,
+  }),
+  hvConduit: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(0.21, BAT_BASE_Y + 0.51, 0),
+      new Vector3(0.345, BAT_BASE_Y + 0.46, 0),
+      new Vector3(0.345, BAT_BASE_Y + 0.2, 0),
+      new Vector3(0.29, BAT_BASE_Y + 0.055, 0),
+    ]),
+    8,
+    0.018,
+    6,
+    false,
+  ),
+}
+
 const DEFAULT_VISUAL: VisualState = {
   light: 1,
   dustHaze: 0,
@@ -500,37 +547,13 @@ function StructureMesh({
 
     case 'battery':
       return (
-        <group position={[0, 0.12, 0]}>
-          {/* Dual cylindrical battery cells */}
-          <mesh position={[-0.16, 0.32, 0]}>
-            <cylinderGeometry args={[0.16, 0.16, 0.6, 8]} />
-            <meshStandardMaterial
-              color={hullColor}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          <mesh position={[0.16, 0.32, 0]}>
-            <cylinderGeometry args={[0.16, 0.16, 0.6, 8]} />
-            <meshStandardMaterial
-              color={secondaryColor}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          {/* Charge status light bar */}
-          <mesh position={[0, 0.64, 0]}>
-            <boxGeometry args={[0.5, 0.08, 0.22]} />
-            <meshStandardMaterial
-              color={MINT_GREEN}
-              emissive={MINT_GREEN}
-              emissiveIntensity={0.35}
-              flatShading
-            />
-          </mesh>
-        </group>
+        <BatteryMesh
+          hullColor={hullColor}
+          secondaryColor={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          nightGlow={nightGlow}
+        />
       )
 
     case 'mine':
@@ -906,6 +929,141 @@ function NonColorCueOverlay({
           ))}
         </group>
       )}
+    </group>
+  )
+}
+
+function BatteryMesh({
+  hullColor,
+  secondaryColor,
+  emissive,
+  emissiveIntensity,
+  nightGlow,
+}: {
+  hullColor: string
+  secondaryColor: string
+  emissive: string
+  emissiveIntensity: number
+  nightGlow: boolean
+}) {
+  const chargeIntensity = nightGlow ? 0.85 : 0.4
+  const cellPositions = [
+    [-0.145, -0.115],
+    [0.145, -0.115],
+    [-0.145, 0.115],
+    [0.145, 0.115],
+  ] as const
+
+  return (
+    <group position={[0, 0.12, 0]}>
+      {/* Chamfered dark-metal battery rack tray */}
+      <mesh
+        geometry={BATTERY_GEO.rackTray}
+        position={[0, BAT_BASE_Y + 0.043, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Four corner structural rack stanchions */}
+      {(
+        [
+          [-0.285, -0.235],
+          [0.285, -0.235],
+          [-0.285, 0.235],
+          [0.285, 0.235],
+        ] as const
+      ).map(([px, pz], idx) => (
+        <mesh key={idx} position={[px, BAT_BASE_Y + 0.265, pz]}>
+          <boxGeometry args={[0.036, 0.45, 0.036]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+      ))}
+
+      {/* Upper perimeter rack rails */}
+      {([-0.235, 0.235] as const).map((rz, idx) => (
+        <mesh key={idx} position={[0, BAT_BASE_Y + 0.46, rz]}>
+          <boxGeometry args={[0.57, 0.028, 0.028]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+      ))}
+      {([-0.285, 0.285] as const).map((rx, idx) => (
+        <mesh key={idx} position={[rx, BAT_BASE_Y + 0.46, 0]}>
+          <boxGeometry args={[0.028, 0.028, 0.47]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+      ))}
+
+      {/* 2x2 vertical lithium-ion storage cells */}
+      {cellPositions.map(([cx, cz], idx) => (
+        <group key={idx} position={[cx, BAT_BASE_Y + 0.048, cz]}>
+          <mesh geometry={BATTERY_GEO.cellBody}>
+            <meshStandardMaterial
+              color={idx % 2 === 0 ? hullColor : secondaryColor}
+              emissive={emissive}
+              emissiveIntensity={emissiveIntensity}
+              flatShading
+            />
+          </mesh>
+          <mesh geometry={BATTERY_GEO.cellBand}>
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+          <mesh position={[0, 0.445, 0]}>
+            <cylinderGeometry args={[0.046, 0.056, 0.035, 6]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Upper busbar collector bridge, rail tie-clamps & charge beacon */}
+      <mesh
+        geometry={BATTERY_GEO.busbar}
+        position={[0, BAT_BASE_Y + 0.528, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <meshStandardMaterial color={secondaryColor} flatShading />
+      </mesh>
+      {([-0.26, 0.26] as const).map((bx, idx) => (
+        <mesh key={idx} position={[bx, BAT_BASE_Y + 0.485, 0]}>
+          <boxGeometry args={[0.055, 0.036, 0.12]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+      ))}
+      <mesh position={[0, BAT_BASE_Y + 0.552, 0]}>
+        <boxGeometry args={[0.26, 0.026, 0.12]} />
+        <meshStandardMaterial
+          color={MINT_GREEN}
+          emissive={MINT_GREEN}
+          emissiveIntensity={chargeIntensity}
+          flatShading
+        />
+      </mesh>
+
+      {/* High-voltage side conduit */}
+      <mesh geometry={BATTERY_GEO.hvConduit}>
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+
+      {/* Front & rear charge controller panels with stacked mint-green charge bars */}
+      {([-1, 1] as const).map((dir) => (
+        <group key={dir} position={[0, BAT_BASE_Y + 0.175, dir * 0.255]}>
+          <mesh>
+            <boxGeometry args={[0.22, 0.21, 0.05]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          {([-0.055, 0, 0.055] as const).map((barY, barIdx) => (
+            <mesh key={barIdx} position={[0, barY, dir * 0.028]}>
+              <boxGeometry args={[0.145, 0.034, 0.016]} />
+              <meshStandardMaterial
+                color={MINT_GREEN}
+                emissive={MINT_GREEN}
+                emissiveIntensity={chargeIntensity}
+                flatShading
+              />
+            </mesh>
+          ))}
+        </group>
+      ))}
     </group>
   )
 }
