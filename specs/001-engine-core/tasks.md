@@ -41,7 +41,7 @@ before US4.
 **Purpose**: the project, tooling and CI already exist (CLAUDE.md: plans and tasks must not
 create them again). Only verify the baseline.
 
-- [ ] T001 On an up-to-date `main`, run `npm ci` and `npm run check` (scripts in `package.json`) and confirm everything is green before branching
+- [x] T001 On an up-to-date `main`, run `npm ci` and `npm run check` (scripts in `package.json`) and confirm everything is green before branching — done on `develop` after the US1 merge (2026-11-14)
 
 ---
 
@@ -102,7 +102,7 @@ system needed.
 
 - [x] T023 [US1] In `src/engine/time.ts` implement `advanceTime` per R1–R2 and export `seasonDuration(config, season)`, `seasonStartedThisStep(state, dt)` (true when `secondsIntoSeason < dt`) and `isMissionTimeOver(state, config)`; on each rollover set `briefing` and append `{ at, cycle, season, kind: 'season_start', ref: season }` to `log`; clamp at the end of the last winter
 - [x] T024 [US1] In `src/engine/game.ts` make `createGame` log the first `season_start`, and make `tick` return `state` unchanged when `isMissionTimeOver(state, config)` (in addition to the existing status and briefing guards)
-- [ ] T025 [US1] Run `npx vitest run src/engine/time.test.ts src/engine/game.test.ts` (green), refactor, run `npm run check`, commit `feat(us1): seasons, cycles and briefings`, open the PR from `engine/us1-seasons` and merge on green CI
+- [x] T025 [US1] Run `npx vitest run src/engine/time.test.ts src/engine/game.test.ts` (green), refactor, run `npm run check`, commit `feat(us1): seasons, cycles and briefings`, open the PR from `engine/us1-seasons` and merge on green CI — PR #14, squash-merged on 2026-11-14
 
 **Checkpoint**: the clock runs, briefings open every season, the mission stops after cycle 4.
 
