@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, develop]
 
 # A new push to the same PR cancels the old run, so the queue never piles up.
 concurrency:

@@ -1,8 +1,11 @@
 <!--
 Sync Impact Report
-Version: 2.0.0 → 2.1.0 (MINOR: test-first principle added; events moved to Dev A,
+Version: 2.1.0 → 2.1.1 (PATCH: fixed checkpoints replaced by one sprint review per user story
+  round, schedule in WORKFLOW.md; story PRs target develop, main changes only at sprint
+  reviews; internal docs such as specs and WORKFLOW.md may be in Portuguese)
+Previous: 2.0.0 → 2.1.0 (MINOR: test-first principle added; events moved to Dev A,
   repair QTE moved to Dev C; one spec per developer)
-Previous: 1.0.0 → 2.0.0 (MAJOR: game concept replaced, principles redefined)
+Earlier: 1.0.0 → 2.0.0 (MAJOR: game concept replaced, principles redefined)
 Modified principles: I (three core systems), III (time controls, narrator), V (isometric 2.5D
   base builder replaces orbit-and-click scene)
 Added principles: VI (real-time with player control of time), VII (failure teaches)
@@ -487,15 +490,18 @@ has English.
   tests first, then implementation, then `npm run check`.
 - Time-box: specify + plan + tasks in about 45 minutes.
 
-**Integration checkpoints:** Saturday 13:00 and 19:00; code freeze Sunday 14:00; submission by
-Sunday 20:00 (deadline 23:59 local time).
+**Integration:** one sprint per user story round (sprint 1 = every area's US1). Story PRs go to
+`develop`; each sprint ends with a team review (demo, PO acceptance, cross code review) and a
+merge of `develop` into `main`. Schedule and steps: `WORKFLOW.md`. Code freeze Sunday 14:00;
+submission by Sunday 20:00 (deadline 23:59 local time).
 
 ---
 
 # Part IV — Space Apps Constraints
 
-- Everything judges see is in English (repo, game, project page). Video demos may be in Portuguese
-  with English subtitles. Demo limits: 7 slides or 30 seconds.
+- Everything judges see is in English: the game, the README and the project page. Internal team
+  documents (specs, `WORKFLOW.md`) may be in Portuguese. Video demos may be in Portuguese with
+  English subtitles. Demo limits: 7 slides or 30 seconds.
 - At least one NASA data source is used and named on the project page.
 - Every third-party asset, library, dataset and AI use is listed in `CREDITS.md`, in the section of
   the area that added it.
@@ -514,4 +520,4 @@ Amendments go through a `shared/` pull request approved by a second team member;
 Part II also need one product owner's approval. Every pull request must respect the ownership
 table and the principles above.
 
-**Version**: 2.1.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-14
+**Version**: 2.1.1 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-14

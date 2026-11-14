@@ -38,6 +38,7 @@ src/
 specs/                one Spec Kit folder per developer (brief, spec, plan, tasks)
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how the team works, the
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how the team works, [WORKFLOW.md](WORKFLOW.md) for
+the sprints and branches, the
 [constitution](.specify/memory/constitution.md) for the rules of the project and the game, and
 [CREDITS.md](CREDITS.md) for data sources and assets.
