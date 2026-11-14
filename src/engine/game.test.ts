@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { config } from '../config/loadConfig'
 import { createGame, tick, winTargets } from './game'
+import { gameAt } from './testState'
 
 describe('createGame', () => {
   const game = createGame(config, 42)
@@ -30,6 +31,11 @@ describe('createGame', () => {
     expect(Object.values(game.powerModes).every((m) => m === 'min')).toBe(true)
   })
 
+  it('createGame logs the first season_start', () => {
+    const first = config.seasons.seasons[0].id
+    expect(game.log).toEqual([{ at: 0, cycle: 1, season: first, kind: 'season_start', ref: first }])
+  })
+
   it('is deterministic for the same seed', () => {
     expect(createGame(config, 42)).toEqual(game)
   })
@@ -39,6 +45,13 @@ describe('tick', () => {
   it('does nothing while a briefing is open', () => {
     const game = createGame(config, 1)
     expect(tick(game, config, 1)).toBe(game)
+  })
+
+  it('tick does nothing once the mission time is over', () => {
+    const seasons = config.seasons.seasons
+    const winter = seasons[seasons.length - 1]
+    const over = gameAt(config, config.seasons.cycles, winter.id, winter.durationSeconds)
+    expect(tick(over, config, 1)).toBe(over)
   })
 
   it.todo('runs time -> events -> power -> production -> jobs -> crew -> outcome in order')
