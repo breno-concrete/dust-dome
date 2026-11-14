@@ -25,6 +25,7 @@ mission ended. Actions work while paused or while a briefing is open.
 | `setPowerMode(type, mode)` | Every structure of the type uses `mode` from the next step. | `not_allowed` (not switchable) |
 | `startRepair(structureId, qteSuccess)` | Parts spent in both cases; success also queues a repair job. | `not_allowed` (not damaged / short-circuited, or already queued), `external_jobs_blocked`, `not_enough_resources` |
 | `clean(structureId)` | Clean job queued; no parts. | `not_allowed` (not clogged, queued, dust storm active), `external_jobs_blocked` |
+| **v2** `demolish(structureId)` | Demolish job queued; nothing refunded yet. Cancelling a construction stops its build job. When the job ends: structure removed, `demolishRefundShare` of everything paid back. A structure queued for demolition no longer counts as a habitat neighbour. | `not_allowed` (missing or already queued), `external_jobs_blocked`, `last_habitat`, `no_room_for_crew`, `not_connected` |
 | **v2** `bringInside(astronautId)` | Astronaut inside now; job back to the queue. No radiation storm: `resting` until exposure is 0. Radiation storm: into a sheltered habitat with room. | `not_allowed` (dead, already inside, or storm with no sheltered habitat with room) |
 | **v2** `bringAllInside()` | Same, for every astronaut outside. During the radiation alarm this is the "Take shelter" button. | `not_allowed` (nobody outside, or storm with no sheltered habitat) |
 | `dismissBriefing()` | Closes the briefing; the clock runs again. | — |
