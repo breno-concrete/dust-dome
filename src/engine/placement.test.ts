@@ -26,4 +26,10 @@ describe('placement', () => {
     const [x, y] = habitat.tile
     expect(placementError(game, config, 'solar_panel', [x + 1, y + 1])).toBe('tile_blocked')
   })
+
+  it.todo('rejects with not_connected a habitat that shares no side with an existing habitat')
+  it.todo('a corner contact does not count as connected')
+  it.todo('accepts a habitat that shares a side, even with a habitat still under construction')
+  it.todo('places the first habitat anywhere when none exists')
+  it.todo('other structure types may go on any free tile')
 })

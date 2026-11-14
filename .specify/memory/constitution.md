@@ -1,16 +1,34 @@
 <!--
 Sync Impact Report
-Version: 2.0.0 → 2.1.0 (MINOR: test-first principle added; events moved to Dev A,
-  repair QTE moved to Dev C; one spec per developer)
-Previous: 1.0.0 → 2.0.0 (MAJOR: game concept replaced, principles redefined)
-Modified principles: I (three core systems), III (time controls, narrator), V (isometric 2.5D
-  base builder replaces orbit-and-click scene)
-Added principles: VI (real-time with player control of time), VII (failure teaches)
-Added sections: Part II — Game Design Canon (all rules and v1 balance values)
-Changed contract: config model in II.15 replaces the v1 example files
-  (resources/modules/decisions/events/scenarios)
+Version: 2.1.1 → 3.0.0 (MAJOR: win and lose conditions redefined — no power target, no death
+  from radiation exposure — and principle V's placement rule changed)
+Modified principles: V (habitat modules must share a tile side; adjacency still has no effect for
+  every other structure), VII (exposure is no longer lethal; warning list updated)
+Modified sections: II.1 and II.2 (32 colonists, 36 people, targets 36/36/36 and 6 modules, ship
+  lands only at the end of cycle 4), II.4 and II.8 (water 1 U per person per season), II.5 and
+  II.6 (refinery 10 hematite → 6 iron, build times 30/40/60 s by level, habitat houses 6, steel
+  factory moves to level 3 still paid with iron, greenhouse takes thermal insulation, shelter
+  60 regolith + 15 iron, starting greenhouse), II.7 (insulated greenhouse table), II.9 (build
+  times, demolish job, automatic return at 75% and resume at 25%), II.11 (cycle 4 global storm
+  −80%), II.12 (cycle 3 warning inside the spring briefing, loss messages, tutorial, AI
+  translation), II.13, II.14 (demolition Must, tutorial Should), II.15 (build time per
+  structure, exposure resume level), Part III (Dev B: tutorial and demolish menu)
+Added sections: II.6 Demolition
+Removed sections: none (removed rules: power win target, radiation-exposure death)
+Templates: .specify/templates/* read the constitution at runtime — no change needed
+Follow-up TODOs:
+  - Config (PR #11 already has the numbers); build time per structure needs a schema change.
+  - Engine contract: demolish action, auto-return at 75% / resume at 25%, no exposure death,
+    win check without power, insulation tables for any insulated structure.
+  - Specs 001, 002 and 003 still use 12 colonists, 4 per module, 16/32/16 and 2 U of water.
+  - Commit the POs' source documents (texts and planning spreadsheet) as the meeting record.
+Previous: 2.1.0 → 2.1.1 (PATCH: one sprint review per user story round; story PRs target
+  develop; internal docs may be in Portuguese)
+Earlier: 2.0.0 → 2.1.0 (MINOR: test-first principle); 1.0.0 → 2.0.0 (MAJOR: game concept
+  replaced)
 Contract implemented in the repo: src/config/schema.ts, src/engine/types.ts, src/app/store.ts
-Source: game design meeting of 2026-11-14 (POs), meeting record in docs/
+Source: product owners' meeting of 2026-11-14 (game texts by Commander Vega and the planning
+  spreadsheet for 32 colonists)
 -->
 
 # Mars Outpost — Project Constitution
@@ -26,7 +44,7 @@ value. Parts III–V define how the team works. Spec Kit plans are checked again
 
 **One-sentence pitch:** four astronauts land in Hellas Planitia, Mars, and the player has four
 Martian years to build a base that keeps everyone alive through real Martian seasons, dust storms
-and solar storms, so that the first colonists can arrive.
+and solar storms, so that 32 colonists can arrive.
 
 ---
 
@@ -88,7 +106,9 @@ and solar storms, so that the first colonists can arrive.
 - The base is shown in **isometric 2.5D** (Clash of Clans–style): a three.js scene with an
   orthographic camera at a fixed isometric angle, rotation in 90° steps, zoom with limits.
 - The player builds on a **12 × 12 tile grid**. Structures occupy 1×1 or 2×2 tiles. Placement is
-  valid on free tiles only; adjacency has no effect.
+  valid on free tiles only. Habitat modules are connected to each other, so a new habitat module
+  must share at least one tile side with an existing one (a corner does not count); for every
+  other structure adjacency has no effect.
 - The scene shows the consequences of decisions: damaged, clogged or short-circuited structures,
   dust storms, winter darkness, season lighting, the radiation alarm.
 - No physics engine, no collisions, no pathfinding, no first-person or free walking. Astronaut
@@ -97,7 +117,7 @@ and solar storms, so that the first colonists can arrive.
   (`src/features/scene/visualState.ts`); R3F components stay thin.
 - Performance budget: low-poly models, models + textures under 5 MB, scene code lazy-loaded,
   smooth on an integrated-GPU school laptop.
-- If WebGL fails, the game stays playable: the build menu places structures on the next free tile.
+- If WebGL fails, the game stays playable: the build menu places structures on the next valid tile.
 
 ### VI. Real Time, Controlled by the Player
 
@@ -109,8 +129,10 @@ and solar storms, so that the first colonists can arrive.
 
 ### VII. Failure Teaches
 
-- Every lethal outcome is preceded by a visible warning: low-reserve alert, exposure alert,
-  10-second radiation alarm, the commander's hint before cycle 3.
+- Every lethal outcome is preceded by a visible warning: low-reserve alert, 10-second radiation
+  alarm, the commander's warning before the winter of cycle 3.
+- Radiation exposure is never lethal: at 75% the astronaut comes back inside by themselves and
+  the game says why (II.9).
 - The debrief explains every death and every lost resource in plain language and links the real
   science behind it.
 - Restarting is one click.
@@ -148,19 +170,23 @@ All values below are **v1 balance values**: they define the first playable versi
   glaciers buried under dust and rock, and a known source of global dust storms. This gives the
   base water ice to mine and frequent dust events.
 - **Crew:** 4 astronauts.
-- **Mission:** prepare the base for **12 colonists** within **4 cycles** (4 Martian years).
+- **Mission:** prepare the base for **32 colonists** within **4 cycles** (4 Martian years). The
+  colonists' ship lands when winter of cycle 4 ends, never earlier, and the mission ends there.
 
 ## II.2 Win and Lose
 
 **Win** — when winter of cycle 4 ends, all of these are true:
 
 1. At least one astronaut is alive.
-2. Stored reserves cover one season for everyone (colonists + crew = 16 people):
-   - **Oxygen ≥ 16 U**
-   - **Food ≥ 16 U**
-   - **Water ≥ 32 U**
-3. Habitat capacity ≥ 16 (4 habitat modules).
-4. Power production ≥ power demand at that moment (all habitats heated, no deficit).
+2. Stored reserves cover one season for everyone (colonists + crew = 36 people):
+   - **Oxygen ≥ 36 U**
+   - **Food ≥ 36 U**
+   - **Water ≥ 36 U**
+3. Habitat capacity ≥ 36 (6 habitat modules).
+
+Power is not a win target. It is what keeps the base producing and heated on the way there: a
+base short of power loses production (brownout) and, without heat, astronauts (empty-reserve
+rule). Whatever is produced beyond the crew's consumption stays in the reserves.
 
 The HUD shows these targets as marks on the three vital bars from the start of the game.
 
@@ -169,8 +195,7 @@ The HUD shows these targets as marks on the three vital bars from the start of t
 | Cause | Rule |
 |---|---|
 | Empty reserve | A vital reserve (O₂, Water or Food) at 0, or no heat in the habitat: after a 15 s grace period one astronaut dies, then one more every 15 s while it lasts. |
-| Radiation storm | An astronaut outside, or inside a habitat without a radiation shelter, when the storm hits. |
-| Radiation exposure | An astronaut's exposure meter reaches 100% (II.9). |
+| Radiation storm | Every astronaut who is not in a habitat with a radiation shelter when the storm hits: outside the base, or inside a habitat without the shelter. |
 | Extreme cold | At the start of winter in cycles 3 and 4, astronauts in a habitat without thermal insulation. |
 
 ## II.3 Time
@@ -203,7 +228,7 @@ The HUD shows these targets as marks on the three vital bars from the start of t
 | Processed | **Steel** | count | Steel & alloy factory | Level 3 builds and upgrades |
 | Processed | **Repair parts** | count | Repair workshop | Repairs |
 | Vital | **Oxygen** | U | Oxygen generator | 1 U per person per season |
-| Vital | **Water** | U | Ice melter | 2 U per person per season; greenhouse |
+| Vital | **Water** | U | Ice melter | 1 U per person per season; greenhouse |
 | Vital | **Food** | U | Pressurized greenhouse | 1 U per person per season |
 | Power | **Power** | kW (flow); EU (stored) | Panels, reactor, batteries | Every consumer structure |
 
@@ -216,20 +241,22 @@ The HUD shows these targets as marks on the three vital bars from the start of t
 
 | Process | Input | Output |
 |---|---|---|
-| Iron refining | 10 hematite | 4 iron |
+| Iron refining | 10 hematite | 6 iron |
 | Steel making | 5 iron + atmospheric CO₂ (free, shown for science) | 3 steel |
 | Repair part making | 2 iron | 5 repair parts |
 
 ## II.6 Structures and Upgrades
 
-**Levels:** level 1 costs hematite and/or regolith; level 2 costs iron; level 3 costs steel.
-Construction takes **15 s** for every structure and occupies one astronaut outside (II.9).
+**Levels:** level 1 costs hematite and/or regolith; level 2 costs iron; level 3 is the advanced
+tier: the steel & alloy factory is paid with iron (steel only exists once it is built) and the
+reactor with steel. Construction occupies one astronaut outside (II.9) and takes **30 s** for a
+level 1 structure, **40 s** for level 2 and **60 s** for level 3.
 
 ### Level 1
 
 | Structure | Cost | Tiles | Power base / max | Output per season (base / max) | Notes |
 |---|---|---|---|---|---|
-| Habitat module | 40 hematite + 30 regolith | 2×2 | heating table (II.7) | — | Houses 4 people. Protects from cold; with the shelter upgrade, from radiation. No power switch. |
+| Habitat module | 40 hematite + 30 regolith | 2×2 | heating table (II.7) | — | Houses 6 people. Protects from cold; with the shelter upgrade, from radiation. No power switch. |
 | Solar panel | 15 hematite | 1×1 | produces (II.7) | — | Output varies by season and events. |
 | Battery bank | 20 hematite | 1×1 | — | — | Stores 1,500 EU. |
 | Mine | 25 hematite | 2×2 | 3 / 6 kW | 25 hematite + 20 regolith / 45 hematite + 35 regolith | Clogs with dust in spring and summer (II.11). |
@@ -240,16 +267,16 @@ Construction takes **15 s** for every structure and occupies one astronaut outsi
 
 | Structure | Cost | Tiles | Power base / max | Per season (base / max) | Notes |
 |---|---|---|---|---|---|
-| Iron refinery | 50 hematite + 20 regolith | 2×2 | 6 / 12 kW | uses 30 / 60 hematite → 12 / 24 iron | Costs no iron because it produces iron. |
-| Pressurized greenhouse | 15 regolith + 20 iron | 2×2 | 5 / 9 kW | uses 15 / 30 water → 4 / 8 food | Extra heating demand in cold seasons (II.7). |
+| Iron refinery | 50 hematite + 20 regolith | 2×2 | 6 / 12 kW | uses 30 / 60 hematite → 18 / 36 iron | Costs no iron because it produces iron. |
+| Pressurized greenhouse | 15 regolith + 20 iron | 2×2 | 5 / 9 kW | uses 15 / 30 water → 4 / 8 food | Extra heating demand in cold seasons (II.7); takes thermal insulation. |
 | Repair workshop | 25 iron | 1×1 | 2 / 5 kW | uses 4 / 8 iron → 10 / 20 repair parts | |
-| Steel & alloy factory | 30 regolith + 45 iron | 2×2 | 10 / 18 kW | uses 15 / 30 iron → 9 / 18 steel | |
 
 ### Level 3
 
-| Structure | Cost | Tiles | Power | Notes |
-|---|---|---|---|---|
-| Compact nuclear reactor | 40 regolith + 30 steel | 2×2 | **produces 40 kW constant** | Unaffected by seasons, darkness, storms or any event. Consumes nothing. |
+| Structure | Cost | Tiles | Power base / max | Per season (base / max) | Notes |
+|---|---|---|---|---|---|
+| Steel & alloy factory | 30 regolith + 45 iron | 2×2 | 10 / 18 kW | uses 15 / 30 iron → 9 / 18 steel | Paid with iron because it is the only source of steel. |
+| Compact nuclear reactor | 40 regolith + 30 steel | 2×2 | **produces 40 kW constant** | — | Unaffected by seasons, darkness, storms or any event. Consumes nothing. |
 
 ### Upgrades
 
@@ -257,17 +284,28 @@ Each upgrade is installed on one structure, takes 15 s and one astronaut outside
 
 | Upgrade | Installs on | Cost | Effect |
 |---|---|---|---|
-| Thermal insulation | Habitat module | 25 regolith + 20 iron | Halves the cold add-on of the habitat's heating demand (II.7). Required to survive winter in cycles 3–4. |
-| Radiation shelter | Habitat module | 30 regolith + 15 iron | Regolith-shielded room. Astronauts inside this habitat survive radiation storms (capacity 4). |
+| Thermal insulation | Habitat module, pressurized greenhouse | 25 regolith + 20 iron | Halves the cold add-on of the structure's heating demand (II.7). Required on habitats to survive winter in cycles 3–4. |
+| Radiation shelter | Habitat module | 60 regolith + 15 iron | Regolith-shielded room. Astronauts inside this habitat survive radiation storms (capacity: the habitat's, 6). |
 | Dust filters & shields | Solar panel, mine, oxygen generator, ice melter, iron refinery | 20 steel | Prevents clogging and short-circuits; on solar panels, prevents dust-devil damage. Does not restore sunlight blocked by storms. |
+
+### Demolition
+
+- The player may demolish any finished structure, or cancel one still under construction.
+- Demolishing is an external job: one astronaut outside for 15 s (II.9), blocked like every
+  external job.
+- When the job ends, everything that was paid comes back to the wallet (100%): the structure's
+  cost and its installed upgrades, whatever its state (damaged, clogged or short-circuited).
+- Not allowed: the last habitat module; a habitat whose occupants do not fit in the other
+  habitats; a habitat whose removal would leave another habitat without a side shared with the
+  rest (principle V).
 
 ### Starting Base
 
 | Item | Starting value |
 |---|---|
-| Structures | 1 habitat module, 1 mine, 2 solar panels, 1 oxygen generator, 1 ice melter (all placed, all at Base) |
+| Structures | 1 habitat module, 1 mine, 2 solar panels, 1 oxygen generator, 1 ice melter, 1 pressurized greenhouse next to the habitat (all placed, all at Base) |
 | Materials | 60 hematite, 40 regolith, 0 iron, 0 steel, 0 repair parts |
-| Reserves | 8 O₂, 20 water, 8 food (two seasons for the crew) |
+| Reserves | 8 O₂, 20 water, 8 food (O₂ and food: two seasons for the crew; the water also feeds the greenhouse) |
 | Batteries | none |
 
 ## II.7 Power System
@@ -293,6 +331,7 @@ The habitat has no switch: it always draws its heating demand.
   **unheated** and the empty-reserve rule applies (II.2).
 
 **Heating demand (kW, Base setting).** Max adds +4 kW for the greenhouse and the ice melter.
+Thermal insulation halves the cold add-on, the part above the spring and summer value.
 
 Habitat module, without insulation:
 
@@ -318,7 +357,15 @@ Pressurized greenhouse:
 | 2 | 5 | 5 | 7 | 9 |
 | 3–4 | 5 | 5 | 9 | 10 |
 
-Ice melter:
+Pressurized greenhouse, with thermal insulation:
+
+| Cycle | Spring | Summer | Autumn | Winter |
+|---|---|---|---|---|
+| 1 | 5 | 5 | 5.5 | 6.5 |
+| 2 | 5 | 5 | 6 | 7 |
+| 3–4 | 5 | 5 | 7 | 7.5 |
+
+Ice melter (takes no insulation):
 
 | Cycle | Spring | Summer | Autumn | Winter |
 |---|---|---|---|---|
@@ -328,22 +375,25 @@ Ice melter:
 
 ## II.8 Life Support
 
-- Each person consumes per season: **1 U oxygen, 2 U water, 1 U food**.
+- Each person consumes per season: **1 U oxygen, 1 U water, 1 U food**.
 - The greenhouse consumes water (II.6), so water feeds both the crew and the food supply.
 - **Low-reserve alert:** a vital bar flashes and the commander warns when it holds less than one
   season of crew needs.
 
 ## II.9 Crew and External Jobs
 
-- **4 astronauts** live in habitat modules (4 per module).
-- **External jobs:** build (15 s), install upgrade (15 s), repair (QTE + 5 s), clean (10 s).
-  Each job takes one astronaut outside. Maximum simultaneous jobs = astronauts alive. Extra jobs
+- **4 astronauts** live in habitat modules (6 per module).
+- **External jobs:** build (30 / 40 / 60 s by level, II.6), install upgrade (15 s), repair
+  (QTE + 5 s), clean (10 s), demolish (15 s). Each job takes one astronaut outside. Maximum simultaneous jobs = astronauts alive. Extra jobs
   wait in a queue.
 - **Radiation exposure meter** (per astronaut, 0–100%):
-  - outside: fills to 100% in 25% of the current season's duration;
+  - outside: fills at a rate that would reach 100% in 25% of the current season's duration;
   - inside a habitat: empties at half that rate;
-  - at 75% the astronaut's icon flashes and the commander tells the player to bring them in;
-  - at 100% the astronaut dies.
+  - at 75% the astronaut stops working and comes back inside by themselves; their icon flashes
+    and the commander explains why. The job keeps its remaining time and any free astronaut may
+    continue it;
+  - an astronaut takes a new job only when their meter is back to 25% or less;
+  - exposure never kills: nobody stays outside past 75%.
 - **Winter, cycles 2–4:** external jobs are blocked; queued jobs resume in spring. Production
   inside the base continues.
 
@@ -394,8 +444,8 @@ Event times are drawn from the seeded generator within the intervals below.
 
 ### Cycle 4 — Final Test of the Colony
 
-Same as cycle 3 at maximum scale: event intervals × 0.75 and the global dust storm reduces panels
-by 85%. Level 3 infrastructure (reactor, steel, dust filters) is what keeps the base alive.
+Same as cycle 3 at maximum scale: event intervals × 0.75; the global dust storm still reduces
+panels by 80%. Level 3 infrastructure (reactor, steel, dust filters) is what keeps the base alive.
 
 ### Radiation Storm (cycles 2–4)
 
@@ -409,8 +459,15 @@ by 85%. Level 3 infrastructure (reactor, steel, dust filters) is what keeps the 
 
 - **Commander Vega** briefs the player at the start of every season (the game pauses): the season,
   why it happens on Mars, what may happen, how to prepare.
-- **Before cycle 3**, the commander warns that winters will be much harsher and that current
-  measures may not be enough, hinting at thermal insulation.
+- **At the start of cycle 3**, inside the spring briefing (well before that winter), the
+  commander warns that winters will be much harsher and that current measures may not be enough,
+  hinting at thermal insulation.
+- **Loss messages:** every crew loss is announced by the commander when it happens and explained
+  again in the debrief.
+- **Tutorial** (first spring): the commander guides three steps (build a solar panel, follow the
+  astronaut and the exposure meter, read the vital bars); each step waits for the player.
+- The product owners write the texts in Portuguese; the English versions are translated with AI,
+  reviewed by the team and listed in `CREDITS.md` (Part IV).
 - **Every structure and upgrade** has an educational description in the build menu: how it works
   and its real-world basis (e.g. the ice melter extracts buried ice like the glaciers detected
   under Hellas).
@@ -427,9 +484,9 @@ by 85%. Level 3 infrastructure (reactor, steel, dust filters) is what keeps the 
 | Hellas Planitia, water ice | Buried glaciers detected by MRO's SHARAD radar | Real |
 | Oxygen generator, 1 U ≈ 62 kg O₂ | MOXIE on Perseverance (up to 12 g O₂/h; ~1 t/year for 4 astronauts) | Real, scaled |
 | Hematite | Detected on Mars from orbit and by the Opportunity rover at Meridiani Planum | Real; mining it from local regolith is a simplification |
-| Compact nuclear reactor, 40 kW | NASA Fission Surface Power project (40 kW-class) | Real target value |
+| Compact nuclear reactor, 40 kW | NASA Fission Surface Power project (40 kW-class), which builds on the Kilopower experiment | Real target value |
 | Radiation storm | Solar particle events in NASA DONKI | Real events |
-| Exposure limit outside | Surface radiation measured on Mars; the 25%-of-season limit is a game rule | Simplification |
+| Exposure limit outside | Surface radiation measured on Mars; the 25%-of-season rate and the automatic return at 75% are game rules | Simplification |
 | Thermal insulation, regolith shelter | Habitat concepts for Mars | Simplification |
 | Production numbers (kW, units per season) | Chosen for gameplay balance | Game values |
 
@@ -437,8 +494,8 @@ by 85%. Level 3 infrastructure (reactor, steel, dust filters) is what keeps the 
 
 | Priority | Items |
 |---|---|
-| **Must** | Real-time loop with seasons and cycles 1–4; time controls; 3 vital bars + power meter + wallet; grid building of all level 1–3 structures; upgrades; power switches and brownout; crew jobs and exposure; damage, repairs with QTE, cleaning; all events in II.11 including the radiation storm; win/lose; commander briefings; educational descriptions; debrief; sources screen; English text |
-| **Should** | Portuguese toggle; sound; dust and darkness visuals; battery charge display |
+| **Must** | Real-time loop with seasons and cycles 1–4; time controls; 3 vital bars + power meter + wallet; grid building of all level 1–3 structures; upgrades; demolition; power switches and brownout; crew jobs and exposure; damage, repairs with QTE, cleaning; all events in II.11 including the radiation storm; win/lose; commander briefings; educational descriptions; debrief; sources screen; English text |
+| **Should** | Portuguese toggle; sound; dust and darkness visuals; battery charge display; first-spring tutorial |
 | **Could** | Decorative astronaut markers; live DONKI "today's space weather" note |
 | **Won't (post-hackathon)** | Prestige / roguelike meta-progression (extra astronaut, cheaper structures between runs); difficulty levels by number of colonists; food types; other sites; multiplayer; accounts |
 
@@ -449,11 +506,11 @@ The contract PR replaces the v1 example config with these files (all owned by th
 | File | Contents |
 |---|---|
 | `resources.json` | Materials and vital reserves: id, name, explain, icon, starting value |
-| `structures.json` | id, level, cost, tiles, power base/max or production, inputs/outputs per season base/max, capacity, allowed upgrades, explain, source |
+| `structures.json` | id, level, cost, build time, tiles, power base/max or production, inputs/outputs per season base/max, capacity, allowed upgrades, explain, source |
 | `upgrades.json` | id, target structure types, cost, effect, explain |
 | `seasons.json` | order, real sols, duration at 1×, solar output per season, heating tables per cycle |
 | `events.json` | per cycle and season: kind, interval range, duration, effects, explain, source |
-| `mission.json` | crew, colonists, needs per person, win targets, starting base, job times, exposure rules, brownout order, QTE parameters, radiation storm rules |
+| `mission.json` | crew, colonists, needs per person, win targets, starting base, job times (upgrade, repair, clean, demolish), exposure rules (rate, recovery, automatic return and resume levels), brownout order, QTE parameters, radiation storm rules |
 
 CI keeps enforcing the design rules on these files: every buildable structure and upgrade has a
 cost; every consumer has a power draw; every event has an explanation and a source; every text
@@ -467,7 +524,7 @@ has English.
 |---|---|---|---|---|
 | Engine core, store, app shell, repo | Breno (tech lead) | `engine/` | `src/engine/` (except `events/`), `src/app/`, `src/config/schema.ts`, `src/config/loadConfig.ts`, `src/config/config.test.ts` | Time and seasons, production and consumption, power and brownout, player actions and jobs, crew exposure and deaths, win/lose, store, loop, selectors, contract, CI |
 | Events and NASA data | Dev A | `data/` | `src/engine/events/`, `src/data/`, `scripts/`, `src/features/sources/`, `src/features/end/` | Seeded event scheduling, dust devils, storms, clogging, short-circuits, darkness, radiation storm, DONKI snapshots, sources screen, debrief |
-| 2D game UI and UI kit | Dev B | `ui/` | `src/ui-kit/`, `src/features/title/`, `src/features/hud/`, `src/features/decisions/` | HUD (vital bars with targets, power meter, wallet, clock, time controls, crew), build and upgrade menus with fact sheets, power switches, commander briefings, alerts and radiation alarm, title screen, i18n |
+| 2D game UI and UI kit | Dev B | `ui/` | `src/ui-kit/`, `src/features/title/`, `src/features/hud/`, `src/features/decisions/` | HUD (vital bars with targets, power meter, wallet, clock, time controls, crew), build, upgrade and demolish menus with fact sheets, power switches, commander briefings and first-spring tutorial, alerts and radiation alarm, title screen, i18n |
 | Isometric scene and repair QTE | Dev C | `scene/` | `src/features/scene/`, `src/features/repair/`, `public/models/`, `public/audio/` | Isometric camera, grid, placement preview, structure models and states, storms, darkness and season light, astronaut markers, repair QTE, sound |
 | Game content and balance | Product owners | `content/` | `src/config/*.json` | Every number and text in Part II |
 | Shared files | Breno | `shared/` | anything; needs CODEOWNERS approval | Contract changes, dependencies, CI, Spec Kit |
@@ -487,15 +544,18 @@ has English.
   tests first, then implementation, then `npm run check`.
 - Time-box: specify + plan + tasks in about 45 minutes.
 
-**Integration checkpoints:** Saturday 13:00 and 19:00; code freeze Sunday 14:00; submission by
-Sunday 20:00 (deadline 23:59 local time).
+**Integration:** one sprint per user story round (sprint 1 = every area's US1). Story PRs go to
+`develop`; each sprint ends with a team review (demo, PO acceptance, cross code review) and a
+merge of `develop` into `main`. Schedule and steps: `WORKFLOW.md`. Code freeze Sunday 14:00;
+submission by Sunday 20:00 (deadline 23:59 local time).
 
 ---
 
 # Part IV — Space Apps Constraints
 
-- Everything judges see is in English (repo, game, project page). Video demos may be in Portuguese
-  with English subtitles. Demo limits: 7 slides or 30 seconds.
+- Everything judges see is in English: the game, the README and the project page. Internal team
+  documents (specs, `WORKFLOW.md`) may be in Portuguese. Video demos may be in Portuguese with
+  English subtitles. Demo limits: 7 slides or 30 seconds.
 - At least one NASA data source is used and named on the project page.
 - Every third-party asset, library, dataset and AI use is listed in `CREDITS.md`, in the section of
   the area that added it.
@@ -514,4 +574,4 @@ Amendments go through a `shared/` pull request approved by a second team member;
 Part II also need one product owner's approval. Every pull request must respect the ownership
 table and the principles above.
 
-**Version**: 2.1.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-14
+**Version**: 3.0.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-14

@@ -1,7 +1,8 @@
 # How we work (48 h, 4 devs, 2 POs, spec-driven + test-first)
 
 The rules live in `.specify/memory/constitution.md` (Part II is the game). This page is the
-practical version.
+practical version. Sprints, schedule and the branch flow (`develop` → `main`) are in
+[WORKFLOW.md](WORKFLOW.md).
 
 ## 1. Who owns what
 
@@ -27,7 +28,7 @@ their own section of `CREDITS.md`.
 
 ## 3. One spec per dev, one PR per user story
 
-1. `git switch main && git pull && git switch -c <prefix>/spec`
+1. `git switch develop && git pull && git switch -c <prefix>/spec`
 2. In Claude Code:
    `/speckit-specify SPECIFY_FEATURE_DIRECTORY=specs/00X-<area> Read specs/00X-<area>/brief.md and the constitution, and specify it.`
 3. `/speckit-clarify` only if the spec has `[NEEDS CLARIFICATION]`: ask the POs.
@@ -47,18 +48,21 @@ Read the tests the agent writes before accepting them: they are the spec in code
 
 ## 5. Branches and PRs
 
-1. `main` is always playable and deployed. Nobody pushes to `main` directly.
+1. Story PRs target `develop` (the default branch). `main` only changes at the end of a sprint,
+   through the sprint review PR `develop` → `main` (merge commit). Nobody pushes to `main` or
+   `develop` directly.
 2. One user story per PR, under ~300 changed lines. Open early as Draft.
-3. Before merging: `git fetch origin && git rebase origin/main`, then `npm run check`.
-4. Green CI (+ owner approval only for shared files) → **you** squash-merge it.
+3. Before merging: `git fetch origin && git rebase origin/develop`, then `npm run check`.
+4. Green CI (+ owner approval only for shared files) → **you** squash-merge it into `develop`.
 5. After a merge, post "merged X" in the group. Everyone rebases within the hour.
-6. `main` red = top priority. The author fixes it in 10 minutes or reverts.
-7. Integration checkpoints: **13:00** and **19:00** Saturday; code freeze Sunday **14:00**.
+6. `develop` red = top priority. The author fixes it in 10 minutes or reverts.
+7. One sprint review per user story round replaces fixed checkpoints; the schedule and the
+   review steps are in [WORKFLOW.md](WORKFLOW.md). Code freeze Sunday **14:00**.
 
 ## 6. Avoiding conflicts
 
 - No new dependencies. Need one? Ask Breno (`shared/` PR).
-- `package-lock.json` conflict: `git checkout origin/main -- package-lock.json && npm install`.
+- `package-lock.json` conflict: `git checkout origin/develop -- package-lock.json && npm install`.
 - No barrel `index.ts` files. Import from the file directly.
 - No global CSS outside `src/ui-kit/tokens.css`. Use `Something.module.css`.
 - UI texts live next to each screen (`strings` object). Game texts live in `src/config/*.json`.

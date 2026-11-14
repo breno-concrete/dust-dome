@@ -7,7 +7,7 @@ import { updateJobs } from './jobs'
 import { checkOutcome } from './outcome'
 import { computePower } from './power'
 import { seedToRng } from './rng'
-import { advanceTime } from './time'
+import { advanceTime, isMissionTimeOver } from './time'
 import type { Astronaut, GameConfig, GameState, StructureInstance, WinTargets } from './types'
 
 const CREW_NAMES = ['Ari', 'Bia', 'Caio', 'Lia', 'Noa', 'Rui']
@@ -23,6 +23,7 @@ export function createGame(config: GameConfig, seed: number): GameState {
     status: 'active',
     upgrades: [],
   }))
+  const firstSeason = config.seasons.seasons[0].id
   const firstHabitat = structures.find((s) => s.type === 'habitat')?.id ?? null
 
   const crew: Astronaut[] = Array.from({ length: config.mission.crew }, (_, i) => ({
@@ -33,6 +34,7 @@ export function createGame(config: GameConfig, seed: number): GameState {
     habitatId: firstHabitat,
     exposure: 0,
     jobId: null,
+    resting: false,
   }))
 
   return {
@@ -51,9 +53,9 @@ export function createGame(config: GameConfig, seed: number): GameState {
     activeEvents: [],
     nextEventAt: {},
     radiationStorm: null,
-    briefing: { cycle: 1, season: config.seasons.seasons[0].id },
+    briefing: { cycle: 1, season: firstSeason },
     dangerTimers: {},
-    log: [],
+    log: [{ at: 0, cycle: 1, season: firstSeason, kind: 'season_start', ref: firstSeason }],
     status: 'running',
     lostReason: null,
     nextId,
@@ -65,7 +67,9 @@ export function createGame(config: GameConfig, seed: number): GameState {
  * time -> events (Dev A) -> power -> production -> jobs -> crew -> outcome.
  */
 export function tick(state: GameState, config: GameConfig, dt: number): GameState {
-  if (state.status !== 'running' || state.briefing) return state
+  if (state.status !== 'running' || state.briefing || isMissionTimeOver(state, config)) {
+    return state
+  }
   let s = advanceTime(state, config, dt)
   s = updateEvents(s, config, dt)
   s = computePower(s, config)

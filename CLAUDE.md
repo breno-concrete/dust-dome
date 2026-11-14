@@ -17,6 +17,12 @@ Your area comes from the current git branch prefix:
 
 Everyone may also add lines to their own section of `CREDITS.md`.
 
+## Branches
+
+Story branches start from `develop` and their PRs target `develop` (squash merge). Only the
+sprint review PR goes from `develop` to `main` (merge commit). One user story per branch, per
+Claude Code session and per PR. Schedule and sprint review: `WORKFLOW.md`.
+
 ## Test-first, always (constitution VIII)
 
 For every task:

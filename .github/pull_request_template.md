@@ -17,7 +17,7 @@ User story: <!-- e.g. specs/004-base-scene US2, tasks T007–T012 -->
 
 - [ ] Tests written first and seen failing (red), then passing (green)
 - [ ] No test deleted, skipped or weakened
-- [ ] Rebased on the latest `main`
+- [ ] Rebased on the latest `develop` (story PRs target `develop`; only the sprint review targets `main`)
 - [ ] `npm run check` passes locally
 - [ ] Only touched files in my area (the `ownership` check enforces it)
 - [ ] Under ~300 changed lines
