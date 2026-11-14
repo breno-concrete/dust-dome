@@ -21,7 +21,7 @@ e validada como um incremento independente.
 **Objetivo**: Confirmar a configuração existente do projeto; esta feature não precisa de novas
 dependências nem de alterações de configuração.
 
-- [ ] T001 Verificar os comandos existentes do Vitest, TypeScript, React Testing Library e `npm run check` em `package.json` antes do trabalho das stories.
+- [x] T001 Verificar os comandos existentes do Vitest, TypeScript, React Testing Library e `npm run check` em `package.json` antes do trabalho das stories.
 
 ---
 
@@ -30,7 +30,7 @@ dependências nem de alterações de configuração.
 **Objetivo**: Confirmar que os contratos compartilhados e a configuração existentes são
 suficientes antes de editar os arquivos do DEV A.
 
-- [ ] T002 Verificar os contratos existentes de eventos, radiação, status de estruturas, log e RNG determinístico em `src/engine/types.ts`, `src/config/schema.ts`, `src/config/events.json` e `src/config/mission.json`; parar e solicitar uma alteração de contrato em `shared/` se faltar algum campo necessário.
+- [x] T002 Verificar os contratos existentes de eventos, radiação, status de estruturas, log e RNG determinístico em `src/engine/types.ts`, `src/config/schema.ts`, `src/config/events.json` e `src/config/mission.json`; parar e solicitar uma alteração de contrato em `shared/` se faltar algum campo necessário.
 
 **Checkpoint**: Os contratos e a configuração existentes foram confirmados; nenhuma alteração de
 código-fonte de fundação é necessária.
@@ -50,14 +50,14 @@ de limpeza devem ser repetíveis.
 
 > **TDD**: Escreva estes testes primeiro e confirme que falham pelo comportamento ausente esperado.
 
-- [ ] T003 [US1] Substituir os casos `it.todo` de agendamento em `src/engine/events/events.test.ts` por testes para cada regra atual, limites dos intervalos com seed, escala do intervalo no ciclo quatro, igualdade para a mesma seed e limpeza na mudança de estação.
-- [ ] T004 [US1] Executar `npx vitest run src/engine/events/events.test.ts` e registrar que os novos testes de agendamento da US1 falham porque `updateEvents` ainda é um no-op.
+- [x] T003 [US1] Substituir os casos `it.todo` de agendamento em `src/engine/events/events.test.ts` por testes para cada regra atual, limites dos intervalos com seed, escala do intervalo no ciclo quatro, igualdade para a mesma seed e limpeza na mudança de estação.
+- [x] T004 [US1] Executar `npx vitest run src/engine/events/events.test.ts` e registrar que os novos testes de agendamento da US1 falham porque `updateEvents` ainda é um no-op.
 
 ### Implementação da User Story 1
 
-- [ ] T005 [US1] Implementar a seleção das regras do ciclo e da estação atuais e o agendamento inicial de `nextEventAt` em `src/engine/events/events.ts`, usando `nextRange` e gravando o estado RNG retornado.
-- [ ] T006 [US1] Implementar o agendamento de eventos repetidos, os limites dos intervalos, `finalCycleIntervalFactor` no ciclo quatro, atualizações imutáveis de estado e a remoção de `activeEvents` na mudança de estação em `src/engine/events/events.ts`.
-- [ ] T007 [US1] Executar `npx vitest run src/engine/events/events.test.ts` e confirmar que todos os testes de agendamento da US1 passam sem enfraquecer ou pular nenhum teste.
+- [x] T005 [US1] Implementar a seleção das regras do ciclo e da estação atuais e o agendamento inicial de `nextEventAt` em `src/engine/events/events.ts`, usando `nextRange` e gravando o estado RNG retornado.
+- [x] T006 [US1] Implementar o agendamento de eventos repetidos, os limites dos intervalos, `finalCycleIntervalFactor` no ciclo quatro, atualizações imutáveis de estado e a remoção de `activeEvents` na mudança de estação em `src/engine/events/events.ts`.
+- [x] T007 [US1] Executar `npx vitest run src/engine/events/events.test.ts` e confirmar que todos os testes de agendamento da US1 passam sem enfraquecer ou pular nenhum teste.
 
 **Checkpoint**: A US1 é testável de forma independente e fornece a linha do tempo determinística
 de eventos necessária para as stories seguintes.
