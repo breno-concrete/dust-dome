@@ -2,7 +2,7 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 import styles from './Card.module.css'
 
-export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+export interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: ReactNode
   badge?: ReactNode
   footer?: ReactNode
@@ -19,9 +19,7 @@ export function Card({
   className,
   ...rest
 }: CardProps) {
-  const classes = [styles.card, selected && styles.selected, className]
-    .filter(Boolean)
-    .join(' ')
+  const classes = [styles.card, selected && styles.selected, className].filter(Boolean).join(' ')
 
   return (
     <article className={classes} {...rest}>

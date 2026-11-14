@@ -59,7 +59,10 @@ export function ResourceBar({
         </span>
         <span className={styles.valueGroup}>
           <strong className={styles.current}>{Math.floor(current)}</strong>
-          <span className={styles.target}> / {target} {unit}</span>
+          <span className={styles.target}>
+            {' '}
+            / {target} {unit}
+          </span>
           {isLow && (
             <span className={styles.alertBadge} title="Low reserve warning!">
               <Icon name="alert" size={16} />
@@ -69,10 +72,7 @@ export function ResourceBar({
       </div>
 
       <div className={styles.track}>
-        <div
-          className={styles.fill}
-          style={{ width: `${fillPercent}%` }}
-        />
+        <div className={styles.fill} style={{ width: `${fillPercent}%` }} />
         <div
           className={styles.targetMarker}
           style={{ left: `${targetPercent}%` }}

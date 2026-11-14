@@ -20,7 +20,7 @@ describe('Hud', () => {
 
   it('the pause and speed buttons change the game speed', async () => {
     render(<Hud />)
-    await userEvent.click(screen.getByRole('button', { name: '4×' }))
+    await userEvent.click(screen.getByRole('button', { name: '4x speed' }))
     expect(useGameStore.getState().speed).toBe(4)
     await userEvent.click(screen.getByRole('button', { name: 'Pause' }))
     expect(useGameStore.getState().speed).toBe(0)
@@ -120,7 +120,9 @@ describe('Hud', () => {
     expect(members).toHaveLength(4)
 
     // The astronaut with 0.8 exposure should have warning indicator
-    const exposedAstronaut = screen.getByTestId(`crew-member-${useGameStore.getState().game!.crew[0].id}`)
+    const exposedAstronaut = screen.getByTestId(
+      `crew-member-${useGameStore.getState().game!.crew[0].id}`,
+    )
     expect(exposedAstronaut.className).toContain('warning')
   })
 })

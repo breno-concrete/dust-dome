@@ -19,12 +19,7 @@ export function Button({
   disabled,
   ...rest
 }: ButtonProps) {
-  const classes = [
-    styles.button,
-    styles[variant],
-    disabled && styles.disabled,
-    className,
-  ]
+  const classes = [styles.button, styles[variant], disabled && styles.disabled, className]
     .filter(Boolean)
     .join(' ')
 

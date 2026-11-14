@@ -23,7 +23,11 @@ describe('UI Kit Components', () => {
 
     it('does not trigger click when disabled', async () => {
       const handleClick = vi.fn()
-      render(<Button disabled onClick={handleClick}>Disabled</Button>)
+      render(
+        <Button disabled onClick={handleClick}>
+          Disabled
+        </Button>,
+      )
       const btn = screen.getByRole('button', { name: 'Disabled' })
       expect(btn).toBeDefined()
       await userEvent.click(btn)
@@ -31,11 +35,7 @@ describe('UI Kit Components', () => {
     })
 
     it('renders icon when provided', () => {
-      render(
-        <Button icon={<Icon name="play" data-testid="play-icon" />}>
-          Play
-        </Button>,
-      )
+      render(<Button icon={<Icon name="play" data-testid="play-icon" />}>Play</Button>)
       expect(screen.getByTestId('play-icon')).toBeDefined()
     })
   })
@@ -43,13 +43,7 @@ describe('UI Kit Components', () => {
   describe('ResourceBar', () => {
     it('renders label, current stock and target values', () => {
       render(
-        <ResourceBar
-          id="oxygen"
-          label="Oxygen"
-          current={12}
-          target={16}
-          data-testid="res-bar"
-        />,
+        <ResourceBar id="oxygen" label="Oxygen" current={12} target={16} data-testid="res-bar" />,
       )
       const bar = screen.getByTestId('res-bar')
       expect(bar.textContent).toContain('Oxygen')
@@ -77,7 +71,7 @@ describe('UI Kit Components', () => {
   describe('Card', () => {
     it('renders title, badge and children', () => {
       render(
-        <Card title="Habitat" badge="Level 1">
+        <Card title={<span>Habitat</span>} badge="Level 1">
           Card Body Text
         </Card>,
       )
@@ -124,6 +118,11 @@ describe('UI Kit Components', () => {
     it('renders SVG for requested icon', () => {
       const { container } = render(<Icon name="power" />)
       expect(container.querySelector('svg')).toBeDefined()
+    })
+
+    it('allows its decorative accessibility setting to be overridden', () => {
+      const { container } = render(<Icon name="power" aria-hidden={false} />)
+      expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('false')
     })
   })
 })

@@ -23,17 +23,11 @@ const strings = {
 
 const VITALS: { id: 'oxygen' | 'water' | 'food'; seasonNeed: number }[] = [
   { id: 'oxygen', seasonNeed: 4 }, // 4 crew * 1 U
-  { id: 'water', seasonNeed: 8 },  // 4 crew * 2 U
-  { id: 'food', seasonNeed: 4 },   // 4 crew * 1 U
+  { id: 'water', seasonNeed: 8 }, // 4 crew * 2 U
+  { id: 'food', seasonNeed: 4 }, // 4 crew * 1 U
 ]
 
-const WALLET_RESOURCES: ResourceId[] = [
-  'hematite',
-  'regolith',
-  'iron',
-  'steel',
-  'repair_parts',
-]
+const WALLET_RESOURCES: ResourceId[] = ['hematite', 'regolith', 'iron', 'steel', 'repair_parts']
 
 const SPEEDS: Speed[] = [1, 2, 4]
 
@@ -145,7 +139,9 @@ export function Hud() {
               {astronaut.alive ? (
                 <span className={styles.exposureValue}>
                   {exposurePercent}%
-                  {isWarning && <Icon name="radiation" size={14} className={styles.radiationIcon} />}
+                  {isWarning && (
+                    <Icon name="radiation" size={14} className={styles.radiationIcon} />
+                  )}
                 </span>
               ) : (
                 <span className={styles.deceasedLabel}>{t(strings.deceased)}</span>

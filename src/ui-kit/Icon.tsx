@@ -26,16 +26,16 @@ interface IconProps extends SVGProps<SVGSVGElement> {
 }
 
 export function Icon({ name, size = 20, style, ...rest }: IconProps) {
-  const commonProps = {
+  const commonProps: SVGProps<SVGSVGElement> = {
     width: size,
     height: size,
     viewBox: '0 0 24 24',
     fill: 'none',
     stroke: 'currentColor',
     strokeWidth: 2,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-    'aria-hidden': 'true',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': true,
     style: { display: 'inline-block', verticalAlign: 'middle', ...style },
     ...rest,
   }
