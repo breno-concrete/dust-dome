@@ -1,6 +1,19 @@
 <!--
 Sync Impact Report
-Version: 2.1.1 → 3.0.0 (MAJOR: win and lose conditions redefined — no power target, no death
+Version: 3.0.0 → 3.1.0 (MINOR: event rules made precise from the POs' 25 answers of 2026-11-14)
+Modified sections: II.2 (extreme cold at the first instant of winter, no grace period), II.9
+  (winter blocks every external job from the first second; running jobs pause and wait for
+  spring), II.10 (only cleaning is blocked during a storm; one state per structure by severity;
+  short-circuit repair clears clogging; filters do not cure), II.11 (storm interval counts from
+  the end of the previous storm; one clogging target per listed type; target draw rules; first
+  short circuit at 45 s; cycle 4 scales only dust-devil intervals; cold only warns; cold and
+  darkness are one event in winters 2–4)
+Follow-up TODOs:
+  - US1 (Dev A): next storm = start + duration + interval (events.ts and its tests).
+  - US2 (Dev A): spec 002, US2 scenario 3 says "filters, mines, and refineries"; the targets are
+    oxygen generator, mine and refinery.
+  - Data needs no change: events.json and mission.json already match.
+Previous: 2.1.1 → 3.0.0 (MAJOR: win and lose conditions redefined — no power target, no death
   from radiation exposure — and principle V's placement rule changed)
 Modified principles: V (habitat modules must share a tile side; adjacency still has no effect for
   every other structure), VII (exposure is no longer lethal; warning list updated)
@@ -196,7 +209,7 @@ The HUD shows these targets as marks on the three vital bars from the start of t
 |---|---|
 | Empty reserve | A vital reserve (O₂, Water or Food) at 0, or no heat in the habitat: after a 15 s grace period one astronaut dies, then one more every 15 s while it lasts. |
 | Radiation storm | Every astronaut who is not in a habitat with a radiation shelter when the storm hits: outside the base, or inside a habitat without the shelter. |
-| Extreme cold | At the start of winter in cycles 3 and 4, astronauts in a habitat without thermal insulation. |
+| Extreme cold | At the first instant of winter in cycles 3 and 4, with no grace period, astronauts in a habitat without thermal insulation. |
 
 ## II.3 Time
 
@@ -394,8 +407,10 @@ Ice melter (takes no insulation):
     continue it;
   - an astronaut takes a new job only when their meter is back to 25% or less;
   - exposure never kills: nobody stays outside past 75%.
-- **Winter, cycles 2–4:** external jobs are blocked; queued jobs resume in spring. Production
-  inside the base continues.
+- **Winter, cycles 2–4:** from the first second of winter, every external job (build, upgrade,
+  repair, clean, demolish) is blocked. A job already running pauses, its astronaut comes back
+  inside, and the job keeps its remaining time in the queue until spring. A panel broken in
+  autumn is only repaired in spring. Production inside the base continues.
 
 ## II.10 Damage, Repairs and Cleaning
 
@@ -409,18 +424,33 @@ Ice melter (takes no insulation):
   structure, and the player has 6 seconds to click all of them. Success: an astronaut finishes the
   repair outside (5 s). Failure: the parts are lost and the player may try again.
 - **Cleaning** takes one astronaut outside for 10 s and is not possible while a dust storm is
-  active.
+  active (15 s local, 20 s dense, the whole summer for the global storm). Building, upgrading
+  and repairing go on during a storm.
+- **One state per structure**, by severity: short-circuited > damaged > clogged. A lighter state
+  never replaces a worse one. Repairing a short circuit brings the structure back to active, with
+  no leftover clogging.
+- **Dust filters** protect only from the moment they are installed; they do not fix a structure
+  that is already damaged, clogged or short-circuited. The ice melter accepts a filter, but no
+  event targets it today.
 
 ## II.11 Events by Cycle and Season
 
-Event times are drawn from the seeded generator within the intervals below.
+Event times are drawn from the seeded generator within the intervals below, counted from the
+start of the season for the first occurrence. For storms that last a while, the interval counts
+from the **end** of one storm to the start of the next.
+
+**Targets.** Every target is drawn by the seeded generator, without repeats, among the eligible
+structures: finished, without a dust filter and not already in that state or a worse one
+(II.10). Clogging hits **one structure of each listed type**. If there are fewer eligible
+structures than the event asks for, it hits the ones there are; if there are none, that part of
+the event is lost.
 
 ### Cycle 1 — Normal
 
 | Season | Event | Effect |
 |---|---|---|
 | Spring | **Dust devils** every 30–45 s | 1 random solar panel becomes damaged |
-| Summer | **Local dust storm** every 30 s, lasting 15 s | Solar panels −40% while active |
+| Summer | **Local dust storm** lasting 15 s; the first 30 s into summer, then 30 s after each one ends | Solar panels −40% while active |
 | Autumn | **Mild cold** | Heating table, cycle 1 autumn |
 | Winter | **Intense cold** | Heating table, cycle 1 winter |
 
@@ -428,8 +458,8 @@ Event times are drawn from the seeded generator within the intervals below.
 
 | Season | Event | Effect |
 |---|---|---|
-| Spring | **Frequent dust devils** every 20–30 s | 1 panel damaged; 50% chance to clog the oxygen generators' filters |
-| Summer | **Dense dust storm** every 30 s, lasting 20 s | Panels −60% while active; each storm clogs mines and iron refineries |
+| Spring | **Frequent dust devils** every 20–30 s | 1 panel damaged; 50% chance to clog one oxygen generator |
+| Summer | **Dense dust storm** lasting 20 s; the first 30 s into summer, then 30 s after each one ends | Panels −60% while active; each storm clogs one mine and one iron refinery |
 | Autumn | **Sharp cold** | Heating table, cycle 2 autumn (ice melter included) |
 | Winter | **Severe cold + total darkness** | Heating table, cycle 2 winter; solar panels 0 kW; external jobs blocked |
 
@@ -437,15 +467,20 @@ Event times are drawn from the seeded generator within the intervals below.
 
 | Season | Event | Effect |
 |---|---|---|
-| Spring | **Large dust devils** every 30–40 s | 2 panels damaged; clogs oxygen generators, mines and iron refineries |
-| Summer | **Global dust storm**, the whole season | Panels −80%; every 45 s a random mine or iron refinery short-circuits. No other efficiency loss. |
+| Spring | **Large dust devils** every 30–40 s | 2 panels damaged; clogs one oxygen generator, one mine and one iron refinery |
+| Summer | **Global dust storm**, the whole season | Panels −80%; 45 s into summer and every 45 s after, one random mine or iron refinery short-circuits. No other efficiency loss. |
 | Autumn | **Extreme cold** | Heating table, cycle 3 autumn (as cold as cycle 2 winter) |
 | Winter | **Severe cold + total darkness** | Heating table, cycle 3 winter; panels 0 kW; external jobs blocked; thermal insulation required (II.2) |
 
 ### Cycle 4 — Final Test of the Colony
 
-Same as cycle 3 at maximum scale: event intervals × 0.75; the global dust storm still reduces
-panels by 80%. Level 3 infrastructure (reactor, steel, dust filters) is what keeps the base alive.
+Same as cycle 3 at maximum scale: dust-devil intervals × 0.75; everything else is the same as
+cycle 3 (the short circuit still comes every 45 s, and the global dust storm still reduces
+panels by 80%).
+
+The cold events (II.7) only warn: they show in the HUD and the debrief and explain the science;
+their cost comes from the heating tables. In the winters of cycles 2–4, cold and darkness are one
+event, and its text explains both the cold and the missing sunlight. Level 3 infrastructure (reactor, steel, dust filters) is what keeps the base alive.
 
 ### Radiation Storm (cycles 2–4)
 
@@ -574,4 +609,4 @@ Amendments go through a `shared/` pull request approved by a second team member;
 Part II also need one product owner's approval. Every pull request must respect the ownership
 table and the principles above.
 
-**Version**: 3.0.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-14
+**Version**: 3.1.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-14
