@@ -117,15 +117,15 @@ consumption (FR-006–FR-010; R3, R4).
 
 ### Tests for User Story 2 ⚠️ (write first, must fail)
 
-- [ ] T026 [US2] Create branch `engine/us2-economy`, then in `src/engine/economy.test.ts` turn "produces each structure output per second = per-season amount / season duration" into a test: a state with only one mine (`onlyStructures`), crew alive, apply one full season of 1 s steps → hematite and regolith grew by `outputs.min` within 1 %
-- [ ] T027 [US2] In `src/engine/economy.test.ts` turn "uses the min or max amounts from the power mode of the structure type" into a test (same state, `powerModes.mine = 'max'` → `outputs.max`)
-- [ ] T028 [US2] In `src/engine/economy.test.ts` turn "produces nothing when the type is off or shed by the brownout" into a test (`powerModes` off, and separately `power.shed` containing the type)
-- [ ] T029 [US2] In `src/engine/economy.test.ts` turn "consumes inputs and stops producing when an input runs out" into a test: an iron refinery with less hematite than one step needs → hematite ends at exactly 0, iron grows in proportion to the hematite used, no stock below 0
-- [ ] T030 [US2] In `src/engine/economy.test.ts` turn "applies damaged x damagedFactor, clogged x cloggedFactor, short_circuit x 0" into a test, including that the factor also scales a converter's inputs (R4)
-- [ ] T031 [US2] In `src/engine/economy.test.ts` turn "ignores structures that are still being built" into a test
-- [ ] T032 [US2] In `src/engine/economy.test.ts` turn "living astronauts consume oxygen, water and food per season" into a test (one full season with no producers → each vital stock dropped by `needs × living crew`; a dead astronaut consumes nothing)
-- [ ] T033 [US2] In `src/engine/economy.test.ts` add the test "converters that share an input are served in reverse brownout order" (repair workshop and steel factory with iron for only one of them: the one later in `mission.brownoutOrder` gets it first)
-- [ ] T034 [US2] Run `npx vitest run src/engine/economy.test.ts`, confirm red for the right reason, commit `test(us2): production and consumption (red)`
+- [x] T026 [US2] Create branch `engine/us2-economy`, then in `src/engine/economy.test.ts` turn "produces each structure output per second = per-season amount / season duration" into a test: a state with only one mine (`onlyStructures`), crew alive, apply one full season of 1 s steps → hematite and regolith grew by `outputs.min` within 1 %
+- [x] T027 [US2] In `src/engine/economy.test.ts` turn "uses the min or max amounts from the power mode of the structure type" into a test (same state, `powerModes.mine = 'max'` → `outputs.max`)
+- [x] T028 [US2] In `src/engine/economy.test.ts` turn "produces nothing when the type is off or shed by the brownout" into a test (`powerModes` off, and separately `power.shed` containing the type)
+- [x] T029 [US2] In `src/engine/economy.test.ts` turn "consumes inputs and stops producing when an input runs out" into a test: an iron refinery with less hematite than one step needs → hematite ends at exactly 0, iron grows in proportion to the hematite used, no stock below 0
+- [x] T030 [US2] In `src/engine/economy.test.ts` turn "applies damaged x damagedFactor, clogged x cloggedFactor, short_circuit x 0" into a test, including that the factor also scales a converter's inputs (R4)
+- [x] T031 [US2] In `src/engine/economy.test.ts` turn "ignores structures that are still being built" into a test
+- [x] T032 [US2] In `src/engine/economy.test.ts` turn "living astronauts consume oxygen, water and food per season" into a test (one full season with no producers → each vital stock dropped by `needs × living crew`; a dead astronaut consumes nothing)
+- [x] T033 [US2] In `src/engine/economy.test.ts` add the test "converters that share an input are served in reverse brownout order" (repair workshop and steel factory with iron for only one of them: the one later in `mission.brownoutOrder` gets it first)
+- [x] T034 [US2] Run `npx vitest run src/engine/economy.test.ts`, confirm red for the right reason, commit `test(us2): production and consumption (red)`
 
 ### Implementation for User Story 2
 
