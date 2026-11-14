@@ -42,7 +42,9 @@ Passo a passo:
    `seasonStart + nextRange(rng, min × fator, max × fator)`.
 5. **Reagenda a cada disparo.** Enquanto `nextEventAt <= elapsed`, sorteia o próximo horário
    somando um novo intervalo ao horário anterior (não ao "agora"). Isso faz o horário não
-   depender do tamanho do `dt`.
+   depender do tamanho do `dt`. Se a regra tem `durationSeconds` (tempestades), o intervalo conta
+   do **fim** da ocorrência: próximo = início + duração + intervalo (decisão T1 do PO). A
+   primeira ocorrência da estação não espera duração nenhuma.
 6. **Limita ao fim da estação.** Nenhum horário passa de `seasonEnd`. Um horário igual ao fim da
    estação significa "não acontece mais nesta estação" e não conta como disparo.
 7. **Devolve o estado novo, sem mutar o antigo.** Se nada mudou, devolve a mesma referência do
@@ -185,7 +187,7 @@ while (at <= elapsed && at < seasonEnd) {
   // US2: aplicar a ocorrência que aconteceu em `at`
   //   - dust_devil: escolher painéis com state.rng e marcá-los como 'damaged'
   //   - dust_storm: criar um ActiveEvent com endsAt = at + durationSeconds
-  at = draw(rule, at) // US1: sorteia o próximo horário
+  at = drawAfter(rule, at) // US1: sorteia o próximo (início + duração + intervalo)
 }
 ```
 
@@ -216,7 +218,7 @@ porque o `rng` é o mesmo que a US1 já avança. Essa escolha de alvo é decisã
 | 1   | Horários sorteados dentro do intervalo configurado da estação           | **Completo**           | Testado para todos os ciclos e estações, 40 seeds, incluindo intervalo de pontas iguais (`[30,30]` dá exatamente 30) e o reagendamento após um disparo.                                                                    |
 | 2   | Mesma seed e mesmos `dt` dão os mesmos tipos, horários e **alvos**      | **Completo em tipos e horários; alvos ficam para a US2** | Testado com 7 passos de `dt` diferentes. Ainda não existe "alvo": quem escolhe o painel ou a máquina é a US2.                                                                                                              |
 | 3   | Evento ativo some na troca de estação; a nova começa só com a sua agenda | **Completo no `updateEvents`**, com uma dependência | Testado com estados montados à mão (spring→summer, autumn→winter, winter→ciclo 2). Estruturas já danificadas ficam como estão (FR-005). Na prática depende de o `advanceTime` do Breno trocar a estação, o que ainda é stub. |
-| 4   | Ciclo 4 usa as regras de escala máxima                                  | **Completo no intervalo; efeito fica para a US2** | O intervalo é multiplicado por `finalCycleIntervalFactor`, e o teste confirma que a mesma seed dá exatamente `fator ×` o deslocamento do ciclo anterior. O efeito (tempestade global a −85%) é da US2.                       |
+| 4   | Ciclo 4 usa as regras de escala máxima                                  | **Completo no intervalo; efeito fica para a US2** | O intervalo é multiplicado por `finalCycleIntervalFactor`, e o teste confirma que a mesma seed dá exatamente `fator ×` o deslocamento do ciclo anterior. O efeito (tempestade global a −80%) é da US2.                       |
 | —   | Caso extremo: nada agendado fora da estação                             | **Completo**           | Teste com intervalo gigante: o horário vira exatamente o fim da estação, e nenhum sorteio extra acontece depois.                                                                                                          |
 
 **Resposta direta: o agendamento da US1 está completo. O que a spec descreve como "alvos" e

@@ -97,6 +97,29 @@ describe('event scheduling', () => {
     }
   })
 
+  it('counts the interval from the end of an event that has a duration', () => {
+    const rule = config.events.find((r) => r.intervalSeconds && r.durationSeconds)!
+    const [lo, hi] = rule.intervalSeconds!
+    for (const seed of SEEDS) {
+      const first = updateEvents(stateAt(rule.cycles[0], rule.season, seed), config, 0)
+      const firedAt = first.nextEventAt[rule.id]
+      const due = { ...first, time: { ...first.time, elapsed: firedAt - 1 } }
+      const gap = step(due, 1).nextEventAt[rule.id] - firedAt
+      expect(gap).toBeGreaterThanOrEqual(rule.durationSeconds! + lo)
+      expect(gap).toBeLessThanOrEqual(rule.durationSeconds! + hi)
+    }
+  })
+
+  it('does not delay the first occurrence of the season by the duration', () => {
+    const rule = config.events.find((r) => r.intervalSeconds && r.durationSeconds)!
+    const [lo, hi] = rule.intervalSeconds!
+    for (const seed of SEEDS) {
+      const next = updateEvents(stateAt(rule.cycles[0], rule.season, seed), config, 0).nextEventAt
+      expect(next[rule.id] - SEASON_START).toBeGreaterThanOrEqual(lo)
+      expect(next[rule.id] - SEASON_START).toBeLessThanOrEqual(hi)
+    }
+  })
+
   it('keeps the schedule and the generator untouched until an event is due', () => {
     const first = updateEvents(stateAt(1, 'spring'), config, 0)
     const again = step(first, 0.1)
@@ -113,6 +136,17 @@ describe('event scheduling', () => {
     const later = step(first, length, cfg)
     expect(later.nextEventAt[rule.id]).toBe(SEASON_START + length)
     expect(later.rng).toBe(first.rng)
+  })
+
+  it('never schedules past the end of the season when the event has a duration', () => {
+    const base = config.events.find((r) => r.intervalSeconds && r.durationSeconds)!
+    const rule: EventRule = { ...base, intervalSeconds: [1, 1], durationSeconds: 9999 }
+    const cfg: GameConfig = { ...config, events: [rule] }
+    const length = seasonDef(rule.season).durationSeconds
+    const first = updateEvents(stateAt(rule.cycles[0], rule.season), cfg, 0)
+    expect(first.nextEventAt[rule.id]).toBe(SEASON_START + 1)
+    const later = step(first, 1, cfg)
+    expect(later.nextEventAt[rule.id]).toBe(SEASON_START + length)
   })
 
   it('does not mutate the state it receives', () => {
