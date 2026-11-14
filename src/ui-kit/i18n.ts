@@ -16,11 +16,13 @@ export const useLang = create<LangStore>((set) => ({
   setLang: (lang) => set({ lang }),
 }))
 
-export function translate(text: LocalizedText, lang: Lang): string {
-  return (lang === 'pt' && text.pt) || text.en
+export function translate(text: LocalizedText | string | undefined | null, lang: Lang): string {
+  if (!text) return ''
+  if (typeof text === 'string') return text
+  return (lang === 'pt' && text.pt) || text.en || ''
 }
 
 export function useT() {
   const lang = useLang((s) => s.lang)
-  return (text: LocalizedText) => translate(text, lang)
+  return (text: LocalizedText | string | undefined | null) => translate(text, lang)
 }

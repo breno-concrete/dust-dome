@@ -24,9 +24,9 @@ description: "Lista de tarefas executáveis para implementação da interface 2D
 
 **Objetivo**: Preparar tokens de design e alinhamento de contratos do Kit de UI.
 
-- [ ] T001 [P] Validar variáveis de tokens CSS (cores de alto contraste, espaçamentos, tipografia, alvos de 44px) em `src/ui-kit/tokens.css`
-- [ ] T002 [P] Criar definições e catálogo de ícones SVG inline (`Icon.tsx`) em `src/ui-kit/Icon.tsx`
-- [ ] T003 Validar exportações e integração básica de tradução (`useT`) em `src/ui-kit/i18n.ts`
+- [x] T001 [P] Validar variáveis de tokens CSS (cores de alto contraste, espaçamentos, tipografia, alvos de 44px) em `src/ui-kit/tokens.css`
+- [x] T002 [P] Criar definições e catálogo de ícones SVG inline (`Icon.tsx`) em `src/ui-kit/Icon.tsx`
+- [x] T003 Validar exportações e integração básica de tradução (`useT`) em `src/ui-kit/i18n.ts`
 
 ---
 
@@ -36,12 +36,12 @@ description: "Lista de tarefas executáveis para implementação da interface 2D
 
 **⚠️ CRÍTICO**: Nenhuma tela ou história de usuário pode ser finalizada sem estes componentes base.
 
-- [ ] T004 [P] Implementar variantes de botão (`primary`, `secondary`, `danger`, `active`), acessibilidade e área mínima de 44×44px em `src/ui-kit/Button.tsx` e `src/ui-kit/Button.module.css`
-- [ ] T005 [P] Implementar barra de recurso (`ResourceBar.tsx`) com marcador de meta, percentual numérico e suporte a animação pulsante de perigo em `src/ui-kit/ResourceBar.tsx` e `src/ui-kit/ResourceBar.module.css`
-- [ ] T006 [P] Implementar contêiner de cartão informativo (`Card.tsx`) com estilos semitransparentes em `src/ui-kit/Card.tsx` e `src/ui-kit/Card.module.css`
-- [ ] T007 [P] Implementar janela modal acessível (`Modal.tsx`) com controle de foco e backdrop em `src/ui-kit/Modal.tsx` e `src/ui-kit/Modal.module.css`
-- [ ] T008 Criar testes unitários para os componentes do Kit de UI em `src/ui-kit/ui-kit.test.tsx`
-- [ ] T009 Exportar componentes consolidados do Kit de UI em `src/ui-kit/index.ts`
+- [x] T004 [P] Implementar variantes de botão (`primary`, `secondary`, `danger`, `active`), acessibilidade e área mínima de 44×44px em `src/ui-kit/Button.tsx` e `src/ui-kit/Button.module.css`
+- [x] T005 [P] Implementar barra de recurso (`ResourceBar.tsx`) com marcador de meta, percentual numérico e suporte a animação pulsante de perigo em `src/ui-kit/ResourceBar.tsx` e `src/ui-kit/ResourceBar.module.css`
+- [x] T006 [P] Implementar contêiner de cartão informativo (`Card.tsx`) com estilos semitransparentes em `src/ui-kit/Card.tsx` e `src/ui-kit/Card.module.css`
+- [x] T007 [P] Implementar janela modal acessível (`Modal.tsx`) com controle de foco e backdrop em `src/ui-kit/Modal.tsx` e `src/ui-kit/Modal.module.css`
+- [x] T008 Criar testes unitários para os componentes do Kit de UI em `src/ui-kit/ui-kit.test.tsx`
+- [x] T009 Exportar componentes consolidados do Kit de UI em `src/ui-kit/index.ts`
 
 **Ponto de Controle**: O Kit de UI fundamental está completo e testado. A implementação das histórias de usuário pode começar.
 
@@ -57,15 +57,15 @@ description: "Lista de tarefas executáveis para implementação da interface 2D
 
 > **NOTA: Implemente os testes primeiro e garanta que falhem antes de codificar a solução.**
 
-- [ ] T010 [US1] Ativar e expandir os testes de sinais vitais, metas de vitória e alerta de reserva baixa em `src/features/hud/Hud.test.tsx`
-- [ ] T011 [US1] Implementar testes para exibição do balanço de energia (superávit e déficit negativo com alerta) em `src/features/hud/Hud.test.tsx`
-- [ ] T012 [P] [US1] Implementar testes para a carteira de materiais (Hematita, Regolito, Ferro, Aço, Peças de Reparo) em `src/features/hud/Hud.test.tsx`
-- [ ] T013 [P] [US1] Implementar testes para o painel da tripulação (status dos 4 astronautas e aviso pulsante em 75% de radiação) em `src/features/hud/Hud.test.tsx`
+- [x] T010 [US1] Ativar e expandir os testes de sinais vitais, metas de vitória e alerta de reserva baixa em `src/features/hud/Hud.test.tsx`
+- [x] T011 [US1] Implementar testes para exibição do balanço de energia (superávit e déficit negativo com alerta) em `src/features/hud/Hud.test.tsx`
+- [x] T012 [P] [US1] Implementar testes para a carteira de materiais (Hematita, Regolito, Ferro, Aço, Peças de Reparo) em `src/features/hud/Hud.test.tsx`
+- [x] T013 [P] [US1] Implementar testes para o painel da tripulação (status dos 4 astronautas e aviso pulsante em 75% de radiação) em `src/features/hud/Hud.test.tsx`
 
 ### Implementação da História de Usuário 1
 
-- [ ] T014 [US1] Integrar o componente `ResourceBar` para Oxigênio, Água e Alimento no HUD, exibindo metas de vitória (`/ 16`, `/ 32`, `/ 16`) e ativando classe de pulso quando o estoque for menor que o consumo de uma estação (4, 8, 4) em `src/features/hud/Hud.tsx` e `src/features/hud/Hud.module.css`
-- [ ] T015 [US1] Implementar seções do medidor de energia, carteira de recursos e painel de status/exposição da tripulação com estilos responsivos em `src/features/hud/Hud.tsx` e `src/features/hud/Hud.module.css`
+- [x] T014 [US1] Integrar o componente `ResourceBar` para Oxigênio, Água e Alimento no HUD, exibindo metas de vitória (`/ 16`, `/ 32`, `/ 16`) e ativando classe de pulso quando o estoque for menor que o consumo de uma estação (4, 8, 4) em `src/features/hud/Hud.tsx` e `src/features/hud/Hud.module.css`
+- [x] T015 [US1] Implementar seções do medidor de energia, carteira de recursos e painel de status/exposição da tripulação com estilos responsivos em `src/features/hud/Hud.tsx` e `src/features/hud/Hud.module.css`
 
 **Ponto de Controle**: A História de Usuário 1 (MVP) está 100% funcional e com todos os testes de `Hud.test.tsx` passando.
 
