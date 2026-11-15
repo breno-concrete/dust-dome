@@ -9,6 +9,22 @@ import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
 
 const strings = {
+  repair: { en: 'Repair', pt: 'Reparar' },
+  clean: { en: 'Clean', pt: 'Limpar' },
+  demolish: { en: 'Demolish', pt: 'Demolir' },
+  missingParts: { en: 'Missing {n} repair parts', pt: 'Faltam {n} peças de reparo' },
+  cleanHint: {
+    en: 'Dust is clogging it. Someone goes outside for 10 seconds.',
+    pt: 'A poeira está entupindo. Alguém sai por 10 segundos.',
+  },
+  repairHint: {
+    en: 'It is broken. Spend repair parts and play the bolt game.',
+    pt: 'Está quebrada. Gaste peças de reparo e jogue o jogo dos parafusos.',
+  },
+  demolishHint: {
+    en: 'You get all the materials back.',
+    pt: 'Você recebe todos os materiais de volta.',
+  },
   title: { en: 'Upgrades', pt: 'Melhorias' },
   install: { en: 'Install', pt: 'Instalar' },
   installed: { en: 'Installed', pt: 'Instalada' },
@@ -42,8 +58,8 @@ const strings = {
     pt: 'Trabalhos externos estão bloqueados nesta estação.',
   },
   notAllowed: {
-    en: 'This upgrade is not allowed for this structure.',
-    pt: 'Esta melhoria não é permitida nesta estrutura.',
+    en: 'You cannot do this right now.',
+    pt: 'Você não pode fazer isso agora.',
   },
   notImplemented: {
     en: 'This action is not ready yet.',
@@ -67,6 +83,9 @@ export function UpgradePanel() {
   const game = useGameStore((s) => s.game)
   const selectedStructureId = useGameStore((s) => s.selectedStructureId)
   const installUpgrade = useGameStore((s) => s.installUpgrade)
+  const openQte = useGameStore((s) => s.openQte)
+  const clean = useGameStore((s) => s.clean)
+  const demolish = useGameStore((s) => s.demolish)
   const lastError = useGameStore((s) => s.lastError)
   const selectStructure = useGameStore((s) => s.selectStructure)
   const panelRef = useRef<HTMLElement>(null)
@@ -85,17 +104,53 @@ export function UpgradePanel() {
 
   const structure = game?.structures.find(({ id }) => id === selectedStructureId)
   const structureDef = structure && config.structures.find(({ id }) => id === structure.type)
-  if (!game || !structure || !structureDef || structureDef.upgrades.length === 0) return null
+  if (!game || !structure || !structureDef) return null
 
   const upgrades = structureDef.upgrades.map((id) =>
     config.upgrades.find((upgrade) => upgrade.id === id),
   )
 
+  const needsRepair = structure.status === 'damaged' || structure.status === 'short_circuit'
+  const partsMissing = Math.max(0, config.mission.repair.parts - (game.stock['repair_parts'] ?? 0))
+  const label = structureDef.upgrades.length > 0 ? t(strings.title) : t(structureDef.name)
+
   return (
-    <section ref={panelRef} className={styles.upgrades} aria-label={t(strings.title)}>
+    <section ref={panelRef} className={styles.upgrades} aria-label={label}>
       <h2>
-        <Icon name="wrench" size={20} /> {t(strings.title)}
+        <Icon name="wrench" size={20} /> {label}
       </h2>
+      <div className={styles.structureActions} data-testid="structure-actions">
+        {needsRepair && (
+          <>
+            <Button
+              variant="primary"
+              disabled={partsMissing > 0}
+              aria-describedby={partsMissing > 0 ? 'missing-repair-parts' : undefined}
+              onClick={() => openQte(structure.id)}
+            >
+              <Icon name="repair_parts" size={16} /> {t(strings.repair)}
+            </Button>
+            <p className={styles.hint}>{t(strings.repairHint)}</p>
+            {partsMissing > 0 && (
+              <p id="missing-repair-parts" className={styles.missing}>
+                {t(strings.missingParts).replace('{n}', String(partsMissing))}
+              </p>
+            )}
+          </>
+        )}
+        {structure.status === 'clogged' && (
+          <>
+            <Button variant="primary" onClick={() => clean(structure.id)}>
+              <Icon name="wrench" size={16} /> {t(strings.clean)}
+            </Button>
+            <p className={styles.hint}>{t(strings.cleanHint)}</p>
+          </>
+        )}
+        <Button variant="danger" onClick={() => demolish(structure.id)}>
+          <Icon name="close" size={16} /> {t(strings.demolish)}
+        </Button>
+        <p className={styles.hint}>{t(strings.demolishHint)}</p>
+      </div>
       {upgrades.map((upgrade, index) => {
         if (!upgrade) {
           const missingId = structureDef.upgrades[index]
