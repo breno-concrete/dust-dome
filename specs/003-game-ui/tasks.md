@@ -124,13 +124,13 @@ description: "Lista de tarefas executáveis para implementação da interface 2D
 ### Testes da História de Usuário 4 (TDD - Test-First) ⚠️
 
 - [ ] T028 [US4] Criar testes unitários para a tela inicial (navegação para missão, fontes científicas e alternância de idioma) em `src/features/title/TitleScreen.test.tsx`
-- [ ] T029 [P] [US4] Criar testes de acessibilidade e internacionalização transversal (`useT`) em `src/ui-kit/a11y.test.tsx`
+- [x] T029 [P] [US4] Criar testes de acessibilidade e internacionalização transversal (`useT`) em `src/ui-kit/a11y.test.tsx`
 
 ### Implementação da História de Usuário 4
 
 - [ ] T030 [US4] Refinar `TitleScreen.tsx` com arte visual tática, botões grandes e alternância fluida entre EN e PT em `src/features/title/TitleScreen.tsx`
-- [ ] T031 [US4] Adicionar regras de mídia responsiva (breakpoints para tablets e smartphones com gavetas de menu inferiores e cabeçalho flexível) em `src/features/hud/Hud.module.css` e `src/features/decisions/Panel.module.css`
-- [ ] T032 [US4] Revisar atributos ARIA (`aria-label`, `aria-live` para alertas vitais e foco de teclado) em todos os componentes em `src/features/hud/Hud.tsx` e `src/features/decisions/`
+- [x] T031 [US4] Adicionar regras de mídia responsiva (breakpoints para tablets e smartphones com gavetas de menu inferiores e cabeçalho flexível) em `src/features/hud/Hud.module.css` e `src/features/decisions/Panel.module.css`
+- [x] T032 [US4] Revisar atributos ARIA (`aria-label`, `aria-live` para alertas vitais e foco de teclado) em todos os componentes em `src/features/hud/Hud.tsx` e `src/features/decisions/`
 
 **Ponto de Controle**: Todas as 4 histórias de usuário estão completas, acessíveis, bilíngues e responsivas.
 

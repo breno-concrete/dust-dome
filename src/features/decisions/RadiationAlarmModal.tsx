@@ -55,7 +55,7 @@ export function RadiationAlarmModal() {
         <div>
           <p>{t(isWarning ? strings.warning : strings.active)}</p>
           {isWarning && (
-            <p className={styles.countdown} data-testid="storm-countdown" aria-live="polite">
+            <p className={styles.countdown} data-testid="storm-countdown">
               <strong>{seconds}</strong> {t(strings.secondsLeft)}
             </p>
           )}
