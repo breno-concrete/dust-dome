@@ -1,5 +1,6 @@
 // Owner: Dev B. Shows only upgrades allowed for the selected structure.
 import { useEffect, useRef } from 'react'
+import { hasPausedJob } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import { Button } from '../../ui-kit/Button'
@@ -12,6 +13,11 @@ const strings = {
   repair: { en: 'Repair', pt: 'Reparar' },
   clean: { en: 'Clean', pt: 'Limpar' },
   demolish: { en: 'Demolish', pt: 'Demolir' },
+  resume: { en: 'Resume', pt: 'Retomar' },
+  resumeHint: {
+    en: 'The work here is paused. Tap Resume to send someone back out.',
+    pt: 'O trabalho aqui está pausado. Toque em Retomar para mandar alguém de volta.',
+  },
   missingParts: { en: 'Missing {n} repair parts', pt: 'Faltam {n} peças de reparo' },
   cleanHint: {
     en: 'Dust is clogging it. Someone goes outside for 10 seconds.',
@@ -86,6 +92,7 @@ export function UpgradePanel() {
   const openQte = useGameStore((s) => s.openQte)
   const clean = useGameStore((s) => s.clean)
   const demolish = useGameStore((s) => s.demolish)
+  const resumeJobs = useGameStore((s) => s.resumeJobs)
   const lastError = useGameStore((s) => s.lastError)
   const selectStructure = useGameStore((s) => s.selectStructure)
   const panelRef = useRef<HTMLElement>(null)
@@ -110,6 +117,7 @@ export function UpgradePanel() {
     config.upgrades.find((upgrade) => upgrade.id === id),
   )
 
+  const paused = hasPausedJob({ game }, structure.id)
   const needsRepair = structure.status === 'damaged' || structure.status === 'short_circuit'
   const partsMissing = Math.max(0, config.mission.repair.parts - (game.stock['repair_parts'] ?? 0))
   const label = structureDef.upgrades.length > 0 ? t(strings.title) : t(structureDef.name)
@@ -120,6 +128,14 @@ export function UpgradePanel() {
         <Icon name="wrench" size={20} /> {label}
       </h2>
       <div className={styles.structureActions} data-testid="structure-actions">
+        {paused && (
+          <>
+            <Button variant="primary" onClick={() => resumeJobs(structure.id)}>
+              <Icon name="play" size={16} /> {t(strings.resume)}
+            </Button>
+            <p className={styles.hint}>{t(strings.resumeHint)}</p>
+          </>
+        )}
         {needsRepair && (
           <>
             <Button
