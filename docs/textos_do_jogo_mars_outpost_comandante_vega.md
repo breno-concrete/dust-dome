@@ -28,7 +28,7 @@
 
    - Escava o solo marciano automaticamente para coletar hematita e regolito sem cansar os astronautas. Ela funciona sozinha, mas precisa de energia e limpeza quando a poeira acumula. A NASA chama isso de "utilização de recursos locais", usando o próprio planeta para construir.
 
-5. **Gerador de** $\text{O}_2$ **(MOXIE)**
+5. **Gerador de O₂ (MOXIE)**
 
    - Puxa o ar fino de Marte, que é quase todo feito de gás carbônico, e o transforma em oxigênio puro para respirarmos. Ele gasta bastante energia porque precisa aquecer muito o ar para separar os gases. Esse aparelho existe de verdade e já produziu oxigênio em Marte no rover _Perseverance_!
 
@@ -76,7 +76,7 @@
 
 ## 2. Fichas de 10 Recursos
 
-1.  **Hematita (**$\text{Fe}_2\text{O}_3$**)**
+1.  **Hematita (Fe₂O₃)**
 
     - É um mineral rico em ferro muito comum em Marte, responsável pela cor avermelhada do planeta. Usamos hematita bruta nas primeiras construções e para produzir ferro na refinaria. O rover _Opportunity_ da NASA encontrou pequenas esferas de hematita em Marte em 2004.
 
@@ -88,7 +88,7 @@
 
     - É a energia que vem do Sol até os nossos painéis solares para gerar eletricidade. Como Marte fica mais longe do Sol que a Terra, a luz lá é mais fraca e muda conforme as estações. Quando grandes tempestades de poeira cobrem o céu, quase nenhuma luz consegue passar.
 
-4.  **Ferro (**$\text{Fe}$**)**
+4.  **Ferro (Fe)**
 
     - É um metal forte obtido ao aquecer e purificar a hematita dentro da refinaria. Usamos o ferro para construir estruturas de nível intermediário, fabricar peças de reparo e produzir aço. Extrair ferro em Marte será fundamental para construir grandes colônias no futuro.
 
@@ -100,11 +100,11 @@
 
     - São parafusos, cabos e componentes feitos de ferro na nossa oficina para consertar máquinas estragadas. Sempre que um redemoinho ou curto-circuito danificar algo, precisamos de 4 peças para o reparo. Ter peças reservas garante que um pequeno defeito não vire um grande problema na missão.
 
-7.  **Oxigênio (**$\text{O}_2$**)**
+7.  **Oxigênio (O₂)**
 
     - É o gás invisível que os humanos precisam respirar o tempo todo para sobreviver. Como o ar de Marte quase não tem oxigênio, nosso gerador precisa fabricá-lo sem parar. Cada pessoa na colônia consome 1 unidade de oxigênio por estação.
 
-8.  **Água (**$\text{H}_2\text{O}$**)**
+8.  **Água (H₂O)**
 
     - É o líquido essencial para matar a sede da tripulação e manter as plantas da estufa vivas. Em Marte, a água não corre em rios; ela está congelada no subsolo e precisa ser derretida. Cada pessoa consome 1 unidade de água por estação, além do que vai para a estufa.
 
@@ -156,7 +156,7 @@
 
 10. **Tempestade Solar (SEP)**
 
-    - É uma explosão no Sol que lança partículas de radiação muito rápidas em direção a Marte, detectada pelo sistema _DONKI_ da NASA. Quando o alarme tocar, você tem 10 segundos para recolher todos os astronautas para o Abrigo Antirradiação. Quem ficar lá fora fica ferido no módulo por uma estação inteira!
+    - É uma explosão no Sol que lança partículas de radiação muito rápidas em direção a Marte, detectada pelo sistema _DONKI_ da NASA. Quando o alarme tocar, você tem 10 segundos para recolher todos os astronautas para o Abrigo Antirradiação. Quem ficar lá fora, ou num módulo sem abrigo, não sobrevive à tempestade!
 
 ## 4. 16 Briefings da Comandante Vega (4 Ciclos × 4 Estações)
 
@@ -192,6 +192,7 @@
 
 - **Primavera (Ciclo 3):**
   "A luz voltou e podemos sair novamente, mas esta primavera traz redemoinhos maiores e mais duradouros! Eles podem danificar dois painéis de uma vez e entupir várias máquinas ao mesmo tempo. Trabalhem para avançar rumo à Fábrica de Aço."
+  _(Este briefing termina com o aviso da seção 5.)_
 
 - **Verão (Ciclo 3):**
   "Alerta máximo: uma tempestade global de poeira está cobrindo Marte inteiro! A luz solar vai cair quase a zero e a eletricidade estática pode causar curtos-circuitos na mina e na refinaria. Escudos antipoeira e o Reator Nuclear farão toda a diferença agora."
@@ -215,24 +216,24 @@
 - **Inverno (Ciclo 4):**
   "Último inverno da missão! Estamos no escuro total e no frio absoluto, mas nossa engenharia foi feita para isso. Mantenham o aquecimento estável e as reservas acima da meta até o fim da estação para darmos boas-vindas aos colonos!"
 
-## 5. Aviso de Transição Antes do Ciclo 3
+## 5. Aviso Antes do Inverno do Ciclo 3
 
-- **Alerta da Comandante Vega (Fim do Ciclo 2):**
+- **Alerta da Comandante Vega (dentro do briefing da Primavera do Ciclo 3):**
   "Excelente trabalho nos dois primeiros anos, mas tenho um aviso importante de engenharia. Os próximos invernos em Marte serão extremos e nossas medidas atuais não vão bastar para segurar o calor. Construam o **Isolamento Térmico** no Módulo Habitacional antes do inverno do Ciclo 3!"
 
-## 6. 4 Mensagens de Falha / Perda de Tripulação
+## 6. Mensagens de Falha / Perda de Tripulação (e o aviso de 75%)
 
-1. **Incapacitação por Tempestade Solar (SEP):**
+1. **Perda por Tempestade Solar (SEP):**
 
-   - "Um astronauta não conseguiu entrar no Abrigo Antirradiação a tempo e recebeu uma forte dose de partículas solares. Ele precisará ficar em repouso na enfermaria durante toda esta estação para se recuperar. Ficaremos com uma ação a menos até ele melhorar!"
+   - "Um astronauta não conseguiu entrar no Abrigo Antirradiação a tempo e recebeu uma dose fatal de partículas solares. Lá fora, ou num módulo sem abrigo, nada bloqueia essa radiação. Quando o alarme tocar, recolha todos para o abrigo em até 10 segundos!"
 
-2. **Perda por Exposição Acumulada (100%):**
+2. **Aviso de Exposição (75%) — não é uma perda:**
 
-   - "O medidor de radiação de um astronauta atingiu 100% após tempo demais trabalhando sem proteção fora da base. Como Marte não tem campo magnético protetor, a exposição prolongada é fatal para humanos. Sempre observe o aviso laranja de 75% para recolher sua equipe!"
+   - "O medidor de radiação de um astronauta chegou a 75% depois de muito tempo trabalhando fora da base. Como Marte não tem campo magnético protetor, ele parou o trabalho e voltou sozinho para dentro para se recuperar. Quando o medidor baixar para 25%, ele pode sair de novo, e qualquer astronauta livre pode continuar o trabalho de onde parou."
 
-3. **Derrota por Frio sem Isolamento Térmico (Educativa):**
+3. **Derrota por Frio (sem Isolamento Térmico ou sem aquecimento) (Educativa):**
 
-   - "Sem o Isolamento Térmico, o calor de dentro do módulo escapou rápido demais para o ar congelante de Marte. Na física, o calor sempre viaja do lugar mais quente para o mais frio até tudo congelar. Use camadas isolantes para segurar o calor interno nos próximos invernos!"
+   - "Sem o Isolamento Térmico, ou sem energia para o aquecimento, o calor de dentro do módulo escapou rápido demais para o ar congelante de Marte. Na física, o calor sempre viaja do lugar mais quente para o mais frio até tudo congelar. Use camadas isolantes e mantenha o aquecimento ligado nos próximos invernos!"
 
 4. **Derrota por Reserva Vital Vazia (Oxigênio, Água ou Comida):**
 
@@ -242,15 +243,15 @@
 
 ### Tela de Vitória
 
-- **Mensagem da Comandante Vega:** "Missão cumprida, engenheiros! A nave de pouso acaba de chegar em segurança e nossa base tem ar, água, comida, abrigo e energia para todas as 36 pessoas. Vocês dominaram os desafios reais de Marte e provaram que a humanidade pode viver no Planeta Vermelho!"
+- **Mensagem da Comandante Vega:** "Missão cumprida, engenheiros! A nave de pouso acaba de chegar em segurança e nossa base tem ar, água, comida e abrigo para todas as 36 pessoas. Vocês dominaram os desafios reais de Marte e provaram que a humanidade pode viver no Planeta Vermelho!"
 
 ### Explicações do Relatório Final (Por Causa de Perda)
 
-- **Se perdeu por Frio sem Isolamento:**
-  "Diagnóstico: Perda excessiva de calor no inverno. O módulo habitacional não possuía Isolamento Térmico instalado antes do inverno do Ciclo 3, tornando impossível manter a temperatura interna habitável."
+- **Se perdeu por Frio (sem Isolamento ou sem aquecimento):**
+  "Diagnóstico: Perda excessiva de calor no inverno. O módulo habitacional não possuía Isolamento Térmico instalado antes do inverno do Ciclo 3, ou ficou sem energia para o aquecimento, tornando impossível manter a temperatura interna habitável."
 
 - **Se perdeu por Falta de Oxigênio:**
-  "Diagnóstico: Colapso no suporte respiratório. A produção de $\text{O}_2$ não acompanhou o consumo da tripulação — verifique se o gerador ficou sem energia ou entupido por poeira."
+  "Diagnóstico: Colapso no suporte respiratório. A produção de O₂ não acompanhou o consumo da tripulação — verifique se o gerador ficou sem energia ou entupido por poeira."
 
 - **Se perdeu por Falta de Água:**
   "Diagnóstico: Escassez hídrica na colônia. O derretedor de gelo não supriu o consumo combinado da tripulação e da estufa pressurizada."
@@ -258,10 +259,10 @@
 - **Se perdeu por Falta de Comida:**
   "Diagnóstico: Déficit alimentar na base. A estufa não produziu alimento suficiente para a equipe, seja por falta de água, falta de energia ou frio excessivo."
 
-- **Se perdeu por Exposição à Radiação:**
-  "Diagnóstico: Limite de radiação ultrapassado. Os astronautas permaneceram mais de 25% da estação expostos na superfície marciana sem retornar ao módulo para recuperação."
+- **Se perdeu por Tempestade Solar:**
+  "Diagnóstico: Exposição a uma tempestade solar. Os astronautas estavam lá fora ou num módulo sem Abrigo Antirradiação quando as partículas chegaram, e só o abrigo de regolito bloqueia essa radiação."
 
-- **Se não atingiu as metas no fim do Ciclo 4:** "Diagnóstico: Infraestrutura insuficiente para os colonos. A base sobreviveu aos 4 ciclos, mas não alcançou o estoque mínimo de recursos, módulos habitacionais ou energia sem déficit para receber os 32 novos colonos."
+- **Se não atingiu as metas no fim do Ciclo 4:** "Diagnóstico: Infraestrutura insuficiente para os colonos. A base sobreviveu aos 4 ciclos, mas não alcançou o estoque mínimo de oxigênio, água e comida ou os módulos habitacionais para receber os 32 novos colonos."
 
 ## 8. Texto do Tutorial (Primeira Primavera)
 

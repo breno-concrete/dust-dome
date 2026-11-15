@@ -157,8 +157,13 @@ Tolerance used everywhere below: `EPS = 1e-9` (floating-point only, not a balanc
   3. **Assignment**: jobs in creation order; each `queued` job that can run now (clean jobs wait
      during a dust storm, nothing starts during a block or a radiation storm) takes the eligible
      astronaut with the lowest exposure (ties: crew order). Eligible = alive, inside, no job, not
-     resting, exposure < `exposure.warnAt`. The astronaut goes outside.
-  Durations: `mission.jobs.buildSeconds`, `upgradeSeconds`, `repairSeconds`, `cleanSeconds`.
+     resting, exposure ≤ `exposure.resumeAt` (constitution 3.0.0). The astronaut goes outside.
+  Durations: the structure's `buildSeconds`, `mission.jobs.upgradeSeconds`, `repairSeconds`,
+  `cleanSeconds`, `demolishSeconds`. A demolish job refunds `demolishRefundShare` of the cost and
+  of every paid upgrade (installed or still queued), drops the structure's other jobs and moves
+  its occupants into another finished habitat that is not leaving too.
+  Repair parts are not refunded: they pay for the repair attempt, like a failed QTE (decided by
+  Breno, 2026-11-14).
 - **Rationale**: FR-023–FR-025; jobs that cannot run do not block the ones behind them; "lowest
   exposure first" spreads the radiation across the crew.
 - **Alternatives**: strict FIFO (one clean job during a storm would freeze the queue); letting the
@@ -184,8 +189,10 @@ Tolerance used everywhere below: `EPS = 1e-9` (floating-point only, not a balanc
 ## R13. Exposure
 
 - **Decision**: fill speed per game second = `1 / (exposure.maxShareOfSeason × duration(season))`.
-  Outside: `+ fill × dt`. Inside: `− recoveryRate × fill × dt`. Clamped to `[0, 1]`. At ≥ 1 − EPS
-  the astronaut dies with cause `exposure`.
+  Outside: `+ fill × dt`. Inside: `− recoveryRate × fill × dt`. Clamped to `[0, 1]`. Outside, at ≥ `exposure.warnAt` − EPS
+  the astronaut comes back inside and their job goes back to the queue with its remaining time
+  (constitution 3.0.0). Nobody dies of exposure. A new job starts only at ≤ `exposure.resumeAt`
+  (R11).
 - **Rationale**: II.9, FR-027. Using the current season's duration matches "25 % of the current
   season".
 - **Alternatives**: none worth keeping.
@@ -219,13 +226,12 @@ Tolerance used everywhere below: `EPS = 1e-9` (floating-point only, not a balanc
 
 - **Decision**: `checkOutcome`: all astronauts dead → `lost`, `lostReason = 'crew_lost'`.
   Otherwise, when `isMissionTimeOver`: `won` if at least one astronaut is alive, every vital stock
-  ≥ `winTargets(config).reserves`, the finished habitats' capacity ≥ `habitatCapacity`, the base
-  is not unheated, and `production ≥ demandAtSwitches` **or** the batteries hold charge > EPS;
-  else `lost`, `lostReason = 'targets_missed'`.
-- **Rationale**: FR-033–FR-034 with the battery decision. The power check reads the player's
-  switch settings directly, so it does not depend on the brownout hysteresis (R6).
-- **Alternatives**: reading `power.shed.length === 0` (a type kept off while the batteries recharge
-  would fail the check even with charge left).
+  ≥ `winTargets(config).reserves`, the finished habitats' capacity ≥ `habitatCapacity`;
+  else `lost`, `lostReason = 'targets_missed'`. Power is not checked (constitution 3.0.0, II.2).
+- **Rationale**: FR-033–FR-034. The POs dropped the power target on 2026-11-14: power keeps the
+  base producing and heated on the way, and a cold base already kills through R14.
+- **Alternatives**: the earlier power target (production ≥ demand or batteries with charge),
+  removed with constitution 3.0.0.
 
 ## R17. Determinism and numbers
 

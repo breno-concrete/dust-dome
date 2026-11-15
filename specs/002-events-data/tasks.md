@@ -77,18 +77,30 @@ controlados.
 **Dependência**: Requer o comportamento de agendamento e limpeza da US1 em
 `src/engine/events/events.ts`.
 
+### Preparação da User Story 2
+
+- [x] T007a [US2] Alinhar `spec.md`, `data-model.md`, `research.md` e `contracts/events-engine.md` às respostas do PO de 2026-11-14 e registrar em `change-requests.md` o que depende de outras áreas.
+
 ### Testes da User Story 2
 
 > **TDD**: Escreva estes testes primeiro e confirme que falham pelo comportamento ausente esperado.
+> Os testes leem os valores da configuração (ou de uma regra montada no teste), nunca números fixos.
+> Os cenários citados são os da US2 em `spec.md`.
 
-- [ ] T008 [US2] Substituir os casos `it.todo` de eventos de poeira em `src/engine/events/events.test.ts` por testes de dano a painéis, imunidade dos filtros de poeira, chance e imunidade a entupimento, duração e fator solar da tempestade, curtos-circuitos globais e bloqueio de trabalhos externos no escuro.
-- [ ] T009 [US2] Executar `npx vitest run src/engine/events/events.test.ts` e registrar que os novos testes de poeira da US2 falham pelos efeitos e transições de status ausentes.
+- [x] T008a [US2] Redemoinho (cenário 1): danifica até `damagePanels` painéis sem repetição; só painéis prontos, sem filtro e `active`; com menos elegíveis, danifica os que houver; sem elegíveis, nada muda além do RNG.
+- [x] T008b [US2] Entupimento (cenário 2): `clogChance` sorteada antes dos alvos (ausente = 100%); um alvo por tipo listado; filtro, construção e outro status excluem do sorteio; tipo sem alvo é ignorado sem afetar os demais.
+- [x] T008c [US2] Tempestade com duração (cenário 3): evento ativo com o `solarFactor` da regra e `endsAt` = início + `durationSeconds`; removido quando `elapsed >= endsAt` e na troca de estação.
+- [x] T008d [US2] Tempestade global (cenário 4): ativa o verão inteiro (`endsAt` null); um curto por `shortCircuitEverySeconds` contado do início do verão; sorteio único entre mina e refinaria sem curto (entupida pode); sem elegível, perde; mesmo número de curtos com ticks de tamanhos diferentes; período sem fator do ciclo 4; resto do tick na virada de estação não conta.
+- [x] T008e [US2] Escuridão e frio (cenários 5 e 6): ativos desde o primeiro tick da estação, criados uma única vez; escuridão copia `solarFactor` e `blocksExternalJobs` da regra; frio tem `solarFactor` 1 e não bloqueia.
+- [x] T008f [US2] Prioridade e log (cenários 7 a 9): curto substitui entupido, nunca o contrário; uma entrada de log por estrutura atingida com `ref` e `cause` = id da regra; status persistem após o fim do evento; filtro instalado depois não cura.
+- [x] T008g [US2] Determinismo: mesma seed e mesmos passos de tempo dão os mesmos alvos; o estado recebido não é mutado.
+- [x] T009 [US2] Executar `npx vitest run src/engine/events/events.test.ts` e registrar que os novos testes de poeira da US2 falham pelos efeitos e transições de status ausentes.
 
 ### Implementação da User Story 2
 
-- [ ] T010 [US2] Implementar a seleção de alvos dos redemoinhos, os limites de dano aos painéis, a imunidade dos filtros de poeira, a chance de entupimento e os status persistentes `damaged`/`clogged` em `src/engine/events/events.ts`, usando seleção determinística.
-- [ ] T011 [US2] Implementar eventos ativos de tempestades locais e densas, fatores solares, duração da tempestade global na estação, alvos determinísticos de curto-circuito, escuridão e bloqueio de trabalhos externos em `src/engine/events/events.ts`.
-- [ ] T012 [US2] Executar `npx vitest run src/engine/events/events.test.ts` e confirmar que os testes das US1 e US2 passam juntos, incluindo a limpeza de efeitos temporários e a persistência dos status das estruturas.
+- [x] T010 [US2] Implementar em `src/engine/events/events.ts` os efeitos das ocorrências agendadas, dentro do laço da US1 e antes de `drawAfter`: sorteio de painéis sem repetição, `clogChance` e um alvo por tipo, elegibilidade, prioridade de status e log.
+- [x] T011 [US2] Implementar em `src/engine/events/events.ts` os eventos ativos: tempestades com `endsAt`, expiração, ativação idempotente dos eventos de estação inteira (global, escuridão, frio) e os curtos da tempestade global pela janela de `secondsIntoSeason`.
+- [x] T012 [US2] Executar `npx vitest run src/engine/events/events.test.ts` e confirmar que os testes das US1 e US2 passam juntos, incluindo a limpeza de efeitos temporários e a persistência dos status das estruturas.
 
 **Checkpoint**: A US2 é testável de forma independente com o agendador da US1 e demonstra os
 perigos ambientais configurados.

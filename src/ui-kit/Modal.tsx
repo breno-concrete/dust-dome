@@ -7,12 +7,23 @@ import styles from './Modal.module.css'
 export interface ModalProps {
   isOpen: boolean
   title: string
+  size?: 'default' | 'wide'
+  /** 'light' is the warm prototype look used by the build menu. */
+  tone?: 'dark' | 'light'
   onClose?: () => void
   children: ReactNode
   footer?: ReactNode
 }
 
-export function Modal({ isOpen, title, onClose, children, footer }: ModalProps) {
+export function Modal({
+  isOpen,
+  title,
+  size = 'default',
+  tone = 'dark',
+  onClose,
+  children,
+  footer,
+}: ModalProps) {
   useEffect(() => {
     if (!isOpen || !onClose) return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -25,9 +36,20 @@ export function Modal({ isOpen, title, onClose, children, footer }: ModalProps) 
   if (!isOpen) return null
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
+    <div
+      className={[
+        styles.backdrop,
+        tone === 'light' && styles.backdropLight,
+        tone === 'light' && size === 'wide' && styles.backdropWide,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      onClick={onClose}
+    >
       <div
-        className={styles.dialog}
+        className={[styles.dialog, size === 'wide' && styles.wide, tone === 'light' && styles.light]
+          .filter(Boolean)
+          .join(' ')}
         role="dialog"
         aria-modal="true"
         aria-label={title}

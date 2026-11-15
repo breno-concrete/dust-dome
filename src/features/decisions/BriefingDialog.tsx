@@ -4,6 +4,8 @@
 import { seasonDef } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { Button } from '../../ui-kit/Button'
+import { Icon } from '../../ui-kit/Icon'
+import { Modal } from '../../ui-kit/Modal'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
 
@@ -21,15 +23,25 @@ export function BriefingDialog() {
   const season = seasonDef(briefing.season)
 
   return (
-    <div className={styles.dialog} role="dialog" aria-modal="true">
-      <div className={styles.dialogBox}>
-        <p>{t(strings.commander)}</p>
-        <h2>
-          {t(strings.year)} {briefing.cycle} · {season ? t(season.name) : ''}
-        </h2>
-        <p>{season ? t(season.explain) : ''}</p>
-        <Button onClick={dismiss}>{t(strings.go)}</Button>
+    <Modal
+      isOpen
+      tone="light"
+      title={`${t(strings.year)} ${briefing.cycle} · ${season ? t(season.name) : ''}`}
+      footer={
+        <Button className={styles.briefingButton} onClick={dismiss}>
+          {t(strings.go)}
+        </Button>
+      }
+    >
+      <div className={styles.commander}>
+        <span className={styles.portrait}>
+          <Icon name="astronaut" size={34} />
+        </span>
+        <div>
+          <strong>{t(strings.commander)}</strong>
+          <p>{season ? t(season.explain) : ''}</p>
+        </div>
       </div>
-    </div>
+    </Modal>
   )
 }

@@ -79,15 +79,15 @@ description: "Lista de tarefas executáveis para implementação da interface 2D
 
 ### Testes da História de Usuário 2 (TDD - Test-First) ⚠️
 
-- [ ] T016 [US2] Ativar e expandir os testes de agrupamento por níveis (1, 2, 3) e bloqueio por recursos insuficientes com texto explicativo em `src/features/decisions/BuildMenu.test.tsx`
-- [ ] T017 [US2] Implementar testes para exibição da ficha educativa (ciência de Marte) e ativação/cancelamento do modo de posicionamento em `src/features/decisions/BuildMenu.test.tsx`
-- [ ] T018 [P] [US2] Criar testes unitários para o painel de melhorias da estrutura selecionada em `src/features/decisions/UpgradePanel.test.tsx`
+- [x] T016 [US2] Ativar e expandir os testes de agrupamento por níveis (1, 2, 3) e bloqueio por recursos insuficientes com texto explicativo em `src/features/decisions/BuildMenu.test.tsx`
+- [x] T017 [US2] Implementar testes para exibição da ficha educativa (ciência de Marte) e ativação/cancelamento do modo de posicionamento em `src/features/decisions/BuildMenu.test.tsx`
+- [x] T018 [P] [US2] Criar testes unitários para o painel de melhorias da estrutura selecionada em `src/features/decisions/UpgradePanel.test.tsx`
 
 ### Implementação da História de Usuário 2
 
-- [ ] T019 [US2] Reformular `BuildMenu.tsx` para agrupar construções por nível tecnológico (Nível 1: Hematita/Regolito, Nível 2: Ferro, Nível 3: Aço), desabilitar opções caras demais indicando os recursos faltantes e exibir fichas científicas em `src/features/decisions/BuildMenu.tsx` e `src/features/decisions/Panel.module.css`
-- [ ] T020 [US2] Criar o componente `UpgradePanel.tsx` e seus estilos para listar apenas as melhorias compatíveis com a estrutura selecionada (`selectedStructureId`), exibindo custos, efeitos e disparando `installUpgrade` em `src/features/decisions/UpgradePanel.tsx` e `src/features/decisions/UpgradePanel.module.css`
-- [ ] T021 [US2] Integrar `UpgradePanel` ao contêiner de decisões do jogo em `src/app/App.tsx`
+- [x] T019 [US2] Reformular `BuildMenu.tsx` para agrupar construções por nível tecnológico, desabilitar opções caras demais indicando os recursos faltantes e exibir fichas científicas em `src/features/decisions/BuildMenu.tsx` e `src/features/decisions/Panel.module.css`
+- [x] T020 [US2] Criar `UpgradePanel.tsx` e seus estilos para listar apenas as melhorias compatíveis com a estrutura selecionada, exibindo custos, efeitos e acionando `installUpgrade` em `src/features/decisions/UpgradePanel.tsx` e `src/features/decisions/Panel.module.css`
+- [x] T021 [US2] Integrar `UpgradePanel` ao `BuildMenu`, já montado por `src/app/App.tsx`, sem editar o shell pertencente à área `engine/`
 
 **Ponto de Controle**: As Histórias de Usuário 1 e 2 estão completas, com testes passando em isolamento.
 

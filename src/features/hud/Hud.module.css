@@ -1,188 +1,478 @@
 .hud {
+  --hud-surface: rgb(251 246 234 / 82%);
+  --hud-border: rgb(148 119 91 / 24%);
+  --hud-text: #3f3a36;
+  --hud-muted: #55594f;
+  --hud-accent: #8d9d68;
+  --hud-inset: 28px;
+
+  /* Re-point the shared tokens so kit components inside the HUD get dark text. */
+  --color-text: var(--hud-text);
+  --color-muted: var(--hud-muted);
+  --hud-crew-width: 258px;
+
   position: absolute;
-  top: var(--space-2);
-  left: var(--space-2);
-  right: var(--space-2);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-  padding: var(--space-2) var(--space-3);
-  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
-  border: 1px solid var(--color-surface-border);
-  border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  top: var(--hud-inset);
+  left: var(--hud-inset);
+  right: var(--hud-inset);
+  display: grid;
+  grid-template-columns: minmax(220px, 258px) minmax(225px, 1fr) auto;
+  align-items: start;
+  gap: 16px;
   z-index: 50;
+  pointer-events: none;
 }
 
-/* Clock / Season */
-.clockGroup {
-  display: inline-flex;
+.hud > * {
+  pointer-events: auto;
+}
+
+.panel {
+  color: var(--hud-text);
+  background: var(--hud-surface);
+  border: 1px solid var(--hud-border);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgb(85 57 41 / 8%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.lifePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 19px 18px;
+}
+
+.timePanel {
+  display: flex;
   align-items: center;
-  padding: var(--space-1) var(--space-2);
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: var(--radius-sm);
+  justify-self: center;
+  gap: 10px;
+  min-height: 74px;
+  padding: 13px;
 }
 
-.clockText {
-  font-size: var(--font-size-sm);
-  color: var(--color-accent);
+.date {
   white-space: nowrap;
 }
 
-/* Vital bars */
-.vitalsGroup {
+.date strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.date > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  color: var(--hud-muted);
+  font-size: 10px;
+}
+
+.seasonLabel {
+  display: inline-block;
+  min-width: 5.2em;
+}
+
+.date i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #a38762;
+}
+
+.clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.timeDivider {
+  width: 1px;
+  height: 29px;
+  flex-shrink: 0;
+  background: #e5e1d7;
+}
+
+.speeds {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.speeds .timeButton {
+  min-width: 38px;
+  min-height: 40px;
+  gap: 5px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(162 164 135 / 18%);
+  color: #4f5545;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.speeds .timeButton:hover:not(:disabled) {
+  background: rgb(162 164 135 / 28%);
+}
+
+.speeds .timeButton.selectedTimeButton {
+  background: #e4e6d9;
+  color: #3f4d2a;
+  box-shadow: inset 0 0 0 1px rgb(117 133 83 / 35%);
+}
+
+.speeds .timeButton.selectedTimeButton:hover:not(:disabled) {
+  background: #dce1ce;
+}
+
+.materials {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
   align-items: center;
+  justify-content: flex-end;
+  gap: 10px 12px;
+  min-height: 74px;
+  padding: 14px 16px;
 }
 
-/* Power Meter */
-.powerMeter {
-  display: inline-flex;
+.material {
+  display: flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  background: var(--color-surface);
-  border: 1px solid var(--color-surface-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
+  gap: 6px;
+}
+
+.materialIcon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+}
+
+.materialValues {
+  display: block;
+  min-width: 35px;
+}
+
+.materialValues small {
+  display: block;
+  margin-bottom: 2px;
+  color: #4f5545;
+  font-size: 9px;
+  font-weight: 700;
   white-space: nowrap;
-  transition:
-    border-color 0.2s,
-    background-color 0.2s;
 }
 
-.powerIcon {
-  color: var(--color-power);
+.materialValues strong {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
-.powerLabel {
-  color: var(--color-muted);
-}
-
-.powerValue {
-  color: var(--color-ok);
+.materialValues em {
+  color: #5a5f4c;
+  font-size: 10px;
+  font-style: normal;
   font-weight: 700;
 }
 
-.deficit {
-  border-color: var(--color-danger);
-  background: rgba(255, 107, 107, 0.15);
-  animation: pulseWarning 1.2s infinite ease-in-out;
+.hematite .materialIcon {
+  color: #c68675;
 }
 
-.deficit .powerValue {
-  color: var(--color-danger);
+.regolith .materialIcon {
+  color: #bcaa76;
 }
 
-.deficit .powerIcon {
-  color: var(--color-danger);
+.iron .materialIcon {
+  color: #7faaa0;
 }
 
-/* Wallet */
-.wallet {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--color-surface-border);
-  border-radius: var(--radius-sm);
+.steel .materialIcon {
+  color: #8992a2;
 }
 
-.walletItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
+.repair_parts .materialIcon {
+  color: #8799a5;
 }
 
-.walletCount {
-  font-weight: 600;
+.energyStat {
+  padding-left: 12px;
+  border-left: 1px solid #e4e2d6;
 }
 
-/* Crew Panel */
+.energyStat .materialIcon {
+  color: #ccb061;
+}
+
+.energyStat .materialValues strong {
+  color: var(--hud-accent);
+}
+
+.energyStat.deficit .materialValues strong,
+.energyStat.deficit .materialIcon {
+  color: #bc775c;
+}
+
 .crewPanel {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--color-surface-border);
-  border-radius: var(--radius-sm);
+  position: fixed;
+  bottom: 28px;
+  left: var(--hud-inset);
+  width: var(--hud-crew-width);
+  padding: 13px 17px;
+  pointer-events: auto;
+}
+
+.crewHeading {
+  margin: 0 0 5px;
+  color: var(--hud-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .crewMember {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 2px 6px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-surface-border);
-  border-radius: 4px;
-  font-size: 12px;
-  color: var(--color-text);
+  gap: 10px;
+  padding: 7px 0;
+  color: var(--hud-text);
   transition: border-color 0.2s;
 }
 
+.crewMember + .crewMember {
+  border-top: 1px solid #eeebdf;
+}
+
+.astronautIcon {
+  display: grid;
+  flex: 0 0 34px;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e9e5d7;
+  color: #4f5545;
+}
+
 .astronautName {
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .exposureValue {
-  color: var(--color-muted);
-  font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
+  margin-left: auto;
+  color: #4f5545;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .warning {
-  border-color: var(--color-danger);
-  background: rgba(255, 107, 107, 0.2);
-  animation: pulseWarning 1s infinite ease-in-out;
+  color: #bc775c;
 }
 
-.warning .exposureValue {
-  color: var(--color-danger);
+.warning .astronautIcon {
+  background: #f4d4c2;
+  color: #ac6b4c;
 }
 
+.warning .exposureValue,
 .radiationIcon {
-  color: var(--color-danger);
+  color: #bc775c;
 }
 
 .deceased {
-  opacity: 0.4;
+  opacity: 0.55;
   text-decoration: line-through;
 }
 
 .deceasedLabel {
-  color: var(--color-danger);
+  margin-left: auto;
+  color: #bc775c;
   font-size: 10px;
 }
 
-/* Time Speeds */
-.speeds {
-  display: inline-flex;
-  gap: var(--space-1);
-  margin-left: auto;
+@media (max-width: 1190px) {
+  .hud {
+    --hud-inset: 22px;
+    --hud-crew-width: 225px;
+
+    grid-template-columns: minmax(205px, 225px) minmax(225px, 1fr);
+    gap: 12px;
+  }
+
+  .lifePanel {
+    grid-row: span 2;
+    padding: 16px 14px;
+  }
+
+  .timePanel {
+    justify-self: start;
+    min-height: 68px;
+    padding: 10px;
+    gap: 7px;
+  }
+
+  .materials {
+    grid-column: 2;
+    justify-content: flex-start;
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .crewPanel {
+    bottom: 22px;
+  }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 760px) {
   .hud {
-    position: relative;
-    top: 0;
-    left: 0;
-    right: 0;
+    --hud-inset: 10px;
+    --hud-crew-width: 170px;
+
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .lifePanel {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    gap: 12px;
+    padding: 12px 9px;
+  }
+
+  .timePanel {
+    grid-column: 2;
+    grid-row: 1;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 8px;
+  }
+
+  .date strong {
+    font-size: 14px;
+  }
+
+  .date > span {
+    font-size: 9px;
+  }
+
+  .timeDivider {
+    display: none;
   }
 
   .speeds {
-    margin-left: 0;
-    width: 100%;
-    justify-content: flex-end;
+    gap: 3px;
+  }
+
+  .speeds .timeButton {
+    min-width: 32px;
+    min-height: 34px;
+    padding: 0 6px;
+    font-size: 12px;
+  }
+
+  .materials {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .material {
+    gap: 3px;
+  }
+
+  .materialIcon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .materialValues {
+    min-width: 28px;
+  }
+
+  .materialValues small {
+    font-size: 8px;
+  }
+
+  .materialValues strong {
+    font-size: 14px;
+  }
+
+  .energyStat {
+    padding-left: 7px;
+  }
+
+  .crewPanel {
+    bottom: 10px;
+    width: var(--hud-crew-width);
+    padding: 8px 10px;
+  }
+
+  .crewMember {
+    gap: 7px;
+    padding: 5px 0;
+  }
+
+  .astronautIcon {
+    flex-basis: 27px;
+    width: 27px;
+    height: 27px;
+  }
+
+  .astronautIcon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .astronautName {
+    font-size: 11px;
+  }
+
+  .exposureValue {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 440px) {
+  .hud {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lifePanel {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    padding: 9px;
+  }
+
+  .timePanel {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: stretch;
+    justify-content: space-between;
+  }
+
+  .materials {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .crewPanel {
+    bottom: 10px;
+    left: 10px;
+    width: 135px;
   }
 }

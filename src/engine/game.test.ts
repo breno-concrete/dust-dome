@@ -1,7 +1,30 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { config } from '../config/loadConfig'
 import { createGame, tick, winTargets } from './game'
 import { gameAt } from './testState'
+
+// Every step of the tick records its name and then runs the real code, so the other tests in
+// this file see the real engine.
+const calls = vi.hoisted(() => [] as string[])
+
+function recorded<M extends Record<string, unknown>>(mod: M, name: string, step: string): M {
+  const real = mod[name] as (...args: unknown[]) => unknown
+  return {
+    ...mod,
+    [name]: (...args: unknown[]) => {
+      calls.push(step)
+      return real(...args)
+    },
+  }
+}
+
+vi.mock('./time', async (orig) => recorded(await orig(), 'advanceTime', 'time'))
+vi.mock('./events/events', async (orig) => recorded(await orig(), 'updateEvents', 'events'))
+vi.mock('./power', async (orig) => recorded(await orig(), 'computePower', 'power'))
+vi.mock('./economy', async (orig) => recorded(await orig(), 'applyProduction', 'production'))
+vi.mock('./jobs', async (orig) => recorded(await orig(), 'updateJobs', 'jobs'))
+vi.mock('./crew', async (orig) => recorded(await orig(), 'updateCrew', 'crew'))
+vi.mock('./outcome', async (orig) => recorded(await orig(), 'checkOutcome', 'outcome'))
 
 describe('createGame', () => {
   const game = createGame(config, 42)
@@ -40,6 +63,13 @@ describe('createGame', () => {
     expect(game.log).toEqual([{ at: 0, cycle: 1, season: first, kind: 'season_start', ref: first }])
   })
 
+  it('createGame already has a power report', () => {
+    expect(game.power.productionKw).toBeGreaterThan(0)
+    expect(game.power.demandKw).toBeGreaterThan(0)
+    expect(game.power.balanceKw).toBeCloseTo(game.power.productionKw - game.power.demandKw)
+    expect(game.batteryEu).toBe(0)
+  })
+
   it('is deterministic for the same seed', () => {
     expect(createGame(config, 42)).toEqual(game)
   })
@@ -58,7 +88,12 @@ describe('tick', () => {
     expect(tick(over, config, 1)).toBe(over)
   })
 
-  it.todo('runs time -> events -> power -> production -> jobs -> crew -> outcome in order')
+  it('runs time -> events -> power -> production -> jobs -> crew -> outcome in order', () => {
+    const s = gameAt(config, 1, 'spring', 10)
+    calls.length = 0
+    tick(s, config, 1)
+    expect(calls).toEqual(['time', 'events', 'power', 'production', 'jobs', 'crew', 'outcome'])
+  })
 })
 
 describe('winTargets', () => {

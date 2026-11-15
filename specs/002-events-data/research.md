@@ -1,75 +1,129 @@
-# Research: Events and NASA Data
+# Pesquisa: Eventos e dados da NASA
 
-## Decision: Reuse the existing pure engine boundary
+## Decisão: Reutilizar o limite existente do engine puro
 
-- **Decision**: Implement all simulation behavior in `src/engine/events/events.ts` through
-  `updateEvents(state, config, dt)`.
-- **Rationale**: `src/engine/game.ts` already calls this function after `advanceTime` and before
-  power, production, jobs, crew, and outcome. This preserves the documented tick order and keeps
-  event effects observable by the systems that consume `GameState`.
-- **Alternatives considered**: Adding event logic to `game.ts` would bypass the owned event module;
-  putting it in the store would violate the pure-engine boundary and make deterministic tests
-  depend on React state.
+- **Decisão**: Implementar todo o comportamento de simulação em `src/engine/events/events.ts` por
+  meio de `updateEvents(state, config, dt)`.
+- **Motivo**: `src/engine/game.ts` já chama essa função depois de `advanceTime` e antes de
+  energia, produção, trabalhos, tripulação e resultado. Isso preserva a ordem documentada do
+  tick e mantém os efeitos dos eventos observáveis pelos sistemas que consomem `GameState`.
+- **Alternativas consideradas**: Adicionar a lógica dos eventos a `game.ts` ignoraria o módulo de
+  eventos sob responsabilidade da área; colocá-la na store violaria o limite do engine puro e
+  faria os testes determinísticos dependerem do estado do React.
 
-## Decision: Use `state.rng` for every random choice
+## Decisão: Usar `state.rng` para toda escolha aleatória
 
-- **Decision**: Use `nextRange` for interval selection and `nextIndex` for structure and DONKI
-  selection, writing every returned RNG value back into the next state.
-- **Rationale**: `src/engine/rng.ts` is the established seeded generator and the constitution
-  requires identical seeds to produce identical missions.
-- **Alternatives considered**: `Math.random` is prohibited; deriving a new random generator from
-  elapsed time would break replayability.
+- **Decisão**: Usar `nextRange` para selecionar intervalos, `nextIndex` para selecionar
+  estruturas e eventos DONKI e `nextFloat` para a `clogChance`, gravando cada valor RNG retornado
+  no próximo estado. Sorteio sem repetição (vários painéis): tirar o escolhido da lista de
+  elegíveis antes do próximo `nextIndex`. A lista de elegíveis segue a ordem de
+  `state.structures`, para o mesmo índice apontar a mesma estrutura.
+- **Motivo**: `src/engine/rng.ts` é o gerador com seed estabelecido, e a constituição exige que
+  seeds idênticas produzam missões idênticas.
+- **Alternativas consideradas**: `Math.random` é proibido; derivar um novo gerador a partir do
+  tempo decorrido quebraria a reprodutibilidade.
 
-## Decision: Treat configured event rules as the source of balance
+## Decisão: Tratar as regras de eventos configuradas como fonte do balanceamento
 
-- **Decision**: Read cycle, season, interval, duration, and effects from `GameConfig.events` and
-  radiation settings from `GameConfig.mission.radiationStorm`.
-- **Rationale**: `src/config/schema.ts` already models the full event configuration, including
-  cycle-four interval scaling, status effects, source metadata, and radiation timing.
-- **Alternatives considered**: Hard-coding the canon's numbers in TypeScript would prevent PO
-  tuning and violate the configuration ownership rule.
+- **Decisão**: Ler ciclo, estação, intervalo, duração e efeitos de `GameConfig.events` e as
+  configurações de radiação de `GameConfig.mission.radiationStorm`.
+- **Motivo**: `src/config/schema.ts` já modela toda a configuração de eventos, incluindo a escala
+  de intervalos do quarto ciclo, efeitos de status, metadados das fontes e tempos da radiação.
+- **Alternativas consideradas**: Fixar os números do cânone em TypeScript impediria os POs de
+  ajustá-los e violaria a regra de responsabilidade da configuração.
 
-## Decision: Keep persistent and temporary effects separate
+## Decisão: Manter efeitos persistentes e temporários separados
 
-- **Decision**: Store active temporary effects in `activeEvents`; store persistent structure
-  statuses and log entries on their existing state fields. Clear temporary effects at event or
-  season boundaries without clearing damage, clogging, or short-circuit statuses.
-- **Rationale**: `visualState.ts` already derives dust and light from `activeEvents`, while
-  structure status is the existing contract consumed by production, repair, and scene code.
-- **Alternatives considered**: Encoding all effects as permanent statuses would make storm
-  duration and season cleanup incorrect.
+- **Decisão**: Armazenar efeitos temporários ativos em `activeEvents`; armazenar status persistentes
+  das estruturas e entradas do log nos campos de estado existentes. Limpar efeitos temporários no
+  fim do evento ou da estação sem limpar status de dano, entupimento ou curto-circuito.
+- **Motivo**: `visualState.ts` já deriva poeira e luz de `activeEvents`, enquanto o status da
+  estrutura é o contrato existente consumido pelo código de produção, reparo e cena.
+- **Alternativas consideradas**: Codificar todos os efeitos como status permanentes faria a
+  duração das tempestades e a limpeza da estação ficarem incorretas.
 
-## Decision: Use committed DONKI snapshots, never runtime NASA access
+## Decisão: Intervalo das tempestades conta do fim da anterior (T1, já na US1)
 
-- **Decision**: Complete `sepEvents()` by reading the committed snapshot format described in
-  `src/data/snapshots/README.md`, and keep `pickSepEvent()` deterministic and null-safe.
-- **Rationale**: The game must work offline and the constitution explicitly restricts NASA I/O to
-  `src/data/`. The source metadata already identifies NASA DONKI as the real basis.
-- **Alternatives considered**: Fetching DONKI during a mission would make behavior non-reproducible,
-  require network access, and incorrectly present archived data as live.
+- **Decisão**: Próxima ocorrência = início da anterior + `durationSeconds` + intervalo. A primeira
+  da estação vem um intervalo depois do início da estação (T2).
+- **Motivo**: Decisão do PO. Com os valores atuais o verão de 277 s tem 6 tempestades locais
+  (início aos 30, 75, 120, 165, 210 e 255 s) e 5 densas (30, 80, 130, 180 e 230 s).
+- **Alternativas consideradas**: Contar do início da anterior deixaria só 15 s de sol entre duas
+  tempestades locais e 10 s entre duas densas; sortear entre as duas regras foi recusado porque a seed precisa repetir a
+  partida.
 
-## Decision: Derive the debrief from `GameState.log`
+## Decisão: Aplicar as ocorrências em ordem cronológica, dentro do laço da US1
 
-- **Decision**: Add feature-local pure helpers for grouping log entries, resolving cause text,
-  and collecting sources; render the results in the existing end and sources screens.
-- **Rationale**: `LogEntry` already records cycle, season, kind, reference, and optional cause,
-  which is the authoritative record of what happened. A helper makes behavior testable without
-  mounting the whole application.
-- **Alternatives considered**: Reconstructing losses from current structures or stock would omit
-  historical events and could invent causes.
+- **Decisão**: A ocorrência de horário `at` aplica seus efeitos (e consome o RNG) antes de
+  `drawAfter` sortear a próxima. Se houver mais de uma regra com ocorrências no mesmo tick, elas
+  são aplicadas em ordem de horário.
+- **Motivo**: A constituição (VI) exige a mesma missão para a mesma seed. A ordem de consumo do
+  RNG não pode depender do tamanho do tick. Hoje cada estação tem no máximo uma regra com
+  intervalo, mas a regra protege contra configurações futuras.
+- **Alternativas consideradas**: Aplicar por regra, na ordem de `events.json`, mudaria o resultado
+  conforme o `dt` quando duas regras disparassem no mesmo tick.
 
-## Decision: No new contract fields in this plan
+## Decisão: Contar os curtos da tempestade global pela janela do tick
 
-- **Decision**: Use `activeEvents`, `nextEventAt`, `radiationStorm`, structure status, and `log`
-  as currently defined. If implementation proves a field is missing, stop and request a
-  `shared/` contract PR.
-- **Rationale**: The brief explicitly assigns those existing fields to DEV A and requires contract
-  changes to be coordinated with Breno.
-- **Alternatives considered**: Editing `src/engine/types.ts`, `src/config/schema.ts`, or
-  `src/app/store.ts` from the data branch would violate ownership and CI rules.
+- **Decisão**: Número de curtos no tick = `floor(s / P) − floor(max(0, s − dt) / P)`, com
+  `s = secondsIntoSeason` e `P = shortCircuitEverySeconds`. Um sorteio por curto.
+- **Motivo**: O período conta do início do verão (T6), não do início do jogo; por isso usa
+  `secondsIntoSeason` e não `elapsed`. O `max(0, …)` impede que o resto do tick anterior, na virada
+  de estação, conte curtos do verão que ainda não começou ou da estação passada.
+- **Alternativas consideradas**: Guardar o próximo curto em `nextEventAt` quebraria o teste da US1
+  "schedules every interval rule … and only those", que exige só regras com `intervalSeconds`
+  nesse mapa; criar um campo novo exigiria uma alteração de contrato.
 
-## Research conclusion
+## Decisão: Ativar eventos de estação inteira de forma idempotente
 
-No unresolved `NEEDS CLARIFICATION` items remain. The repository already supplies the required
-engine, configuration, RNG, store, test, and snapshot boundaries; implementation work is
-behavioral completion of the existing TODOs.
+- **Decisão**: A cada atualização, para cada regra da estação sem `intervalSeconds`, criar o evento
+  ativo se ainda não existir um com o mesmo `ruleId`. Tempestades com duração são removidas quando
+  `elapsed >= endsAt`.
+- **Motivo**: Não há sinal de "início de estação" no contrato; a limpeza da US1 já remove eventos
+  de outra estação, então a nova estação começa vazia e o primeiro tick cria os seus.
+- **Alternativas consideradas**: Depender do log `season_start` acoplaria os eventos à ordem de
+  escrita do engine.
+
+## Decisão: `cause` do log é o id da regra
+
+- **Decisão**: Entradas `damaged`, `clogged` e `short_circuit` usam o id da regra em `cause`.
+- **Motivo**: O debrief (US4) busca nome, explicação e fonte da regra direto na configuração, e os
+  POs mudam os textos sem tocar no código.
+- **Alternativas consideradas**: Uma chave por tipo de evento (`dust_storm`) perderia a diferença
+  entre tempestade local e densa e exigiria uma tabela de textos no código.
+
+## Decisão: Usar snapshots DONKI versionados, nunca acessar a NASA em runtime
+
+- **Decisão**: Completar `sepEvents()` lendo o formato de snapshot versionado descrito em
+  `src/data/snapshots/README.md` e manter `pickSepEvent()` determinístico e seguro para `null`.
+- **Motivo**: O jogo precisa funcionar offline, e a constituição restringe explicitamente a
+  entrada e saída da NASA a `src/data/`. Os metadados da fonte já identificam o NASA DONKI como
+  base real.
+- **Alternativas consideradas**: Buscar o DONKI durante uma missão tornaria o comportamento
+  irreprodutível, exigiria rede e apresentaria dados arquivados incorretamente como atuais.
+
+## Decisão: Derivar o debrief de `GameState.log`
+
+- **Decisão**: Adicionar helpers puros locais da feature para agrupar entradas do log, resolver
+  textos de causa e coletar fontes; renderizar os resultados nas telas existentes de fim e fontes.
+- **Motivo**: `LogEntry` já registra ciclo, estação, tipo, referência e causa opcional, sendo o
+  registro autoritativo do que aconteceu. Um helper torna o comportamento testável sem montar toda
+  a aplicação.
+- **Alternativas consideradas**: Reconstruir perdas a partir das estruturas ou do estoque atual
+  omitiria eventos históricos e poderia inventar causas.
+
+## Decisão: Nenhum campo novo de contrato neste plano
+
+- **Decisão**: Usar `activeEvents`, `nextEventAt`, `radiationStorm`, o status das estruturas e
+  `log` como definidos atualmente. Se a implementação provar que falta um campo, parar e
+  solicitar uma PR de contrato `shared/`.
+- **Motivo**: O brief atribui explicitamente esses campos existentes ao DEV A e exige que
+  alterações de contrato sejam coordenadas com Breno.
+- **Alternativas consideradas**: Editar `src/engine/types.ts`, `src/config/schema.ts` ou
+  `src/app/store.ts` a partir da branch de dados violaria as regras de ownership e CI.
+
+## Conclusão da pesquisa
+
+Não há itens `NEEDS CLARIFICATION` pendentes. O repositório já fornece os limites necessários do
+engine, da configuração, do RNG, da store, dos testes e dos snapshots; o trabalho de implementação
+é concluir o comportamento dos TODOs existentes.

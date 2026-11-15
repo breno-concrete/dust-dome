@@ -85,8 +85,8 @@
       "pt": "Painel solar"
     },
     "explain": {
-      "en": "Turns sunlight into electricity. Less sun in winter and in dust storms means less power.",
-      "pt": "Transforma luz do sol em eletricidade. Menos sol no inverno e nas tempestades de poeira, menos energia."
+      "en": "Turns sunlight into electricity to keep our whole base running. It makes more power in summer and less in winter, and it must always be kept clean of the red dust. Real NASA landers, like InSight, use similar solar panels on Mars.",
+      "pt": "Transforma a luz do Sol em energia elétrica para fazer toda a nossa base funcionar. Ele gera mais energia no verão e menos no inverno, e precisa estar sempre limpo da poeira vermelha. Sondas reais da NASA, como a InSight, usam painéis solares parecidos em Marte."
     },
     "level": 1,
     "buildSeconds": 30,
@@ -113,8 +113,8 @@
       "pt": "Banco de baterias"
     },
     "explain": {
-      "en": "Saves extra electricity for the dark and dusty days.",
-      "pt": "Guarda a eletricidade que sobra para os dias escuros e de poeira."
+      "en": "Saves the extra power from sunny days so we can use it when there is no light. It keeps the heating on during dark nights and dust storms. In space exploration, lithium-ion batteries make sure nothing shuts down in the dark.",
+      "pt": "Guarda a energia que sobra durante os dias ensolarados para usarmos quando faltar luz. Ele é essencial para manter o aquecimento ligado nas noites escuras e durante tempestades de poeira. Na exploração espacial, baterias de íons de lítio garantem que nada desligue no escuro."
     },
     "level": 1,
     "buildSeconds": 30,
@@ -135,8 +135,8 @@
       "pt": "Mina"
     },
     "explain": {
-      "en": "Digs hematite and regolith from the ground.",
-      "pt": "Escava hematita e regolito do chão."
+      "en": "Digs the Martian ground by itself to collect hematite and regolith without tiring the astronauts. It works on its own, but it needs power, and cleaning when dust piles up. NASA calls this \"using local resources\": building with the planet itself.",
+      "pt": "Escava o solo marciano automaticamente para coletar hematita e regolito sem cansar os astronautas. Ela funciona sozinha, mas precisa de energia e limpeza quando a poeira acumula. A NASA chama isso de \"utilização de recursos locais\", usando o próprio planeta para construir."
     },
     "level": 1,
     "buildSeconds": 30,
@@ -169,8 +169,8 @@
       "pt": "Gerador de oxigênio"
     },
     "explain": {
-      "en": "Splits carbon dioxide from the Martian air into oxygen, like NASA's MOXIE on the Perseverance rover.",
-      "pt": "Separa o gás carbônico do ar de Marte em oxigênio, como o MOXIE da NASA no rover Perseverance."
+      "en": "Pulls in the thin Martian air, which is almost all carbon dioxide, and turns it into pure oxygen for us to breathe. It uses a lot of power because it must heat the air a lot to split the gases. This machine really exists and has already made oxygen on Mars, on the Perseverance rover!",
+      "pt": "Puxa o ar fino de Marte, que é quase todo feito de gás carbônico, e o transforma em oxigênio puro para respirarmos. Ele gasta bastante energia porque precisa aquecer muito o ar para separar os gases. Esse aparelho existe de verdade e já produziu oxigênio em Marte no rover Perseverance!"
     },
     "level": 1,
     "buildSeconds": 30,
@@ -206,8 +206,8 @@
       "pt": "Derretedor de gelo"
     },
     "explain": {
-      "en": "Digs up ice buried under the dust and melts it into water. Radar found glaciers like this under Hellas.",
-      "pt": "Escava o gelo enterrado sob a poeira e derrete em água. Um radar achou geleiras assim em Hellas."
+      "en": "Digs up the ice hidden under the Martian ground and melts it into clean water. This water quenches the crew's thirst and waters the plants in our greenhouse. NASA radars found huge glaciers buried just under the Martian surface.",
+      "pt": "Escava o gelo escondido debaixo da terra de Marte e o derrete para termos água limpa. Essa água mata a sede da tripulação e rega as plantas da nossa estufa. Radares da NASA descobriram enormes geleiras enterradas logo abaixo da superfície marciana."
     },
     "level": 1,
     "buildSeconds": 30,
@@ -269,8 +269,8 @@
       "pt": "Refinaria de ferro"
     },
     "explain": {
-      "en": "Heats hematite to pull out the iron.",
-      "pt": "Aquece a hematita para tirar o ferro."
+      "en": "Uses intense heat to melt raw hematite and turn it into strong iron bars. With this iron we can build stronger structures and parts to fix the base. In space engineering, refining metals in space avoids the huge cost of bringing them from Earth.",
+      "pt": "Usa calor intenso para derreter a hematita bruta e transformá-la em barras de ferro resistente. Com esse ferro, conseguimos construir estruturas mais fortes e peças para consertar a base. Na Engenharia Espacial, refinar metais no espaço evita o custo altíssimo de trazê-los da Terra."
     },
     "level": 2,
     "buildSeconds": 40,
@@ -310,8 +310,8 @@
       "pt": "Estufa pressurizada"
     },
     "explain": {
-      "en": "A warm bubble where plants grow with water and light.",
-      "pt": "Uma bolha quente onde as plantas crescem com água e luz."
+      "en": "A closed garden with artificial light, water and a controlled temperature to grow fresh food on Mars. Every harvest helps feed the astronauts and prepare food for the new colonists. NASA tests space crops on the International Space Station for long missions.",
+      "pt": "É um jardim fechado com luz artificial, água e temperatura controlada para cultivar alimentos frescos em Marte. Cada colheita ajuda a alimentar os astronautas e a preparar comida para os novos colonos. A NASA testa cultivos espaciais na Estação Espacial Internacional para missões de longa duração."
     },
     "level": 2,
     "buildSeconds": 40,
@@ -403,8 +403,8 @@
       "pt": "Oficina de reparos"
     },
     "explain": {
-      "en": "Turns iron into bolts and plates for repairs.",
-      "pt": "Transforma ferro em parafusos e placas para consertos."
+      "en": "Turns iron bars into spare parts and tools to fix broken equipment. Without parts from the workshop, our astronauts cannot fix damaged panels or machines. On real Mars missions, astronauts will use 3D printers and workshops to make their own parts.",
+      "pt": "Transforma barras de ferro em peças de reposição e ferramentas para consertar equipamentos quebrados. Sem peças da oficina, nossos astronautas não conseguem arrumar painéis ou máquinas danificadas. Em missões reais a Marte, astronautas usarão impressoras 3D e oficinas para fabricar suas próprias peças."
     },
     "level": 2,
     "buildSeconds": 40,
@@ -442,8 +442,8 @@
       "pt": "Fábrica de aço e ligas"
     },
     "explain": {
-      "en": "Mixes iron with carbon from the air to make steel.",
-      "pt": "Mistura ferro com carbono do ar para fazer aço."
+      "en": "Mixes hot iron with carbon taken from the Martian air to make super-strong steel. Steel is the strongest material in our colony and lets us build advanced technology. In the aerospace industry, special metal alloys can handle extreme pressures and temperatures.",
+      "pt": "Mistura ferro quente com carbono tirado do ar marciano para criar aço super-resistente. O aço é o material mais forte da nossa colônia e permite construir tecnologias avançadas. Na indústria aeroespacial, ligas metálicas especiais suportam pressões e temperaturas extremas."
     },
     "level": 3,
     "buildSeconds": 60,
@@ -482,8 +482,8 @@
       "pt": "Reator nuclear compacto"
     },
     "explain": {
-      "en": "Makes steady power day and night, in any storm. NASA is designing a 40 kW reactor like this.",
-      "pt": "Gera energia constante de dia e de noite, em qualquer tempestade. A NASA projeta um reator de 40 kW assim."
+      "en": "Makes lots of clean, steady power day and night, without needing sunlight. Dust storms and the total darkness of the Martian winter cannot stop it. NASA developed the Kilopower project exactly to give steady power on Mars.",
+      "pt": "Gera muita energia limpa e constante dia e noite, sem depender da luz do Sol. Ele é totalmente imune às tempestades de poeira e à escuridão total do inverno marciano. A NASA desenvolveu o projeto Kilopower exatamente para fornecer energia contínua em Marte."
     },
     "level": 3,
     "buildSeconds": 60,

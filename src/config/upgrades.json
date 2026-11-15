@@ -6,8 +6,8 @@
       "pt": "Isolamento térmico"
     },
     "explain": {
-      "en": "A thick blanket on the walls keeps the heat inside, so heating needs less power.",
-      "pt": "Um cobertor grosso nas paredes segura o calor, então o aquecimento gasta menos energia."
+      "en": "Covers the habitat module and the greenhouse with special layers that keep the heat inside. It cuts the extra power used in the cold in half and saves the base in the harshest winters. NASA uses super-insulating materials, like aerogel, to protect spacecraft from the cold of space.",
+      "pt": "Reveste o Módulo Habitacional e a Estufa com camadas especiais que seguram o calor lá dentro. Ele reduz pela metade o gasto extra de energia no frio e salva a base nos invernos mais rigorosos. A NASA usa materiais superisolantes, como o aerogel, para proteger naves do frio espacial."
     },
     "effect": "insulation",
     "cost": {
@@ -22,8 +22,8 @@
       "pt": "Abrigo antirradiação"
     },
     "explain": {
-      "en": "A room covered with thick regolith. Hide here when the Sun throws a particle storm.",
-      "pt": "Uma sala coberta de regolito grosso. Esconda-se aqui quando o Sol lançar uma tempestade de partículas."
+      "en": "Covers the habitat module with a thick layer of packed regolith to block the Sun's dangerous radiation. When a solar storm comes, all astronauts must hurry inside it. In real life, covering habitats with Martian soil is one of the best ways to block cosmic rays.",
+      "pt": "Cobre o Módulo Habitacional com uma camada grossa de regolito compactado para bloquear a radiação perigosa do Sol. Quando uma tempestade solar chega, todos os astronautas devem correr para dentro dele. Na vida real, cobrir habitats com solo marciano é uma das melhores formas de barrar raios cósmicos."
     },
     "effect": "radiation_shelter",
     "cost": {
@@ -38,8 +38,8 @@
       "pt": "Filtros e escudos antipoeira"
     },
     "explain": {
-      "en": "Filters keep dust out of machines and shields protect panels. They cannot bring back sunlight blocked by a storm.",
-      "pt": "Filtros tiram a poeira das máquinas e escudos protegem os painéis. Não trazem de volta a luz bloqueada pela tempestade."
+      "en": "Protects panels, mines and generators from the fine Martian dust, preventing clogs and short circuits. It does not bring back sunlight during storms, but it stops machines from breaking. NASA engineers design electrostatic shields that push dust away with tiny electric charges.",
+      "pt": "Protege painéis, minas e geradores contra a poeira fina de Marte, evitando entupimentos e curtos-circuitos. Ele não traz a luz do Sol de volta nas tempestades, mas impede que as máquinas quebrem. Engenheiros da NASA criam escudos eletrostáticos que repelem a poeira com pequenas cargas elétricas."
     },
     "effect": "dust_filters",
     "cost": {
