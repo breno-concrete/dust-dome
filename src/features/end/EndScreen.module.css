@@ -1,0 +1,52 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.lines,
+.weather {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.loss,
+.hit,
+.event {
+  border-left: 4px solid var(--color-muted);
+  padding-left: var(--space-2);
+}
+
+.loss {
+  border-left-color: var(--color-danger);
+}
+
+.hit {
+  border-left-color: var(--color-warning);
+}
+
+.event {
+  border-left-color: var(--color-accent);
+}
+
+.what {
+  font-weight: bold;
+}
+
+.ok {
+  color: var(--color-ok);
+}
+
+.weather p,
+.lines p {
+  margin: 0;
+}

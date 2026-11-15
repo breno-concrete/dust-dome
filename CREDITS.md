@@ -7,9 +7,13 @@ Add lines only in your own area's section to avoid merge conflicts.
 
 All data sources used by the game are also listed in-game on the sources screen.
 
-| Dataset                        | Used for                 | Link                                    | Live / archive / curated |
-| ------------------------------ | ------------------------ | --------------------------------------- | ------------------------ |
-| Space Weather Database (DONKI) | Solar events in the game | https://kauai.ccmc.gsfc.nasa.gov/DONKI/ | archive                  |
+| Dataset                                                           | Used for                                                                         | Link                                                                                                                                  | Live / archive / curated            |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| Space Weather Database (DONKI)                                    | Solar events in the game                                                         | https://kauai.ccmc.gsfc.nasa.gov/DONKI/                                                                                               | archive                             |
+| DONKI SEP events, May 2024 (`src/data/snapshots/2024-05.json`)    | Each radiation storm cites one archived event in the debrief and sources screens | https://api.nasa.gov/ (DONKI SEP API, fetched offline by `scripts/fetch-donki.ts`)                                                    | archive (never fetched during play) |
+| NASA JPL Edu: the 2018 global dust storm and Opportunity          | Dust storms and the global dust storm                                            | https://jpl.nasa.gov/edu/news/2019/2/13/mars-rover-mission-comes-to-an-end-but-science-legacy-live-on                                 | curated                             |
+| NASA Solar System Exploration: Mars in depth                      | Seasons, cold and winter darkness                                                | https://solarsystem.nasa.gov/planets/mars/in-depth.amp                                                                                | curated                             |
+| Scientific American: dust devils on Mars (Spirit and Opportunity) | Dust devils (game simplification)                                                | https://www.scientificamerican.com/article/lost-opportunity-after-a-15-year-odyssey-nasas-trailblazing-mars-rover-approaches-its-end/ | curated                             |
 
 ## 3D models, textures and sound (Dev C)
 

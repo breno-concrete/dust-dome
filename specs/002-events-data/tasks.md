@@ -161,11 +161,11 @@ de apresentação podem ser testados independentemente com estados criados manua
 
 ### Implementação da User Story 4
 
-- [ ] T023 [US4] Adicionar helpers puros de agrupamento do debrief e resolução de causas em `src/features/end/debrief.ts`, derivando todas as explicações de `GameState.log`, do texto da configuração e de rótulos explícitos de simplificação.
-- [ ] T024 [US4] Atualizar `src/features/end/EndScreen.tsx` para renderizar o debrief em linguagem simples, preservar o resultado e a ação de reinício existentes e não inventar perdas ausentes no log.
-- [ ] T025 [US4] Atualizar `src/features/sources/SourcesScreen.tsx` para exibir fontes deduplicadas, rótulos real/scaled/simplification/game-value e o status DONKI arquivado, preservando a navegação existente.
-- [ ] T026 [US4] Adicionar a atribuição de dados/NASA do DEV A à seção do DEV A em `CREDITS.md` para o snapshot DONKI versionado e o uso das fontes relacionadas.
-- [ ] T027 [US4] Executar `npx vitest run src/features/end/EndScreen.test.tsx src/features/sources/SourcesScreen.test.tsx` e confirmar que os testes da US4 passam sem alterar os testes de outras áreas.
+- [x] T023 [US4] Adicionar helpers puros de agrupamento do debrief e resolução de causas em `src/features/end/debrief.ts`, derivando todas as explicações de `GameState.log`, do texto da configuração e de rótulos explícitos de simplificação.
+- [x] T024 [US4] Atualizar `src/features/end/EndScreen.tsx` para renderizar o debrief em linguagem simples, preservar o resultado e a ação de reinício existentes e não inventar perdas ausentes no log.
+- [x] T025 [US4] Atualizar `src/features/sources/SourcesScreen.tsx` para exibir fontes deduplicadas, rótulos real/scaled/simplification/game-value e o status DONKI arquivado, preservando a navegação existente.
+- [x] T026 [US4] Adicionar a atribuição de dados/NASA do DEV A à seção do DEV A em `CREDITS.md` para o snapshot DONKI versionado e o uso das fontes relacionadas.
+- [x] T027 [US4] Executar `npx vitest run src/features/end/EndScreen.test.tsx src/features/sources/SourcesScreen.test.tsx` e confirmar que os testes da US4 passam sem alterar os testes de outras áreas.
 
 **Checkpoint**: A US4 é testável de forma independente e a missão explica tanto o sucesso quanto
 o fracasso com atribuição científica honesta.
