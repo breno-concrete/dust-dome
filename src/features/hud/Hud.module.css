@@ -526,7 +526,7 @@
   .hud {
     --hud-inset: 8px;
 
-    grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.6fr) auto minmax(0, 1.1fr);
     align-items: stretch;
     gap: 8px;
   }
@@ -553,13 +553,40 @@
     display: none;
   }
 
+  .date strong {
+    font-size: 14px;
+  }
+
+  .speeds .timeButton {
+    padding: 0 8px;
+    font-size: 13px;
+  }
+
+  /* Six values in three columns and two rows, instead of a tall stack. */
   .materials {
     grid-column: 3;
     grid-row: 1;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    align-items: center;
+    justify-content: start;
     min-height: 0;
-    padding: 6px 8px;
-    gap: 6px;
+    padding: 6px 10px;
+    gap: 4px 10px;
+  }
+
+  .energyStat {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .materialIcon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .materialValues strong {
+    font-size: 14px;
   }
 
   /* The crew becomes a strip in the bottom-left corner, beside the two docks. */
@@ -576,7 +603,8 @@
   }
 
   .crewHeader {
-    flex: 1 0 100%;
+    flex: 0 0 auto;
+    gap: 10px;
     margin-bottom: 0;
   }
 
