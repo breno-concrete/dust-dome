@@ -3,11 +3,15 @@
 // silhouettes, high-contrast white/light-gray hulls (#f0f2f5, #d9e0e8), safety-orange
 // accents (#ff7a29), mint-green bio/energy highlights (#5bd6a0), stilt foundations,
 // and non-color visual cues for building, damaged, clogged, short-circuit, and frost.
-import type { ThreeEvent } from '@react-three/fiber'
+import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { useLayoutEffect, useRef } from 'react'
 import {
   CatmullRomCurve3,
   ExtrudeGeometry,
+  Group,
   LatheGeometry,
+  Mesh,
+  MeshStandardMaterial,
   Quaternion,
   Shape,
   TubeGeometry,
@@ -970,6 +974,28 @@ const DEFAULT_VISUAL: VisualState = {
   radiationTint: false,
 }
 
+const PREVIEW_VALID_MATERIAL = new MeshStandardMaterial({
+  color: '#5bd6a0',
+  emissive: '#5bd6a0',
+  emissiveIntensity: 0.35,
+  transparent: true,
+  opacity: 0.48,
+  depthWrite: false,
+  flatShading: true,
+})
+
+const PREVIEW_INVALID_MATERIAL = new MeshStandardMaterial({
+  color: '#ff6b6b',
+  emissive: '#ff6b6b',
+  emissiveIntensity: 0.35,
+  transparent: true,
+  opacity: 0.48,
+  depthWrite: false,
+  flatShading: true,
+})
+
+const NOOP_RAYCAST = () => {}
+
 export interface StructureModelProps {
   structure: StructureInstance
   size: number
@@ -977,6 +1003,7 @@ export interface StructureModelProps {
   selected: boolean
   onSelect: (id: string) => void
   visual?: VisualState
+  preview?: 'valid' | 'invalid'
 }
 
 export function StructureModel({
@@ -986,53 +1013,93 @@ export function StructureModel({
   selected,
   onSelect,
   visual = DEFAULT_VISUAL,
+  preview,
 }: StructureModelProps) {
+  const liftRef = useRef<Group>(null)
   const stateVisual = structureVisualState(structure, visual)
   const statusColor = stateVisual.color
   const hullColor = structure.status === 'active' ? HULL_WHITE : statusColor
   const secondaryColor = structure.status === 'active' ? HULL_GRAY : statusColor
-  const emissive = selected ? SELECTED_EMISSIVE : '#000000'
-  const emissiveIntensity = selected ? 0.35 : 0
-  const isTiltedDamaged = stateVisual.nonColorCue === 'damage'
-  const nightGlow = visual.dark && structure.status === 'active'
+  const emissive = selected && !preview ? SELECTED_EMISSIVE : '#000000'
+  const emissiveIntensity = selected && !preview ? 0.14 : 0
+  const isTiltedDamaged = !preview && stateVisual.nonColorCue === 'damage'
+  const nightGlow = !preview && visual.dark && structure.status === 'active'
+
+  useLayoutEffect(() => {
+    if (!preview || !liftRef.current) return
+    const mat = preview === 'valid' ? PREVIEW_VALID_MATERIAL : PREVIEW_INVALID_MATERIAL
+    liftRef.current.traverse((obj) => {
+      if ((obj as Mesh).isMesh) {
+        const mesh = obj as Mesh
+        mesh.material = mat
+        mesh.raycast = NOOP_RAYCAST
+      }
+    })
+  }, [preview, structure.type])
+
+  useFrame(({ clock }, delta) => {
+    if (!liftRef.current) return
+    if (preview) {
+      liftRef.current.position.y = 0.14 + Math.sin(clock.elapsedTime * 3.5) * 0.03
+      return
+    }
+    const targetY = selected ? 0.14 : 0
+    liftRef.current.position.y += (targetY - liftRef.current.position.y) * Math.min(1, delta * 14)
+  })
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
+    if (preview) return
     e.stopPropagation()
     onSelect(structure.id)
   }
 
   return (
     <group position={position} onClick={handleClick}>
-      {/* Elevated stilt foundation pad (Lote 3 visual reference) */}
-      <FoundationPad size={size} selected={selected} statusColor={statusColor} />
+      {/* Ground-anchored selection glow pad beneath the lifted structure */}
+      {selected && !preview && (
+        <mesh position={[0, 0.015, 0]}>
+          <boxGeometry args={[size * 0.94, 0.012, size * 0.94]} />
+          <meshStandardMaterial
+            color={SELECTED_EMISSIVE}
+            emissive={SELECTED_EMISSIVE}
+            emissiveIntensity={0.65}
+            transparent
+            opacity={0.75}
+            flatShading
+          />
+        </mesh>
+      )}
 
-      {/* Structure-specific low-poly model (Lote 1 & 2 visual reference) */}
-      <group rotation={isTiltedDamaged ? [0.05, 0, -0.09] : [0, 0, 0]}>
-        <StructureMesh
-          type={structure.type}
-          hullColor={hullColor}
-          secondaryColor={secondaryColor}
-          emissive={emissive}
-          emissiveIntensity={emissiveIntensity}
-          nightGlow={nightGlow}
-        />
+      <group ref={liftRef}>
+        {/* Elevated stilt foundation pad (Lote 3 visual reference) */}
+        <FoundationPad size={size} statusColor={statusColor} />
+
+        {/* Structure-specific low-poly model (Lote 1 & 2 visual reference) */}
+        <group rotation={isTiltedDamaged ? [0.05, 0, -0.09] : [0, 0, 0]}>
+          <StructureMesh
+            type={structure.type}
+            hullColor={hullColor}
+            secondaryColor={secondaryColor}
+            emissive={emissive}
+            emissiveIntensity={emissiveIntensity}
+            nightGlow={nightGlow}
+          />
+        </group>
+
+        {/* Non-color visual cues (Constitution III & Lote 3 visual reference) */}
+        {!preview && (
+          <NonColorCueOverlay
+            cue={stateVisual.nonColorCue}
+            frosted={stateVisual.frosted}
+            size={size}
+          />
+        )}
       </group>
-
-      {/* Non-color visual cues (Constitution III & Lote 3 visual reference) */}
-      <NonColorCueOverlay cue={stateVisual.nonColorCue} frosted={stateVisual.frosted} size={size} />
     </group>
   )
 }
 
-function FoundationPad({
-  size,
-  selected,
-  statusColor,
-}: {
-  size: number
-  selected: boolean
-  statusColor: string
-}) {
+function FoundationPad({ size, statusColor }: { size: number; statusColor: string }) {
   const span = size * 0.88
   const legOffset = span * 0.4
   return (
@@ -1061,13 +1128,6 @@ function FoundationPad({
         <boxGeometry args={[span * 0.96, 0.02, span * 0.96]} />
         <meshStandardMaterial color={statusColor} flatShading />
       </mesh>
-      {/* Selection highlight ring */}
-      {selected && (
-        <mesh position={[0, 0.02, 0]} rotation-x={-Math.PI / 2}>
-          <ringGeometry args={[size * 0.52, size * 0.62, 24]} />
-          <meshBasicMaterial color={SELECTED_EMISSIVE} />
-        </mesh>
-      )}
     </group>
   )
 }

@@ -5,7 +5,7 @@
 // hoverAt, placeAt, selectStructure.
 import { MapControls } from '@react-three/drei'
 import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type ComponentRef } from 'react'
 import { placementPreview, structureDef } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
@@ -14,6 +14,7 @@ import { useT } from '../../ui-kit/i18n'
 import type { DevVisualOverrides } from './DevVisualInspector'
 import {
   cameraPositionForStep,
+  clampPanTarget,
   rotateStep,
   tileCenter,
   worldToTile,
@@ -21,11 +22,11 @@ import {
 } from './iso'
 import styles from './Scene.module.css'
 import { StructureModel } from './StructureModel'
+import { Terrain } from './Terrain'
 import { visualState, type VisualState } from './visualState'
 
 const grid = config.mission.grid
 const GROUND = '#b5532f'
-const SURROUND_TERRAIN = '#944222'
 const CLIFF_OCHRE = '#c76538'
 
 // Strict dev/prod barrier: Vite replaces import.meta.env.DEV with false in production builds,
@@ -69,6 +70,7 @@ export default function Scene() {
   const selectStructure = useGameStore((s) => s.selectStructure)
   const [rotationStep, setRotationStep] = useState<RotationStep>(0)
   const [devOverrides, setDevOverrides] = useState<DevVisualOverrides>(INITIAL_DEV_OVERRIDES)
+  const controlsRef = useRef<ComponentRef<typeof MapControls>>(null)
   const t = useT()
 
   useEffect(() => {
@@ -92,6 +94,9 @@ export default function Scene() {
       : baseLook
   // Derived in render: a store selector must never return a new object (infinite re-render).
   const preview = placementPreview({ game, placing, hoverTile })
+  const placingSize = placing ? (structureDef(placing)?.size ?? 1) : 1
+  const previewCenter =
+    placing && hoverTile && preview ? tileCenter(hoverTile, placingSize, grid) : null
 
   const skyColor = look.radiationTint
     ? '#421414'
@@ -141,10 +146,10 @@ export default function Scene() {
         <ambientLight color={ambientColor} intensity={0.28 + 0.62 * look.light} />
         <directionalLight color={sunColor} position={[8, 12, 4]} intensity={1.4 * look.light} />
 
-        <CameraRig step={rotationStep} />
+        <CameraRig step={rotationStep} controlsRef={controlsRef} />
 
-        {/* Surrounding Hellas Planitia crater floor and faceted rock plateaus (Lote 3) */}
-        <SurroundingTerrain />
+        {/* Unified Hellas Planitia terrain with stepped canyons, craters and rocks */}
+        <Terrain gridWidth={grid.width} gridHeight={grid.height} />
 
         {/* Atmospheric dust haze clouds during local or global dust storms (Lote 3) */}
         {look.dustHaze > 0 && <DustHazeClouds intensity={look.dustHaze} />}
@@ -194,13 +199,37 @@ export default function Scene() {
               <meshBasicMaterial
                 color={preview.valid ? '#5bd6a0' : '#ff6b6b'}
                 transparent
-                opacity={0.65}
+                opacity={0.42}
               />
             </mesh>
           )
         })}
 
-        <MapControls enableRotate={false} enablePan={false} minZoom={25} maxZoom={90} />
+        {placing && preview && previewCenter && (
+          <StructureModel
+            structure={{
+              id: '__preview__',
+              type: placing,
+              tile: hoverTile!,
+              status: 'active',
+              upgrades: [],
+            }}
+            size={placingSize}
+            position={previewCenter}
+            selected={false}
+            onSelect={() => {}}
+            preview={preview.valid ? 'valid' : 'invalid'}
+          />
+        )}
+
+        <MapControls
+          ref={controlsRef}
+          enableRotate={false}
+          enablePan={true}
+          screenSpacePanning={false}
+          minZoom={25}
+          maxZoom={90}
+        />
       </Canvas>
 
       {DevVisualInspector && (
@@ -233,44 +262,55 @@ export default function Scene() {
   )
 }
 
-function CameraRig({ step }: { step: RotationStep }) {
-  const [targetX, targetY, targetZ] = cameraPositionForStep(step)
+function CameraRig({
+  step,
+  controlsRef,
+}: {
+  step: RotationStep
+  controlsRef: React.RefObject<ComponentRef<typeof MapControls> | null>
+}) {
+  const prevStepRef = useRef<RotationStep>(step)
+  const isRotatingRef = useRef(false)
+
+  useEffect(() => {
+    if (prevStepRef.current !== step) {
+      prevStepRef.current = step
+      isRotatingRef.current = true
+    }
+  }, [step])
+
   useFrame(({ camera }, delta) => {
-    const alpha = Math.min(1, delta * 8)
-    camera.position.x += (targetX - camera.position.x) * alpha
-    camera.position.y += (targetY - camera.position.y) * alpha
-    camera.position.z += (targetZ - camera.position.z) * alpha
-    camera.lookAt(0, 0, 0)
+    const controls = controlsRef.current
+    if (!controls) return
+
+    const [clampedX, clampedZ] = clampPanTarget(controls.target.x, controls.target.z, grid)
+    const dx = clampedX - controls.target.x
+    const dz = clampedZ - controls.target.z
+    if (dx !== 0 || dz !== 0 || controls.target.y !== 0) {
+      controls.target.set(clampedX, 0, clampedZ)
+      camera.position.x += dx
+      camera.position.z += dz
+    }
+
+    if (isRotatingRef.current) {
+      const [targetX, targetY, targetZ] = cameraPositionForStep(step, 14, [clampedX, clampedZ])
+      const alpha = Math.min(1, delta * 8)
+      camera.position.x += (targetX - camera.position.x) * alpha
+      camera.position.y += (targetY - camera.position.y) * alpha
+      camera.position.z += (targetZ - camera.position.z) * alpha
+      if (
+        Math.abs(targetX - camera.position.x) < 0.02 &&
+        Math.abs(targetY - camera.position.y) < 0.02 &&
+        Math.abs(targetZ - camera.position.z) < 0.02
+      ) {
+        camera.position.set(targetX, targetY, targetZ)
+        isRotatingRef.current = false
+      }
+    }
+
+    controls.update()
   })
   return null
-}
-
-function SurroundingTerrain() {
-  return (
-    <group>
-      <mesh position={[0, -0.04, 0]} rotation-x={-Math.PI / 2} raycast={() => null}>
-        <planeGeometry args={[48, 48]} />
-        <meshStandardMaterial color={SURROUND_TERRAIN} flatShading />
-      </mesh>
-      {/* Low-poly mesa outcrops around the perimeter */}
-      <mesh position={[-8.5, 0.45, -7.5]} raycast={() => null}>
-        <dodecahedronGeometry args={[1.4, 0]} />
-        <meshStandardMaterial color={CLIFF_OCHRE} flatShading />
-      </mesh>
-      <mesh position={[8.2, 0.55, -8.0]} raycast={() => null}>
-        <dodecahedronGeometry args={[1.6, 0]} />
-        <meshStandardMaterial color={SURROUND_TERRAIN} flatShading />
-      </mesh>
-      <mesh position={[-8.0, 0.35, 8.2]} raycast={() => null}>
-        <dodecahedronGeometry args={[1.2, 0]} />
-        <meshStandardMaterial color={CLIFF_OCHRE} flatShading />
-      </mesh>
-      <mesh position={[8.5, 0.4, 7.8]} raycast={() => null}>
-        <dodecahedronGeometry args={[1.3, 0]} />
-        <meshStandardMaterial color={SURROUND_TERRAIN} flatShading />
-      </mesh>
-    </group>
-  )
 }
 
 const DUST_CLOUD_POSITIONS: ReadonlyArray<readonly [number, number, number, number]> = [
