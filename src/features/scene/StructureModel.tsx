@@ -876,6 +876,91 @@ const STEEL_GEO = {
   ),
 }
 
+// ============================================================================
+// NUCLEAR REACTOR GEOMETRY (2x2 NASA Fission Surface Power Core + 4 Radiator Wings)
+// ============================================================================
+
+const REACTOR_BASE_Y = 0.14
+
+function buildTrefoilBlade(): ExtrudeGeometry {
+  // Single trapezoidal nuclear trefoil sector spanning 52 degrees
+  const shape = new Shape()
+  const r0 = 0.022
+  const r1 = 0.068
+  const a = (26 * Math.PI) / 180
+  shape.moveTo(Math.cos(-a) * r0, Math.sin(-a) * r0)
+  shape.lineTo(Math.cos(-a) * r1, Math.sin(-a) * r1)
+  shape.lineTo(r1, 0)
+  shape.lineTo(Math.cos(a) * r1, Math.sin(a) * r1)
+  shape.lineTo(Math.cos(a) * r0, Math.sin(a) * r0)
+  shape.closePath()
+  const geo = new ExtrudeGeometry(shape, { depth: 0.01, bevelEnabled: false })
+  geo.computeVertexNormals()
+  return geo
+}
+
+const REACTOR_GEO = {
+  // Hyperbolic concave cooling tower with recessed throat (latheOctagon-style 10 sides for crisp smooth flare)
+  coolingTower: latheOctagon(
+    [
+      [0.34, 0],
+      [0.3, 0.18],
+      [0.24, 0.42],
+      [0.21, 0.66],
+      [0.225, 0.82],
+      [0.255, 0.94],
+      [0.205, 0.94],
+      [0.18, 0.74],
+      [0, 0.74],
+    ],
+    10,
+  ),
+  // Hemispherical reinforced concrete containment dome
+  containmentDome: latheOctagon(
+    [
+      [0.31, 0],
+      [0.31, 0.34],
+      [0.295, 0.42],
+      [0.25, 0.5],
+      [0.16, 0.565],
+      [0, 0.59],
+    ],
+    10,
+  ),
+  // Shielded spent-fuel cask canister
+  fuelCask: latheOctagon([
+    [0.095, 0],
+    [0.095, 0.22],
+    [0.075, 0.255],
+    [0, 0.255],
+  ]),
+  trefoilBlade: buildTrefoilBlade(),
+  // Primary pressurized coolant pipe (upper & lower) bridging containment dome -> hyperbolic tower
+  coolantPipeUpper: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(0.14, 0.36, 0.1),
+      new Vector3(0.02, 0.41, 0.0),
+      new Vector3(-0.1, 0.38, -0.1),
+      new Vector3(-0.18, 0.31, -0.17),
+    ]),
+    10,
+    0.042,
+    6,
+    false,
+  ),
+  coolantPipeLower: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(0.16, 0.16, 0.11),
+      new Vector3(0.03, 0.19, 0.01),
+      new Vector3(-0.14, 0.16, -0.13),
+    ]),
+    8,
+    0.038,
+    6,
+    false,
+  ),
+}
+
 const DEFAULT_VISUAL: VisualState = {
   light: 1,
   dustHaze: 0,
@@ -1119,37 +1204,13 @@ function StructureMesh({
 
     case 'nuclear_reactor':
       return (
-        <group position={[0, 0.12, 0]}>
-          {/* Shielded reactor vessel (2x2) */}
-          <mesh position={[0, 0.48, 0]}>
-            <cylinderGeometry args={[0.36, 0.44, 0.9, 8]} />
-            <meshStandardMaterial
-              color={hullColor}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          {/* Cross-shaped radiator fins (NASA Fission Surface Power) */}
-          <mesh position={[0, 0.52, 0]}>
-            <boxGeometry args={[1.5, 0.56, 0.08]} />
-            <meshStandardMaterial color={METAL_DARK} flatShading />
-          </mesh>
-          <mesh position={[0, 0.52, 0]}>
-            <boxGeometry args={[0.08, 0.56, 1.5]} />
-            <meshStandardMaterial color={METAL_DARK} flatShading />
-          </mesh>
-          {/* Cherenkov/power core glow ring */}
-          <mesh position={[0, 0.96, 0]}>
-            <cylinderGeometry args={[0.28, 0.34, 0.14, 8]} />
-            <meshStandardMaterial
-              color={MINT_GREEN}
-              emissive={MINT_GREEN}
-              emissiveIntensity={0.5}
-              flatShading
-            />
-          </mesh>
-        </group>
+        <NuclearReactorMesh
+          hullColor={hullColor}
+          secondaryColor={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          nightGlow={nightGlow}
+        />
       )
 
     default:
@@ -2809,6 +2870,216 @@ function SteelFactoryMesh({
             <meshStandardMaterial color={idx === 0 ? '#96a3b5' : secondaryColor} flatShading />
           </mesh>
         ))}
+      </group>
+    </group>
+  )
+}
+
+function NuclearReactorMesh({
+  hullColor,
+  secondaryColor,
+  emissive,
+  emissiveIntensity,
+  nightGlow,
+}: {
+  hullColor: string
+  secondaryColor: string
+  emissive: string
+  emissiveIntensity: number
+  nightGlow: boolean
+}) {
+  const glowFactor = nightGlow ? 1 : 0
+  const coreEmissive = emissiveIntensity > 0 ? emissive : MINT_GREEN
+  const coreEmissiveIntensity =
+    emissiveIntensity > 0 ? emissiveIntensity : 0.7 + 0.75 * glowFactor
+  const towerPhi = Math.PI / 10
+
+  return (
+    <group position={[0, REACTOR_BASE_Y, 0]}>
+      {/* Hyperbolic nuclear cooling tower (-X / -Z) */}
+      <group position={[-0.26, 0, -0.24]}>
+        <mesh geometry={REACTOR_GEO.coolingTower} castShadow receiveShadow>
+          <meshStandardMaterial
+            color={hullColor}
+            emissive={emissive}
+            emissiveIntensity={emissiveIntensity}
+            flatShading
+          />
+        </mesh>
+        {/* Heavy dark base plinth skirt */}
+        <mesh position={[0, 0.045, 0]} rotation={[0, towerPhi, 0]} castShadow>
+          <cylinderGeometry args={[0.35, 0.36, 0.09, 10]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Safety-orange hazard collar band around upper flared lip (open-ended so throat stays hollow) */}
+        <mesh position={[0, 0.87, 0]} rotation={[0, towerPhi, 0]}>
+          <cylinderGeometry args={[0.258, 0.242, 0.072, 10, 1, true]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+        {/* Inner cooling throat shadow ring + glowing condenser vapor mist */}
+        <mesh position={[0, 0.76, 0]} rotation={[0, towerPhi, 0]}>
+          <cylinderGeometry args={[0.175, 0.165, 0.03, 10]} />
+          <meshStandardMaterial
+            color={WATER_BLUE}
+            emissive={WATER_BLUE}
+            emissiveIntensity={0.45 + 0.65 * glowFactor}
+            flatShading
+          />
+        </mesh>
+      </group>
+
+      {/* Armored concrete containment dome + exposed Cherenkov fuel rods (+X / +Z) */}
+      <group position={[0.28, 0, 0.22]} rotation={[0, Math.PI / 4, 0]}>
+        <mesh geometry={REACTOR_GEO.containmentDome} castShadow receiveShadow>
+          <meshStandardMaterial
+            color={secondaryColor}
+            emissive={emissive}
+            emissiveIntensity={emissiveIntensity}
+            flatShading
+          />
+        </mesh>
+        {/* Dark blast shield base collar */}
+        <mesh position={[0, 0.04, 0]} rotation={[0, towerPhi, 0]} castShadow>
+          <cylinderGeometry args={[0.325, 0.33, 0.08, 10]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Orange dome crane/ring collar */}
+        <mesh position={[0, 0.345, 0]} rotation={[0, towerPhi, 0]}>
+          <cylinderGeometry args={[0.318, 0.318, 0.04, 10]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+
+        {/* Front armored viewport revealing glowing MINT_GREEN Cherenkov core + 3 fuel rods */}
+        <group position={[0, 0.2, 0.295]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.24, 0.2, 0.05]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0, 0, 0.016]}>
+            <boxGeometry args={[0.185, 0.145, 0.025]} />
+            <meshStandardMaterial
+              color={MINT_GREEN}
+              emissive={coreEmissive}
+              emissiveIntensity={coreEmissiveIntensity}
+              flatShading
+            />
+          </mesh>
+          {/* Three vertical dark reactor control rods silhouette inside glowing viewport */}
+          {([-0.052, 0, 0.052] as const).map((rx, idx) => (
+            <mesh key={`rod-${idx}`} position={[rx, 0, 0.032]}>
+              <cylinderGeometry args={[0.014, 0.014, 0.135, 6]} />
+              <meshStandardMaterial color={METAL_DARK} flatShading />
+            </mesh>
+          ))}
+        </group>
+
+        {/* Side vertical reinforcement blast ribs on dome */}
+        {([-0.295, 0.295] as const).map((bx, idx) => (
+          <mesh key={`rib-${idx}`} position={[bx, 0.2, 0]} castShadow>
+            <boxGeometry args={[0.05, 0.34, 0.08]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+
+        {/* Top radiation trefoil emblem plate (☢) mounted on top crown of containment dome */}
+        <mesh position={[0, 0.596, 0]}>
+          <cylinderGeometry args={[0.095, 0.1, 0.016, 12]} />
+          <meshStandardMaterial color={SPARK_YELLOW} flatShading />
+        </mesh>
+        <group position={[0, 0.605, 0]}>
+          {[0, (2 * Math.PI) / 3, (4 * Math.PI) / 3].map((ang, idx) => (
+            <group key={`trefoil-${idx}`} rotation={[0, ang, 0]}>
+              <mesh geometry={REACTOR_GEO.trefoilBlade} rotation={[-Math.PI / 2, 0, 0]}>
+                <meshStandardMaterial color={METAL_DARK} flatShading />
+              </mesh>
+            </group>
+          ))}
+          <mesh position={[0, 0.006, 0]}>
+            <cylinderGeometry args={[0.016, 0.016, 0.012, 8]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        </group>
+      </group>
+
+      {/* Dual primary insulated coolant bridge pipes connecting containment dome <-> cooling tower */}
+      <mesh geometry={REACTOR_GEO.coolantPipeUpper} castShadow>
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+      <mesh geometry={REACTOR_GEO.coolantPipeLower} castShadow>
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Quadrant (-X / +Z): Spent-fuel cask + HV output transformer & 3 ceramic bushings */}
+      <group position={[-0.44, 0, 0.4]}>
+        {/* HV output transformer skid facing outward (-X / +Z) */}
+        <group position={[-0.08, 0, 0.08]} rotation={[0, -Math.PI / 4, 0]}>
+          <mesh position={[0, 0.1, 0]} castShadow>
+            <boxGeometry args={[0.24, 0.2, 0.19]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0, 0.21, 0]} castShadow>
+            <boxGeometry args={[0.26, 0.024, 0.21]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+          {([-0.072, 0, 0.072] as const).map((bx, idx) => (
+            <mesh
+              key={`bushing-${idx}`}
+              position={[bx, 0.275, 0]}
+              rotation={[0, HAB_PHI, 0]}
+              castShadow
+            >
+              <cylinderGeometry args={[0.02, 0.026, 0.11, 8]} />
+              <meshStandardMaterial color={HULL_WHITE} flatShading />
+            </mesh>
+          ))}
+          <mesh position={[0, 0.11, 0.1]}>
+            <boxGeometry args={[0.14, 0.05, 0.014]} />
+            <meshStandardMaterial
+              color={MINT_GREEN}
+              emissive={coreEmissive}
+              emissiveIntensity={coreEmissiveIntensity}
+              flatShading
+            />
+          </mesh>
+        </group>
+
+        {/* Shielded yellow/black nuclear fuel cask drum cleanly separated beside transformer */}
+        <group position={[0.17, 0, -0.14]}>
+          <mesh geometry={REACTOR_GEO.fuelCask} castShadow>
+            <meshStandardMaterial color={SPARK_YELLOW} flatShading />
+          </mesh>
+          <mesh position={[0, 0.12, 0]} rotation={[0, HAB_PHI, 0]}>
+            <cylinderGeometry args={[0.102, 0.102, 0.045, 8]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        </group>
+      </group>
+
+      {/* Quadrant (+X / -Z): Ground-mounted low angled condenser fin bank + floor pipes */}
+      <group position={[0.45, 0, -0.45]} rotation={[0, Math.PI / 4, 0]}>
+        <mesh position={[0, 0.045, 0]} castShadow>
+          <boxGeometry args={[0.38, 0.09, 0.26]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Twin ground return pipes linking condenser skid back toward cooling loop */}
+        {([-0.065, 0.065] as const).map((pz, idx) => (
+          <mesh key={`cpipe-${idx}`} position={[-0.24, 0.03, pz]} castShadow>
+            <boxGeometry args={[0.2, 0.045, 0.045]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+        <group position={[0, 0.13, 0]} rotation={[0.42, 0, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.36, 0.032, 0.24]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+          {([-0.12, -0.04, 0.04, 0.12] as const).map((fx, idx) => (
+            <mesh key={`cond-fin-${idx}`} position={[fx, 0.024, 0]}>
+              <boxGeometry args={[0.026, 0.024, 0.22]} />
+              <meshStandardMaterial color="#475569" flatShading />
+            </mesh>
+          ))}
+        </group>
       </group>
     </group>
   )
