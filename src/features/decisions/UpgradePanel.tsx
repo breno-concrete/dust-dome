@@ -7,6 +7,7 @@ import { Card } from '../../ui-kit/Card'
 import { Icon } from '../../ui-kit/Icon'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
+import { StructureInfo } from './StructureInfo'
 
 const strings = {
   repair: { en: 'Repair', pt: 'Reparar' },
@@ -112,13 +113,14 @@ export function UpgradePanel() {
 
   const needsRepair = structure.status === 'damaged' || structure.status === 'short_circuit'
   const partsMissing = Math.max(0, config.mission.repair.parts - (game.stock['repair_parts'] ?? 0))
-  const label = structureDef.upgrades.length > 0 ? t(strings.title) : t(structureDef.name)
+  const label = t(structureDef.name)
 
   return (
     <section ref={panelRef} className={styles.upgrades} aria-label={label}>
       <h2>
         <Icon name="wrench" size={20} /> {label}
       </h2>
+      <StructureInfo game={game} structure={structure} />
       <div className={styles.structureActions} data-testid="structure-actions">
         {needsRepair && (
           <>
@@ -151,6 +153,7 @@ export function UpgradePanel() {
         </Button>
         <p className={styles.hint}>{t(strings.demolishHint)}</p>
       </div>
+      {upgrades.length > 0 && <h3 className={styles.infoTitle}>{t(strings.title)}</h3>}
       {upgrades.map((upgrade, index) => {
         if (!upgrade) {
           const missingId = structureDef.upgrades[index]

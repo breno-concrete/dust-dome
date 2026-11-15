@@ -640,3 +640,77 @@
   font-size: 13px;
   line-height: 1.4;
 }
+
+/* ---- Selected machine: state and production bars ---- */
+.structureInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.structureStatus {
+  align-self: flex-start;
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #e4e6d9;
+  color: #3f4d2a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.structureStatus:not([data-status='active']) {
+  background: #f7e3cf;
+  color: #7a3d14;
+}
+
+.infoTitle {
+  margin: 0 0 var(--space-1);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.productionBar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.productionLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.productionValue {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.productionTrack {
+  grid-column: 1 / -1;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e4e0d2;
+}
+
+.productionFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #8d9d68;
+  transition: width 0.3s;
+}
+
+.infoUses {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
