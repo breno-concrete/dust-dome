@@ -26,7 +26,8 @@ const strings = {
   },
   start: { en: 'Play game', pt: 'Jogar' },
   sources: { en: 'Where does the science come from?', pt: 'De onde vem a ciência?' },
-  language: { en: 'Português', pt: 'English' },
+  // The button names the language the menu is in now.
+  language: { en: 'English', pt: 'Português' },
   landing: { en: 'Landing on Mars…', pt: 'Pousando em Marte…' },
   skip: { en: 'Skip', pt: 'Pular' },
 }

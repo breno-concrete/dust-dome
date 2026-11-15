@@ -112,7 +112,10 @@ export function UpgradePanel() {
   )
 
   const needsRepair = structure.status === 'damaged' || structure.status === 'short_circuit'
-  const partsMissing = Math.max(0, config.mission.repair.parts - (game.stock['repair_parts'] ?? 0))
+  const partsMissing = Math.max(
+    0,
+    Math.ceil(config.mission.repair.parts - (game.stock['repair_parts'] ?? 0)),
+  )
   const label = t(structureDef.name)
 
   return (
@@ -192,7 +195,7 @@ export function UpgradePanel() {
             {!isInstalled &&
               missing.map(([resourceId, amount]) => {
                 const resource = config.resources.find(({ id }) => id === resourceId)
-                const amountMissing = amount - (game.stock[resourceId] ?? 0)
+                const amountMissing = Math.ceil(amount - (game.stock[resourceId] ?? 0))
                 return (
                   <p
                     key={resourceId}
