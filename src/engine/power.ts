@@ -84,7 +84,9 @@ function nextShed(
 ): StructureTypeId[] {
   const order = config.mission.brownoutOrder
   const empty = state.batteryEu <= EPS
-  const full = capacity > 0 && state.batteryEu >= capacity - EPS
+  // Charged enough to run everything again (playtest 2026-11-15: waiting for full took a season).
+  const charged =
+    capacity > 0 && state.batteryEu >= capacity * config.mission.batteryRestoreShare - EPS
   const fits = (shed: StructureTypeId[]) => productionKw >= demandOf(state, config, shed) - EPS
 
   // Bring back, most vital first, every shed type that production alone covers. A type that does
@@ -95,8 +97,9 @@ function nextShed(
       return fits(without) ? without : kept
     }, shed)
 
-  // 1. Full batteries bring everything back; otherwise restore what production covers.
-  let shed = full ? [] : restore(order.filter((t) => state.power.shed.includes(t)))
+  // 1. Batteries at the restore share bring everything back; otherwise restore what production
+  //    covers.
+  let shed = charged ? [] : restore(order.filter((t) => state.power.shed.includes(t)))
 
   // 2. Empty batteries: switch types off in brownout order until demand fits. Types that draw
   //    nothing right now are skipped: switching them off would change nothing. Then restore, as a

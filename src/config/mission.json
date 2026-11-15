@@ -75,6 +75,7 @@
     "greenhouse",
     "oxygen_generator"
   ],
+  "batteryRestoreShare": 0.25,
   "insulationRequiredFromCycle": 3,
   "finalCycleIntervalFactor": 0.75,
   "radiationStorm": {

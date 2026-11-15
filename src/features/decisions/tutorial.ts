@@ -4,7 +4,7 @@
 import { create } from 'zustand'
 import type { PowerMode } from '../../engine/types'
 import type { LocalizedText } from '../../config/schema'
-import type { VegaMood } from './vegaPortrait'
+import type { VegaMood } from './vegaMood'
 
 export type StepCheck = 'pick' | 'place' | 'select' | 'switch'
 /** What the dock buttons should draw attention to. */

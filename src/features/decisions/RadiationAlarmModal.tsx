@@ -1,5 +1,6 @@
 // Owner: Dev B. Emergency alarm for a solar radiation storm (constitution II.11).
 // Shows the seconds left, the real NASA DONKI event it is modeled on and a one-click shelter.
+import { radiationShelterPlaces } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { Button } from '../../ui-kit/Button'
 import { Modal } from '../../ui-kit/Modal'
@@ -9,13 +10,22 @@ import { VegaPortrait } from './VegaPortrait'
 
 const strings = {
   title: { en: 'Radiation storm!', pt: 'Tempestade de radiação!' },
+  // Constitution II.2: outside, or in a habitat without a radiation shelter, nobody is safe.
   warning: {
-    en: 'The Sun threw out fast particles. They can hurt astronauts who are outside!',
-    pt: 'O Sol lançou partículas rápidas. Elas podem machucar os astronautas que estão fora!',
+    en: 'The Sun threw out fast particles! Only a habitat with a radiation shelter keeps astronauts safe.',
+    pt: 'O Sol lançou partículas rápidas! Só um módulo com Abrigo antirradiação protege os astronautas.',
   },
   active: {
-    en: 'The storm is here. Keep everyone inside until it passes.',
-    pt: 'A tempestade chegou. Deixe todos dentro até ela passar.',
+    en: 'The storm is here. Only astronauts in a radiation shelter are safe until it passes.',
+    pt: 'A tempestade chegou. Só quem está no Abrigo antirradiação fica seguro até ela passar.',
+  },
+  noShelter: {
+    en: 'Your base has no radiation shelter. Everyone is in danger, even inside!',
+    pt: 'Sua base não tem Abrigo antirradiação. Todos correm perigo, até quem está dentro!',
+  },
+  notEnoughRoom: {
+    en: 'The radiation shelters have room for {n} of {total} astronauts. The others are in danger, even inside!',
+    pt: 'Os abrigos antirradiação têm lugar para {n} de {total} astronautas. Os outros correm perigo, até dentro!',
   },
   secondsLeft: { en: 'seconds left', pt: 'segundos restantes' },
   basedOn: {
@@ -30,6 +40,8 @@ export function RadiationAlarmModal() {
   const storm = useGameStore((s) => s.game?.radiationStorm)
   const elapsed = useGameStore((s) => s.game?.time.elapsed ?? 0)
   const bringAllInside = useGameStore((s) => s.bringAllInside)
+  const places = useGameStore((s) => radiationShelterPlaces(s))
+  const alive = useGameStore((s) => s.game?.crew.filter((a) => a.alive).length ?? 0)
   const t = useT()
   if (!storm) return null
 
@@ -52,6 +64,15 @@ export function RadiationAlarmModal() {
         <VegaPortrait mood="alert" variant="alarm" />
         <div>
           <p>{t(isWarning ? strings.warning : strings.active)}</p>
+          {places < alive && (
+            <p className={styles.shelterDanger} data-testid="shelter-danger">
+              {places === 0
+                ? t(strings.noShelter)
+                : t(strings.notEnoughRoom)
+                    .replace('{n}', String(places))
+                    .replace('{total}', String(alive))}
+            </p>
+          )}
           {isWarning && (
             <p className={styles.countdown} data-testid="storm-countdown">
               <strong>{seconds}</strong> {t(strings.secondsLeft)}

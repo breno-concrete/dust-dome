@@ -196,6 +196,8 @@ export const MissionConfigSchema = z.object({
   }),
   /** Structure types switched off first when power runs out. */
   brownoutOrder: z.array(z.string()),
+  /** Shed types come back once the batteries hold this share of their capacity (II.7, R6). */
+  batteryRestoreShare: z.number().positive().max(1),
   insulationRequiredFromCycle: z.number().int().positive(),
   /** Cycle 4 = cycle 3 with intervals multiplied by this factor. */
   finalCycleIntervalFactor: z.number().positive(),

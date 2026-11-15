@@ -8,6 +8,7 @@ export type IconName =
   | 'water'
   | 'food'
   | 'power'
+  | 'battery'
   | 'hematite'
   | 'regolith'
   | 'iron'
@@ -82,6 +83,15 @@ export function Icon({ name, size = 20, style, ...rest }: IconProps) {
       return (
         <svg {...commonProps}>
           <path d="m14 2-9 12h7l-2 8 9-12h-7Z" />
+        </svg>
+      )
+
+    // Battery: cell with two charge bars and a terminal
+    case 'battery':
+      return (
+        <svg {...commonProps}>
+          <rect x="2" y="7" width="17" height="10" rx="2" />
+          <path d="M22 11v2M6 10v4M10 10v4" />
         </svg>
       )
 

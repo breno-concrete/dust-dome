@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import { config } from '../../config/loadConfig'
 import { TUTORIAL_STEPS, isStepDone, type StepContext } from './tutorial'
-import { VEGA_MOODS } from './vegaPortrait'
+import { VEGA_MOODS } from './vegaMood'
 
 const ctx = (patch: Partial<StepContext> = {}): StepContext => ({
   placing: null,
