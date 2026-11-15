@@ -709,6 +709,72 @@ const IRON_GEO = {
   ),
 }
 
+// ============================================================================
+// REPAIR WORKSHOP GEOMETRY (1x1 Repair Bay + Jib Hoist Crane + Welding Arm)
+// ============================================================================
+
+const WORK_BASE_Y = 0.14
+
+function buildWorkGarageBody(): ExtrudeGeometry {
+  const geo = new ExtrudeGeometry(makeChamferedArchShape(0.21, 0.29, 0.055), {
+    depth: 0.39,
+    bevelEnabled: true,
+    bevelThickness: 0.015,
+    bevelSize: 0.015,
+    bevelSegments: 1,
+    curveSegments: 4,
+  })
+  geo.translate(0, 0, -0.195)
+  geo.computeVertexNormals()
+  return geo
+}
+
+function buildWorkRoofCap(): ExtrudeGeometry {
+  const geo = new ExtrudeGeometry(makeChamferedArchShape(0.225, 0.065, 0.04), {
+    depth: 0.42,
+    bevelEnabled: true,
+    bevelThickness: 0.01,
+    bevelSize: 0.01,
+    bevelSegments: 1,
+    curveSegments: 4,
+  })
+  geo.translate(0, 0, -0.21)
+  geo.computeVertexNormals()
+  return geo
+}
+
+function buildWorkDoorFrame(): ExtrudeGeometry {
+  const geo = new ExtrudeGeometry(makeHollowRectFrameShape(0.26, 0.21, 0.028), {
+    depth: 0.032,
+    bevelEnabled: false,
+  })
+  geo.translate(0, 0, -0.016)
+  geo.computeVertexNormals()
+  return geo
+}
+
+const WORK_CRANE_STRUT = makeStrutTransform([0.22, 0.34, -0.18], [0.22, 0.56, 0.09])
+const WORK_ARM_LOWER = makeStrutTransform([-0.2, 0.075, 0.27], [-0.11, 0.25, 0.23])
+const WORK_ARM_UPPER = makeStrutTransform([-0.11, 0.25, 0.23], [0.06, 0.165, 0.22])
+
+const WORK_GEO = {
+  garageBody: buildWorkGarageBody(),
+  roofCap: buildWorkRoofCap(),
+  doorFrame: buildWorkDoorFrame(),
+  cranePedestal: latheOctagon([
+    [0.082, 0],
+    [0.075, 0.035],
+    [0.055, 0.065],
+    [0, 0.065],
+  ]),
+  armTurret: latheOctagon([
+    [0.068, 0],
+    [0.062, 0.04],
+    [0.048, 0.068],
+    [0, 0.068],
+  ]),
+}
+
 const DEFAULT_VISUAL: VisualState = {
   light: 1,
   dustHaze: 0,
@@ -930,23 +996,13 @@ function StructureMesh({
 
     case 'repair_workshop':
       return (
-        <group position={[0, 0.12, 0]}>
-          {/* Workshop cabin (1x1) */}
-          <mesh position={[0, 0.26, 0]}>
-            <boxGeometry args={[0.68, 0.48, 0.68]} />
-            <meshStandardMaterial
-              color={hullColor}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          {/* Chamfered orange tool roof */}
-          <mesh position={[0, 0.56, 0]} rotation={[0, Math.PI / 4, 0]}>
-            <coneGeometry args={[0.52, 0.22, 4]} />
-            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
-          </mesh>
-        </group>
+        <RepairWorkshopMesh
+          hullColor={hullColor}
+          secondaryColor={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          nightGlow={nightGlow}
+        />
       )
 
     case 'steel_factory':
@@ -2173,6 +2229,247 @@ function IronRefineryMesh({
       </group>
     </group>
   )
+}
+
+function RepairWorkshopMesh({
+  hullColor,
+  secondaryColor,
+  emissive,
+  emissiveIntensity,
+  nightGlow,
+}: {
+  hullColor: string
+  secondaryColor: string
+  emissive: string
+  emissiveIntensity: number
+  nightGlow: boolean
+}) {
+  const glowFactor = nightGlow ? 1 : 0
+  const interiorEmissive = emissiveIntensity > 0 ? emissive : WARM_WINDOW_LIGHT
+  const interiorEmissiveIntensity =
+    emissiveIntensity > 0 ? emissiveIntensity : 0.42 + 0.65 * glowFactor
+
+  return (
+    <group position={[0, WORK_BASE_Y, 0]}>
+      {/* Low workshop service deck apron over the 1x1 foundation */}
+      <mesh position={[0, 0.008, 0]} receiveShadow>
+        <boxGeometry args={[0.8, 0.016, 0.8]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Beveled service garage cabin (-X / -Z) */}
+      <group position={[-0.1, 0.016, -0.06]}>
+          <mesh geometry={WORK_GEO.garageBody} castShadow receiveShadow>
+            <meshStandardMaterial
+              color={hullColor}
+              emissive={emissive}
+              emissiveIntensity={emissiveIntensity}
+              flatShading
+            />
+          </mesh>
+          {/* Safety-orange chamfered garage roof cap + ridge vent */}
+          <mesh geometry={WORK_GEO.roofCap} position={[0, 0.295, 0]} castShadow>
+            <meshStandardMaterial
+              color={SAFETY_ORANGE}
+              emissive={emissive}
+              emissiveIntensity={emissiveIntensity * 0.5}
+              flatShading
+            />
+          </mesh>
+          <mesh position={[0, 0.375, 0]} castShadow>
+            <boxGeometry args={[0.14, 0.032, 0.32]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+
+          {/* Front +Z garage shutter bay frame & warm illuminated workshop interior */}
+          <mesh geometry={WORK_GEO.doorFrame} position={[0, 0.11, 0.218]}>
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          {/* Glowing interior garage backdrop */}
+          <mesh position={[0, 0.085, 0.205]}>
+            <boxGeometry args={[0.21, 0.15, 0.02]} />
+            <meshStandardMaterial
+              color={WARM_WINDOW_LIGHT}
+              emissive={interiorEmissive}
+              emissiveIntensity={interiorEmissiveIntensity}
+              flatShading
+            />
+          </mesh>
+          {/* Half-raised ribbed roll-up garage shutter */}
+          <mesh position={[0, 0.165, 0.222]} castShadow>
+            <boxGeometry args={[0.205, 0.058, 0.022]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+          <mesh position={[0, 0.138, 0.228]}>
+            <boxGeometry args={[0.205, 0.014, 0.022]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+
+          {/* Side (-X) steel tool locker cabinet */}
+          <mesh position={[-0.245, 0.125, -0.02]} castShadow>
+            <boxGeometry args={[0.06, 0.22, 0.22]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+          <mesh position={[-0.278, 0.13, -0.02]}>
+            <boxGeometry args={[0.012, 0.16, 0.16]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        </group>
+
+        {/* Overhanging jib hoist crane (+X / -Z mast extending forward over service bay) */}
+        <group>
+          <mesh geometry={WORK_GEO.cranePedestal} position={[0.22, 0, -0.22]} castShadow>
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          {/* Vertical crane column */}
+          <mesh position={[0.22, 0.32, -0.22]} rotation={[0, HAB_PHI, 0]} castShadow>
+            <cylinderGeometry args={[0.042, 0.048, 0.62, 8]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          {/* Diagonal truss brace */}
+          <mesh
+            position={WORK_CRANE_STRUT.position}
+            quaternion={WORK_CRANE_STRUT.quaternion}
+            castShadow
+          >
+            <cylinderGeometry args={[0.022, 0.022, WORK_CRANE_STRUT.length, 6]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          {/* Cantilevered safety-orange jib boom */}
+          <mesh position={[0.22, 0.585, 0.015]} castShadow>
+            <boxGeometry args={[0.075, 0.055, 0.52]} />
+            <meshStandardMaterial
+              color={SAFETY_ORANGE}
+              emissive={emissive}
+              emissiveIntensity={emissiveIntensity * 0.5}
+              flatShading
+            />
+          </mesh>
+          {/* Jib-tip downward work floodlight */}
+          <mesh position={[0.21, 0.554, 0.245]}>
+            <boxGeometry args={[0.056, 0.012, 0.038]} />
+            <meshStandardMaterial
+              color={WARM_WINDOW_LIGHT}
+              emissive={WARM_WINDOW_LIGHT}
+              emissiveIntensity={0.35 + 0.85 * glowFactor}
+              flatShading
+            />
+          </mesh>
+          {/* Mast head cap + counterweight */}
+          <mesh position={[0.22, 0.605, -0.26]} castShadow>
+            <boxGeometry args={[0.11, 0.075, 0.09]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          {/* Trolley + vertical steel hoist cable + hook pulley block */}
+          <mesh position={[0.21, 0.545, 0.21]}>
+            <boxGeometry args={[0.088, 0.036, 0.07]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0.21, 0.43, 0.21]}>
+            <cylinderGeometry args={[0.008, 0.008, 0.22, 6]} />
+            <meshStandardMaterial color={HULL_GRAY} flatShading />
+          </mesh>
+          <mesh position={[0.21, 0.305, 0.21]} castShadow>
+            <boxGeometry args={[0.045, 0.048, 0.045]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+          <mesh position={[0.21, 0.268, 0.21]} rotation={[0, 0, Math.PI / 6]}>
+            <cylinderGeometry args={[0.01, 0.014, 0.032, 6]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        </group>
+
+        {/* Front service workbench & rover drive module under hoist (+X / +Z) */}
+        <group position={[0.2, 0, 0.22]}>
+          {/* Four workbench legs */}
+          {(
+            [
+              [-0.1, -0.09],
+              [0.1, -0.09],
+              [-0.1, 0.09],
+              [0.1, 0.09],
+            ] as const
+          ).map(([lx, lz], idx) => (
+            <mesh key={`leg-${idx}`} position={[lx, 0.045, lz]} castShadow>
+              <boxGeometry args={[0.026, 0.09, 0.026]} />
+              <meshStandardMaterial color={METAL_DARK} flatShading />
+            </mesh>
+          ))}
+          {/* Heavy steel bench top */}
+          <mesh position={[0, 0.1, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.25, 0.026, 0.23]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+          {/* Rover core module / motor block undergoing repair */}
+          <mesh position={[0, 0.155, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+            <cylinderGeometry args={[0.046, 0.046, 0.14, 8]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0.03, 0.165, 0.045]} castShadow>
+            <boxGeometry args={[0.06, 0.045, 0.03]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+        </group>
+
+        {/* Articulated robotic welding arm (-X / +Z) reaching toward service bench */}
+        <group>
+          <mesh geometry={WORK_GEO.armTurret} position={[-0.2, 0, 0.27]} castShadow>
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={WORK_ARM_LOWER.position} quaternion={WORK_ARM_LOWER.quaternion} castShadow>
+            <cylinderGeometry args={[0.026, 0.03, WORK_ARM_LOWER.length, 6]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+          <mesh position={[-0.11, 0.25, 0.23]} castShadow>
+            <octahedronGeometry args={[0.042, 0]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={WORK_ARM_UPPER.position} quaternion={WORK_ARM_UPPER.quaternion} castShadow>
+            <cylinderGeometry args={[0.02, 0.024, WORK_ARM_UPPER.length, 6]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+          {/* Welding torch nozzle sleeve & glowing arc tip */}
+          <mesh position={[0.052, 0.168, 0.22]} castShadow>
+            <octahedronGeometry args={[0.024, 0]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0.074, 0.156, 0.22]}>
+            <octahedronGeometry args={[0.017, 0]} />
+            <meshStandardMaterial
+              color={SPARK_YELLOW}
+              emissive={SPARK_YELLOW}
+              emissiveIntensity={0.65 + 0.55 * glowFactor}
+              flatShading
+            />
+          </mesh>
+        </group>
+
+        {/* Side spare parts rack: spare rover wheel + welding gas tank (+X side) */}
+        <group position={[0.31, 0, -0.02]}>
+          {/* Rack stand */}
+          <mesh position={[0, 0.025, 0]} castShadow>
+            <boxGeometry args={[0.1, 0.05, 0.18]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          {/* Spare chunky low-poly wheel */}
+          <group position={[0.01, 0.125, -0.02]} rotation={[0, 0, Math.PI / 2 - 0.15]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.082, 0.082, 0.052, 8]} />
+              <meshStandardMaterial color={METAL_DARK} flatShading />
+            </mesh>
+            <mesh>
+              <cylinderGeometry args={[0.042, 0.042, 0.06, 8]} />
+              <meshStandardMaterial color={secondaryColor} flatShading />
+            </mesh>
+          </group>
+          {/* Welding gas cylinder */}
+          <mesh position={[0, 0.135, 0.075]} rotation={[0, HAB_PHI, 0]} castShadow>
+            <cylinderGeometry args={[0.032, 0.032, 0.17, 8]} />
+            <meshStandardMaterial color={WATER_BLUE} flatShading />
+          </mesh>
+        </group>
+      </group>
+    )
 }
 
 function BatteryMesh({
