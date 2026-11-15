@@ -32,6 +32,7 @@ All data sources used by the game are also listed in-game on the sources screen.
 ## Libraries (Breno)
 
 React, Vite, three.js, React Three Fiber, drei, Zustand, Zod, Vitest, Testing Library, jsdom, Prettier, oxlint (all MIT).
+TypeScript (Apache-2.0).
 GitHub Spec Kit (MIT) for spec-driven development.
 
 ## AI ("Super Intelligence") use (everyone)
@@ -44,5 +45,7 @@ GitHub Spec Kit (MIT) for spec-driven development.
 - Review and fixes of the sprint 2 construction/upgrade UI and HUD: Claude Code (Anthropic).
 - Sound playback code for the scene and repair QTE (`sound.ts` and its tests): Claude Code (Anthropic).
 - Title screen 3D menu and landing transition (`src/features/title/`, models built in code): Claude Code (Anthropic).
+- Visual reference images in `specs/004-base-scene/visual-references/` (11 images, design
+  references for the scene only, not shipped in the game): generated with Figma's AI.
 
 <!-- Add where and how AI tools were used. AI images/videos need a visible watermark. -->
