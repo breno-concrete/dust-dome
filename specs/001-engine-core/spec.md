@@ -529,8 +529,8 @@ and the mission result.
   type off.
 - When several events are active, their solar factors multiply.
 - The brownout starts when the batteries are empty; a switched-off type comes back on by itself
-  when production alone can run it, or when the batteries are full again, so switches never
-  blink on and off (plan research R6).
+  when production alone can run it, or when the batteries hold `mission.batteryRestoreShare`
+  of their capacity again (25% in v1), so switches never blink on and off (plan research R6).
 - An astronaut who comes back at the warning level is not resting: they work again once their
   exposure is at or below the resume level. Only a player recall makes an astronaut rest until
   their exposure is back to empty, so a recalled astronaut does not walk straight back out. The

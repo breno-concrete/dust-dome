@@ -1,6 +1,16 @@
 <!--
 Sync Impact Report
-Version: 3.1.0 → 3.2.0 (MINOR: bringing an astronaut inside pauses their job until Resume)
+Version: 3.2.0 → 3.3.0 (MINOR: playtest fixes of 2026-11-15 asked by the product owners)
+Modified sections: II.6 (the base starts with 8 repair parts), II.7 (machines switched off for
+  lack of power come back when the batteries reach a restore share of their capacity, 25% in
+  v1, instead of waiting for full batteries; the power switch of a switched-off type shows Off),
+  II.11 (the radiation alarm says that only a habitat with a radiation shelter is safe, so
+  "inside" is not enough), II.15 (mission.json holds the battery restore share)
+Follow-up TODOs: none (engine, UI, config and research R6 change in the same PR)
+Source: playtest of 2026-11-15 (the battery seemed not to work, the switches looked on while the
+  machines had no power, the first spring had no parts to repair the panels, and the radiation
+  alarm said "keep everyone inside" while a habitat without a shelter protects nobody)
+Previous: 3.1.0 → 3.2.0 (MINOR: bringing an astronaut inside pauses their job until Resume)
 Modified sections: II.9 (a job paused by "Bring inside" / "Everyone inside" waits for the
   player's Resume; the least exposed free astronaut then takes it; radiation storms, the 75%
   automatic return and winter are unchanged)
@@ -325,7 +335,7 @@ Each upgrade is installed on one structure, takes 15 s and one astronaut outside
 | Item | Starting value |
 |---|---|
 | Structures | 1 habitat module, 1 mine, 2 solar panels, 1 oxygen generator, 1 ice melter, 1 pressurized greenhouse next to the habitat (all placed, all at Base) |
-| Materials | 60 hematite, 40 regolith, 0 iron, 0 steel, 0 repair parts |
+| Materials | 60 hematite, 40 regolith, 0 iron, 0 steel, 8 repair parts (two panel repairs) |
 | Reserves | 8 O₂, 20 water, 8 food (O₂ and food: two seasons for the crew; the water also feeds the greenhouse) |
 | Batteries | none |
 
@@ -341,7 +351,8 @@ Each upgrade is installed on one structure, takes 15 s and one astronaut outside
 **Power switches.** Each structure **type** (not each unit) has one switch: **Off / Base / Max**,
 applied to all structures of that type. Off draws 0 kW and produces nothing. Switches exist for:
 mine, oxygen generator, ice melter, iron refinery, greenhouse, repair workshop, steel factory.
-The habitat has no switch: it always draws its heating demand.
+The habitat has no switch: it always draws its heating demand. When the brownout switches a type
+off, its switch shows Off and says it comes back by itself to the player's setting.
 
 **Balance.** The HUD power meter shows production − demand.
 - Surplus charges batteries (1 EU per kW per second, no losses).
@@ -350,6 +361,9 @@ The habitat has no switch: it always draws its heating demand.
   steel factory → repair workshop → iron refinery → mine → ice melter → greenhouse → oxygen
   generator. The habitat is never switched off; if even its heating cannot be met, the base is
   **unheated** and the empty-reserve rule applies (II.2).
+- A switched-off type comes back by itself when production alone can run it, or when the
+  batteries hold **25% of their capacity** again; then everything runs on the batteries until
+  they are empty. The HUD shows the battery charge with a mark at that share.
 
 **Heating demand (kW, Base setting).** Max adds +4 kW for the greenhouse and the ice melter.
 Thermal insulation halves the cold add-on, the part above the spring and summer value.
@@ -501,6 +515,8 @@ event, and its text explains both the cold and the missing sunlight. Level 3 inf
 - One per cycle, at a seeded random time in spring, summer or autumn.
 - A **10-second alarm** sounds. The player taps **Take shelter** (all astronauts) or sends
   astronauts one by one into a habitat with a radiation shelter. Jobs pause and resume afterwards.
+  The alarm says that only a habitat with a radiation shelter is safe and, when the shelters have
+  no room for the whole crew, that the others are in danger even inside.
 - When the storm hits (lasting 20 s), astronauts outside or in a habitat without a shelter die.
 - The alert names the real solar particle event from NASA DONKI it is modeled on (date and link).
 
@@ -559,7 +575,7 @@ The contract PR replaces the v1 example config with these files (all owned by th
 | `upgrades.json` | id, target structure types, cost, effect, explain |
 | `seasons.json` | order, real sols, duration at 1×, solar output per season, heating tables per cycle |
 | `events.json` | per cycle and season: kind, interval range, duration, effects, explain, source |
-| `mission.json` | crew, colonists, needs per person, win targets, starting base, job times (upgrade, repair, clean, demolish), exposure rules (rate, recovery, automatic return and resume levels), brownout order, QTE parameters, radiation storm rules |
+| `mission.json` | crew, colonists, needs per person, win targets, starting base, job times (upgrade, repair, clean, demolish), exposure rules (rate, recovery, automatic return and resume levels), brownout order, battery restore share, QTE parameters, radiation storm rules |
 
 CI keeps enforcing the design rules on these files: every buildable structure and upgrade has a
 cost; every consumer has a power draw; every event has an explanation and a source; every text
@@ -623,4 +639,4 @@ Amendments go through a `shared/` pull request approved by a second team member;
 Part II also need one product owner's approval. Every pull request must respect the ownership
 table and the principles above.
 
-**Version**: 3.2.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-15
+**Version**: 3.3.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-15

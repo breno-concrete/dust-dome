@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 // UI tests for US1 (Dev B): real store, assertions on HUD elements, TDD test-first.
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { targets } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
+import { config } from '../../config/loadConfig'
 import { Hud } from './Hud'
 
 describe('Hud', () => {
@@ -151,5 +152,54 @@ describe('Hud', () => {
       `crew-member-${useGameStore.getState().game!.crew[0].id}`,
     )
     expect(exposedAstronaut.className).toContain('warning')
+  })
+
+  // Playtest 2026-11-15: the player could not tell whether the battery was storing energy.
+  describe('battery charge', () => {
+    const bank = config.structures.find((s) => s.power.kind === 'storage')!
+    const capacity = bank.power.kind === 'storage' ? bank.power.capacityEu : 0
+    function withBattery(batteryEu: number, balanceKw: number) {
+      act(() => {
+        const g = useGameStore.getState().game!
+        const site = { id: 'b1', type: bank.id, tile: [10, 10] as [number, number] }
+        useGameStore.setState({
+          game: {
+            ...g,
+            batteryEu,
+            structures: [...g.structures, { ...site, status: 'active', upgrades: [] }],
+            power: { ...g.power, balanceKw },
+          },
+        })
+      })
+    }
+
+    it('shows the battery charge next to power and says when it is charging', () => {
+      withBattery(capacity / 2, 3)
+      render(<Hud />)
+      const battery = screen.getByTestId('battery')
+      const bar = within(battery).getByRole('progressbar')
+      expect(bar.getAttribute('aria-valuenow')).toBe(String(capacity / 2))
+      expect(bar.getAttribute('aria-valuemax')).toBe(String(capacity))
+      expect(battery.textContent).toContain('50%')
+      expect(battery.textContent).toContain('Charging')
+    })
+
+    it('says the battery is in use when the base draws more than it makes', () => {
+      withBattery(capacity / 2, -3)
+      render(<Hud />)
+      expect(screen.getByTestId('battery').textContent).toContain('In use')
+    })
+
+    it('marks the charge at which switched-off machines come back', () => {
+      withBattery(0, 3)
+      render(<Hud />)
+      const mark = screen.getByTestId('battery-restore-mark')
+      expect(mark.style.left).toBe(`${config.mission.batteryRestoreShare * 100}%`)
+    })
+
+    it('says there is no battery yet when the base has no battery bank', () => {
+      render(<Hud />)
+      expect(screen.getByTestId('battery').textContent).toContain('No battery')
+    })
   })
 })
