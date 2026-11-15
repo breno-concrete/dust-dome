@@ -101,15 +101,15 @@ description: "Lista de tarefas executáveis para implementação da interface 2D
 
 ### Testes da História de Usuário 3 (TDD - Test-First) ⚠️
 
-- [ ] T022 [US3] Criar testes para o painel de chaves de energia (Off / Min / Max por tipo de estrutura) em `src/features/decisions/PowerPanel.test.tsx`
-- [ ] T023 [US3] Criar testes para a caixa de diálogo de briefing da Comandante Vega (pausa da missão, textos por ciclo/estação e dica pré-ciclo 3) em `src/features/decisions/BriefingDialog.test.tsx`
-- [ ] T024 [P] [US3] Criar testes para o modal de alarme de radiação (contagem regressiva de 10s, link do evento DONKI e ação `shelterAll`) em `src/features/decisions/RadiationAlarmModal.test.tsx`
+- [x] T022 [US3] Criar testes para o painel de chaves de energia (Off / Min / Max por tipo de estrutura) em `src/features/decisions/PowerPanel.test.tsx`
+- [x] T023 [US3] Criar testes para a caixa de diálogo de briefing da Comandante Vega (pausa da missão, textos por ciclo/estação e dica pré-ciclo 3) em `src/features/decisions/BriefingDialog.test.tsx`
+- [x] T024 [P] [US3] Criar testes para o modal de alarme de radiação (contagem regressiva de 10s, link do evento DONKI e ação `shelterAll`) em `src/features/decisions/RadiationAlarmModal.test.tsx`
 
 ### Implementação da História de Usuário 3
 
-- [ ] T025 [US3] Aprimorar `PowerPanel.tsx` para apresentar as chaves de modo com botões ativos e reflexo imediato no balanço em `src/features/decisions/PowerPanel.tsx`
-- [ ] T026 [US3] Aprimorar `BriefingDialog.tsx` para incluir retrato da Comandante Vega, formatação narrativa dos ciclos/estações e aviso obrigatório sobre o frio do Ano 3 em `src/features/decisions/BriefingDialog.tsx` e `src/features/decisions/Panel.module.css`
-- [ ] T027 [US3] Implementar o componente `RadiationAlarmModal.tsx` conectado ao estado `radiationStorm`, com contagem de 10 segundos, referência DONKI e botão "Abrigar Tripulação" chamando `shelterAll()` em `src/features/decisions/RadiationAlarmModal.tsx` e `src/features/decisions/Panel.module.css`
+- [x] T025 [US3] Aprimorar `PowerPanel.tsx` para apresentar as chaves de modo com botões ativos e reflexo imediato no balanço em `src/features/decisions/PowerPanel.tsx`
+- [x] T026 [US3] Aprimorar `BriefingDialog.tsx` para incluir retrato da Comandante Vega, formatação narrativa dos ciclos/estações e aviso obrigatório sobre o frio do Ano 3 em `src/features/decisions/BriefingDialog.tsx` e `src/features/decisions/Panel.module.css`
+- [x] T027 [US3] Implementar o componente `RadiationAlarmModal.tsx` conectado ao estado `radiationStorm`, com contagem de 10 segundos, referência DONKI e botão "Abrigar Tripulação" chamando `shelterAll()` em `src/features/decisions/RadiationAlarmModal.tsx` e `src/features/decisions/Panel.module.css`
 
 **Ponto de Controle**: As Histórias 1, 2 e 3 estão integradas e funcionais com todos os testes passando.
 
@@ -123,14 +123,16 @@ description: "Lista de tarefas executáveis para implementação da interface 2D
 
 ### Testes da História de Usuário 4 (TDD - Test-First) ⚠️
 
-- [ ] T028 [US4] Criar testes unitários para a tela inicial (navegação para missão, fontes científicas e alternância de idioma) em `src/features/title/TitleScreen.test.tsx`
-- [ ] T029 [P] [US4] Criar testes de acessibilidade e internacionalização transversal (`useT`) em `src/ui-kit/a11y.test.tsx`
+- [x] T028 [US4] Criar testes unitários para a tela inicial (navegação para missão, fontes científicas e alternância de idioma) em `src/features/title/TitleScreen.test.tsx`
+- [x] T028a [US4] Criar testes da linha do tempo da transição de pouso (funções puras) em `src/features/title/transition.test.ts` e da detecção de WebGL / movimento reduzido em `src/features/title/motion.test.ts`
+- [x] T029 [P] [US4] Criar testes de acessibilidade e internacionalização transversal (`useT`) em `src/ui-kit/a11y.test.tsx`
 
 ### Implementação da História de Usuário 4
 
-- [ ] T030 [US4] Refinar `TitleScreen.tsx` com arte visual tática, botões grandes e alternância fluida entre EN e PT em `src/features/title/TitleScreen.tsx`
-- [ ] T031 [US4] Adicionar regras de mídia responsiva (breakpoints para tablets e smartphones com gavetas de menu inferiores e cabeçalho flexível) em `src/features/hud/Hud.module.css` e `src/features/decisions/Panel.module.css`
-- [ ] T032 [US4] Revisar atributos ARIA (`aria-label`, `aria-live` para alertas vitais e foco de teclado) em todos os componentes em `src/features/hud/Hud.tsx` e `src/features/decisions/`
+- [x] T030 [US4] Refinar `TitleScreen.tsx` com arte visual tática, botões grandes e alternância fluida entre EN e PT em `src/features/title/TitleScreen.tsx`
+- [x] T030a [US4] Implementar o menu 3D low-poly (céu verde-azulado, logo Dust & Dome, Marte cor de areia com uma mini-base girando, conforme o modelo do Figma) e a transição "Começar missão" (aproximação, foguete passando pela câmera, pouso, fade para o jogo) em `src/features/title/MenuScene.tsx` e `src/features/title/transition.ts`, com início imediato sem WebGL, com movimento reduzido ou se a cena falhar, e botão "Pular"; o planeta já aparece com textura na hora (`planet.webp`, gerado da própria cena) e as construções e o satélite surgem uma a uma (`src/features/title/reveal.ts`) enquanto o three.js carrega
+- [x] T031 [US4] Adicionar regras de mídia responsiva (breakpoints para tablets e smartphones com gavetas de menu inferiores e cabeçalho flexível) em `src/features/hud/Hud.module.css` e `src/features/decisions/Panel.module.css`
+- [x] T032 [US4] Revisar atributos ARIA (`aria-label`, `aria-live` para alertas vitais e foco de teclado) em todos os componentes em `src/features/hud/Hud.tsx` e `src/features/decisions/`
 
 **Ponto de Controle**: Todas as 4 histórias de usuário estão completas, acessíveis, bilíngues e responsivas.
 

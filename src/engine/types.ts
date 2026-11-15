@@ -69,7 +69,12 @@ export interface Job {
   upgradeId?: UpgradeId
   astronautId: string | null
   remainingSeconds: number
-  status: 'queued' | 'active' | 'paused'
+  /**
+   * queued: waits for a free astronaut. active: an astronaut is on it. paused: blocked by an
+   * event (winter, dust storm), resumes by itself. held: the player brought its astronaut
+   * inside; nobody takes it until resumeJobs (constitution II.9).
+   */
+  status: 'queued' | 'active' | 'paused' | 'held'
 }
 
 /** An event occurrence that is currently affecting the base (Dev A writes these). */

@@ -54,5 +54,20 @@ atualizar:
 engine lê `activeEvents` (`solarFactor`, `blocksExternalJobs`, tempestades ativas) e os status das
 estruturas. Ver a seção "Fora do escopo da US2" em [spec.md](../spec.md).
 - Tempestades de radiação usam uma citação DONKI arquivada quando disponível.
+- `events.ts` pode importar `sepEvents()` de `src/data/donki`: o snapshot é um JSON estático
+  embutido no pacote, como os JSON da configuração, sem leitura de arquivo em runtime, e não cria
+  campo novo em `GameState` nem em `GameConfig`. A lógica da tempestade fica numa função interna
+  `updateRadiationStorm(state, config, dt, events: () => readonly SepEvent[])`, que recebe a
+  lista por uma função e é a que os testes chamam com `() => fixtures`. `updateEvents` mantém a
+  assinatura e passa a própria `sepEvents`, que só é chamada quando uma tempestade vai começar.
+  O plano das tempestades é exportado como `radiationPlan(seed, cycle, config)`, para os testes
+  calcularem o horário esperado sem copiar a lógica. Se a leitura do snapshot for considerada
+  "acesso a arquivos" pelo tech lead, o caminho alternativo é um pedido `shared/` para
+  `GameConfig` ganhar a lista.
+- Log da tempestade de radiação: uma entrada por tempestade, gravada uma vez, quando o aviso
+  começa (nenhuma → `warning`), com `kind` e `cause` `radiation_storm`. O `ref` tem dois
+  significados: a `url` do evento DONKI citado ou, quando não há evento (lista vazia), a palavra
+  `radiation_storm`. O debrief (US4) deve tratar os dois casos, e o caso sem evento não pode
+  inventar uma citação.
 - Ausência de estado de contrato necessário bloqueia a implementação e exige uma alteração
   `shared/` separada, não um cast local nem um fallback silencioso.

@@ -1,8 +1,8 @@
 // Owner: Dev B. Commander briefing at the start of every season; the game is
-// paused while it is open (constitution II.12). TODO(Dev B): commander portrait,
-// per-cycle texts from the POs, transition hint before cycle 3.
+// paused while it is open (constitution II.12). The texts come from narrator.json.
 import { seasonDef } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
+import { config } from '../../config/loadConfig'
 import { Button } from '../../ui-kit/Button'
 import { Icon } from '../../ui-kit/Icon'
 import { Modal } from '../../ui-kit/Modal'
@@ -21,6 +21,7 @@ export function BriefingDialog() {
   const t = useT()
   if (!briefing) return null
   const season = seasonDef(briefing.season)
+  const text = config.narrator.briefings[String(briefing.cycle)]?.[briefing.season]
 
   return (
     <Modal
@@ -39,9 +40,15 @@ export function BriefingDialog() {
         </span>
         <div>
           <strong>{t(strings.commander)}</strong>
-          <p>{season ? t(season.explain) : ''}</p>
+          <p>{text ? t(text.text) : season ? t(season.explain) : ''}</p>
         </div>
       </div>
+      {text?.warning && (
+        <p className={styles.briefingWarning} role="alert" data-testid="briefing-warning">
+          <Icon name="alert" size={22} />
+          <span>{t(text.warning)}</span>
+        </p>
+      )}
     </Modal>
   )
 }

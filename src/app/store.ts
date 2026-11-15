@@ -55,6 +55,8 @@ export interface GameStore {
   bringInside: (astronautId: string) => void
   /** Crew panel "everyone inside" and the radiation alarm's "Take shelter". */
   bringAllInside: () => void
+  /** "Resume" on a structure whose jobs were paused by bringInside / bringAllInside. */
+  resumeJobs: (structureId: string) => void
   /** @deprecated Same as bringAllInside; kept so the UI built on contract v1 keeps working. */
   shelterAll: () => void
   dismissBriefing: () => void
@@ -129,6 +131,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     demolish: (structureId) => withGame((g) => actions.demolish(g, config, structureId)),
     bringInside: (astronautId) => withGame((g) => actions.bringInside(g, config, astronautId)),
     bringAllInside: () => withGame((g) => actions.bringAllInside(g, config)),
+    resumeJobs: (structureId) => withGame((g) => actions.resumeJobs(g, config, structureId)),
     shelterAll: () => get().bringAllInside(),
     dismissBriefing: () => withGame((g) => actions.dismissBriefing(g)),
   }

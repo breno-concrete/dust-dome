@@ -17,6 +17,9 @@ const strings = {
   crew: { en: 'Crew', pt: 'Tripulação' },
   inside: { en: 'Sheltered', pt: 'Abrigado' },
   outside: { en: 'EVA', pt: 'Externo' },
+  allInside: { en: 'All inside', pt: 'Todos para dentro' },
+  bringInside: { en: 'Bring {name} inside', pt: 'Trazer {name} para dentro' },
+  bringInsideShort: { en: 'Bring in', pt: 'Trazer' },
   deceased: { en: 'Lost', pt: 'Perdido' },
   lifeSupport: { en: 'Life support reserves', pt: 'Reservas vitais' },
   gameClock: { en: 'Game clock', pt: 'Relógio do jogo' },
@@ -24,6 +27,13 @@ const strings = {
   powerDeficit: { en: 'Warning: power deficit!', pt: 'Alerta: falta de energia!' },
   powerStable: { en: 'Power grid stable', pt: 'Rede de energia estável' },
   radiation: { en: 'Radiation', pt: 'Radiação' },
+  speedControls: { en: 'Game speed controls', pt: 'Controles de velocidade' },
+  speedLabel: { en: '{n}x speed', pt: 'Velocidade {n}x' },
+  lowReserve: { en: 'Low reserve: {name}', pt: 'Reserva baixa: {name}' },
+  exposureAlert: {
+    en: '{name} is getting too much radiation',
+    pt: '{name} está recebendo muita radiação',
+  },
   materialsAndEnergy: { en: 'Materials and energy', pt: 'Materiais e energia' },
 }
 
@@ -44,6 +54,8 @@ export function Hud() {
   const game = useGameStore((s) => s.game)
   const speed = useGameStore((s) => s.speed)
   const setSpeed = useGameStore((s) => s.setSpeed)
+  const bringInside = useGameStore((s) => s.bringInside)
+  const bringAllInside = useGameStore((s) => s.bringAllInside)
   const left = useGameStore((s) => secondsLeftInSeason(s))
   const t = useT()
 
@@ -52,8 +64,22 @@ export function Hud() {
   const isPowerDeficit = game.power.balanceKw < 0
   const isPaused = speed === 0
 
+  // What a screen reader hears when something needs attention (kept quiet otherwise).
+  const alerts = [
+    ...VITALS.filter((id) => (game.stock[id] ?? 0) < crewNeed(id)).map((id) =>
+      t(strings.lowReserve).replace('{name}', t(config.resources.find((r) => r.id === id)?.name)),
+    ),
+    ...(isPowerDeficit ? [t(strings.powerDeficit)] : []),
+    ...game.crew
+      .filter((a) => a.alive && a.exposure >= 0.75)
+      .map((a) => t(strings.exposureAlert).replace('{name}', a.name.split(' ')[0]!)),
+  ]
+
   return (
     <header className={styles.hud} role="banner" aria-label={t(strings.missionHud)}>
+      <div role="status" aria-live="polite" className={styles.srOnly}>
+        {alerts.join('. ')}
+      </div>
       <section
         className={[styles.panel, styles.lifePanel].join(' ')}
         aria-label={t(strings.lifeSupport)}
@@ -96,7 +122,7 @@ export function Hud() {
           </span>
         </div>
         <div className={styles.timeDivider} aria-hidden="true" />
-        <div className={styles.speeds} role="group" aria-label="Game speed controls">
+        <div className={styles.speeds} role="group" aria-label={t(strings.speedControls)}>
           <Button
             className={[styles.timeButton, isPaused && styles.selectedTimeButton]
               .filter(Boolean)
@@ -117,7 +143,7 @@ export function Hud() {
                 .join(' ')}
               variant={speed === x ? 'active' : 'secondary'}
               onClick={() => setSpeed(x)}
-              aria-label={`${x}x speed`}
+              aria-label={t(strings.speedLabel).replace('{n}', String(x))}
               aria-pressed={speed === x}
             >
               {x}×
@@ -177,7 +203,17 @@ export function Hud() {
         data-testid="crew-panel"
         aria-label={t(strings.crew)}
       >
-        <h2 className={styles.crewHeading}>{t(strings.crew)}</h2>
+        <div className={styles.crewHeader}>
+          <h2 className={styles.crewHeading}>{t(strings.crew)}</h2>
+          <button
+            type="button"
+            className={styles.crewButton}
+            disabled={!game.crew.some((a) => a.alive && a.location === 'outside')}
+            onClick={bringAllInside}
+          >
+            {t(strings.allInside)}
+          </button>
+        </div>
         {game.crew.map((astronaut) => {
           const isWarning = astronaut.exposure >= 0.75
           const exposurePercent = Math.round(astronaut.exposure * 100)
@@ -209,6 +245,19 @@ export function Hud() {
                 </span>
               ) : (
                 <span className={styles.deceasedLabel}>{t(strings.deceased)}</span>
+              )}
+              {astronaut.alive && astronaut.location === 'outside' && (
+                <button
+                  type="button"
+                  className={styles.crewButton}
+                  aria-label={t(strings.bringInside).replace(
+                    '{name}',
+                    astronaut.name.split(' ')[0]!,
+                  )}
+                  onClick={() => bringInside(astronaut.id)}
+                >
+                  {t(strings.bringInsideShort)}
+                </button>
               )}
             </div>
           )

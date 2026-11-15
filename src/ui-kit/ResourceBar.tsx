@@ -1,7 +1,10 @@
 // Owner: Dev B. Visual resource meter with win target marker and low-reserve alert pulse.
 import type { HTMLAttributes, ReactNode } from 'react'
 import { Icon } from './Icon'
+import { useT } from './i18n'
 import styles from './ResourceBar.module.css'
+
+const strings = { low: { en: 'Low reserve warning!', pt: 'Reserva baixa!' } }
 
 export interface ResourceBarProps extends HTMLAttributes<HTMLDivElement> {
   id: string
@@ -30,6 +33,7 @@ export function ResourceBar({
   className,
   ...rest
 }: ResourceBarProps) {
+  const t = useT()
   const effectiveMax = max ?? Math.max(target * 1.25, current, 1)
   const fillPercent = Math.min(100, Math.max(0, (current / effectiveMax) * 100))
   const targetPercent = Math.min(100, Math.max(0, (target / effectiveMax) * 100))
@@ -49,7 +53,7 @@ export function ResourceBar({
     <div
       className={containerClasses}
       role="progressbar"
-      aria-label={`${id} reserve`}
+      aria-label={typeof label === 'string' ? label : id}
       aria-valuenow={Math.floor(current)}
       aria-valuemin={0}
       aria-valuemax={target}
@@ -69,7 +73,7 @@ export function ResourceBar({
               / {target} {unit}
             </span>
             {isLow && (
-              <span className={styles.alertBadge} title="Low reserve warning!">
+              <span className={styles.alertBadge} title={t(strings.low)}>
                 <Icon name="alert" size={16} />
               </span>
             )}

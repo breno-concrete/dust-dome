@@ -110,7 +110,29 @@ uma estrutura ausente; sem alvo elegível, aquele alvo se perde.
 
 ## Tempestade de radiação
 
-Armazenada em `GameState.radiationStorm` e agendada pelo mapa `nextEventAt` existente.
+Armazenada em `GameState.radiationStorm`. O horário das tempestades **não** fica em
+`nextEventAt`: os testes da US1 exigem que esse mapa tenha só as regras de clima, e o
+`GameState` não tem outro campo para uma tempestade que ainda não começou. O plano de cada ciclo,
+`radiationPlan(seed, cycle, config)` (exportado por `events.ts`), é uma função pura, sorteada com
+os helpers de `rng.ts` num fluxo próprio, iniciado pela seed misturada com o ciclo e uma
+constante fixa. Não lê nem grava `state.rng`, então tempestades e poeira não deslocam os sorteios
+umas das outras (testado). A tempestade começa no tick em que seu horário cai em
+`(elapsed − dt, elapsed]`; antes de ciclo `fromCycle` e depois do último ciclo o plano é vazio.
+
+- A tempestade `n` do ciclo começa na `n`-ésima fatia do tempo permitido (estações de
+  `radiationStorm.seasons`); toda fatia menos a última deixa espaço para uma tempestade inteira,
+  então duas tempestades nunca se sobrepõem.
+- Nunca começa nos primeiros `warningSeconds` de uma estação, quando o briefing da comandante
+  pausa o jogo, e começa cedo o bastante para o aviso e a fase ativa acabarem antes do fim da
+  estação. A margem reaproveita `warningSeconds` (nenhum número novo no código); um valor próprio
+  exigiria um campo novo na config (`content/` + `shared/`).
+- Os tempos das fases contam do início planejado, nunca do tick, e a tempestade avança no máximo
+  uma fase por tick: o aviso sempre aparece e o impacto sempre acontece. Por isso a fase fica em
+  `radiationStorm` e não é derivada só do `elapsed`: um tick longo que passa do fim da tempestade
+  ainda mostra o aviso.
+- Log: uma entrada por tempestade, gravada uma vez, quando o aviso começa (nenhuma → `warning`):
+  `kind` `radiation_storm`, `at` = início planejado, `ref` = `url` do evento DONKI citado (ou a
+  palavra `radiation_storm` se não houver), `cause` `radiation_storm`.
 
 | Campo | Tipo | Regras |
 |---|---|---|
@@ -128,33 +150,70 @@ O aviso dura `mission.radiationStorm.warningSeconds`; a fase ativa dura
 `mission.radiationStorm.durationSeconds`. A tempestade é agendada somente a partir do ciclo e da
 estação configurados e no máximo pela quantidade `perCycle` configurada.
 
+### Escolha do evento DONKI (sem repetir na partida)
+
+A lista de eventos (`SepEvent[]`, na ordem do snapshot) é dividida em grupos por posição, e cada
+tempestade sorteia só dentro do seu grupo, com o `nextIndex` da seed:
+
+- Número de grupos: `(seasons.cycles − radiationStorm.fromCycle + 1) × radiationStorm.perCycle`
+  (hoje 3). Nenhum desses números fica no código.
+- Grupo da tempestade: `(ciclo − fromCycle) × perCycle + n`, em que `n` é a ordem da tempestade
+  dentro do ciclo (0 quando `perCycle` é 1).
+- O evento `i` da lista pertence ao grupo `i % grupos`. Os grupos não se cruzam, então duas
+  tempestades da mesma partida nunca citam o mesmo evento.
+- Grupo vazio (lista com menos eventos do que grupos): essa tempestade sorteia na lista inteira.
+  Lista vazia: `basedOn` é `null`.
+- A ordem da lista deve ser estável (a do snapshot); a mesma seed escolhe os mesmos eventos.
+- Cada tempestade consome um `nextIndex`, como antes.
+
 ## Snapshot DONKI
 
 Armazenado como JSON versionado em `src/data/snapshots/`.
 
-Formato externo esperado:
+Um arquivo por mês, nomeado `<AAAA-MM>.json`. Formato do arquivo:
 
 ```text
 {
   range: string,
   fetchedAt: string,
-  flr: unknown[],
-  sep: SepEvent[],
-  cme: unknown[]
+  sep: SepRecord[],     // registros brutos do DONKI, como a API devolveu
+  flr?: unknown[],      // opcional: omitido no snapshot atual
+  cme?: unknown[]       // opcional: omitido no snapshot atual
 }
 ```
 
-O jogo usa somente registros SEP com:
+O snapshot atual traz só `{ range, fetchedAt, sep }`. `flr` e `cme` são opcionais: quando não
+existem, a chave é omitida, nunca gravada como `[]` (um array vazio pareceria "não houve
+erupções"). O parser ignora essas chaves se existirem e não as exige. O jogo só lê `sep`.
+
+Cada `SepRecord` é o registro da API. Campos que o jogo lê:
 
 ```text
 {
-  date: string,
-  url: string
+  sepID: string,
+  eventTime: string,   // ex.: "2024-05-09T13:59Z"
+  link: string,        // https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/...
+  ...                  // demais campos da API, preservados sem edição
 }
 ```
 
-Um conjunto elegível vazio ou inválido retorna `null` na seleção e deve ser informado
-explicitamente pelo chamador; nenhuma citação pode ser fabricada.
+A conversão para o tipo do jogo acontece em `readSepSnapshot(raw)` (`src/data/donki.ts`), só com o
+formato da API:
+
+```text
+SepEvent = { date: string, url: string }     // date = eventTime, url = link
+readSepSnapshot(raw: unknown): { events: SepEvent[]; problems: string[] }
+```
+
+- Registro sem `eventTime` válido (formato e `Date`) ou sem `link` `https://` é descartado e
+  entra em `problems`.
+- Snapshot corrompido devolve `problems` preenchido, sem lançar erro.
+- Mês vazio (`sep: []`) devolve `events: []` e `problems: []`.
+
+Um conjunto elegível vazio ou inválido retorna `null` na seleção (`pickSepEvent`), e o problema é
+informado por `problems` (e por `console.warn` em `sepEvents()`); nenhuma citação pode ser
+fabricada. Para o alerta nesse caso, o texto exato é combinado com o PO de UI; ele não pode
+inventar uma fonte.
 
 ## Entrada do log da missão
 
