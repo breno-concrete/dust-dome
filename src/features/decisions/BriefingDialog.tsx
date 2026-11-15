@@ -8,7 +8,7 @@ import { Icon } from '../../ui-kit/Icon'
 import { Modal } from '../../ui-kit/Modal'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
-import { moodForBriefing } from './vegaPortrait'
+import { moodForBriefing } from './vegaMood'
 import { VegaPortrait } from './VegaPortrait'
 
 const strings = {
