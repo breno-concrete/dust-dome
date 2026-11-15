@@ -4,7 +4,7 @@
 // accents (#ff7a29), mint-green bio/energy highlights (#5bd6a0), stilt foundations,
 // and non-color visual cues for building, damaged, clogged, short-circuit, and frost.
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import {
   CatmullRomCurve3,
   ExtrudeGeometry,
@@ -31,11 +31,15 @@ const WATER_BLUE = '#63c5da'
 const MARS_ROCK = '#944222'
 const SELECTED_EMISSIVE = '#ffb347'
 const WARM_WINDOW_LIGHT = '#ffb84d'
-const FROST_ICE = '#e6f7ff'
-const FROST_GLOW = '#8ce0ff'
-const DUST_DRIFT = '#c77843'
+const FROST_ICE = '#dff4ff'
+const FROST_ICE_DEEP = '#74c6f7'
+const FROST_GLOW = '#5ecbff'
+const DUST_DRIFT = '#d4763c'
+const DUST_DRIFT_DARK = '#9e4c21'
 const SPARK_YELLOW = '#ffe066'
+const SPARK_CYAN = '#7df9ff'
 const SMOKE_DARK = '#3d3532'
+const SMOKE_CHAR = '#282324'
 
 // Shared datum & static procedural geometries for Habitat (2x2 footprint <= 1.76 x 1.76)
 const HAB_BASE_Y = 0.022 // clears FoundationPad trim ring top (0.02 above deck)
@@ -166,13 +170,14 @@ const HABITAT_GEO = {
     8,
   ),
   frostShell: latheOctagon([
-    [0.615, HAB_BASE_Y + 0.06],
-    [0.632, 0.35],
-    [0.565, 0.49],
-    [0.445, 0.635],
-    [0.275, 0.71],
-    [0.255, 0.81],
-    [0, 0.835],
+    [0.578, 0.368],
+    [0.59, 0.39],
+    [0.556, 0.488],
+    [0.438, 0.632],
+    [0.278, 0.706],
+    [0.258, 0.795],
+    [0.215, 0.818],
+    [0, 0.84],
   ]),
 }
 
@@ -1057,7 +1062,7 @@ export function StructureModel({
     <group position={position} onClick={handleClick}>
       {/* Ground-anchored selection glow pad beneath the lifted structure */}
       {selected && !preview && (
-        <mesh position={[0, 0.015, 0]}>
+        <mesh position={[0, 0.015, 0]} raycast={NOOP_RAYCAST}>
           <boxGeometry args={[size * 0.94, 0.012, size * 0.94]} />
           <meshStandardMaterial
             color={SELECTED_EMISSIVE}
@@ -1072,7 +1077,18 @@ export function StructureModel({
 
       <group ref={liftRef}>
         {/* Elevated stilt foundation pad (Lote 3 visual reference) */}
-        <FoundationPad size={size} statusColor={statusColor} />
+        <FoundationPad size={size} statusColor={statusColor} nightGlow={nightGlow} />
+
+        {/* Subtle warm local pool light on larger active structures during winter darkness */}
+        {nightGlow && size >= 2 && (
+          <pointLight
+            position={[0, 0.78, 0]}
+            color="#ffbe66"
+            intensity={1.7}
+            distance={4.2}
+            decay={2}
+          />
+        )}
 
         {/* Structure-specific low-poly model (Lote 1 & 2 visual reference) */}
         <group rotation={isTiltedDamaged ? [0.05, 0, -0.09] : [0, 0, 0]}>
@@ -1092,6 +1108,7 @@ export function StructureModel({
             cue={stateVisual.nonColorCue}
             frosted={stateVisual.frosted}
             size={size}
+            type={structure.type}
           />
         )}
       </group>
@@ -1099,9 +1116,18 @@ export function StructureModel({
   )
 }
 
-function FoundationPad({ size, statusColor }: { size: number; statusColor: string }) {
+function FoundationPad({
+  size,
+  statusColor,
+  nightGlow,
+}: {
+  size: number
+  statusColor: string
+  nightGlow: boolean
+}) {
   const span = size * 0.88
   const legOffset = span * 0.4
+  const bollardOffset = span * 0.44
   return (
     <group>
       {/* Platform deck */}
@@ -1128,6 +1154,29 @@ function FoundationPad({ size, statusColor }: { size: number; statusColor: strin
         <boxGeometry args={[span * 0.96, 0.02, span * 0.96]} />
         <meshStandardMaterial color={statusColor} flatShading />
       </mesh>
+      {/* Diagonal corner deck perimeter light bollards (illuminate during winter darkness) */}
+      {(
+        [
+          [-bollardOffset, bollardOffset],
+          [bollardOffset, -bollardOffset],
+        ] as const
+      ).map(([bx, bz], idx) => (
+        <group key={`bollard-${idx}`} position={[bx, 0.14, bz]}>
+          <mesh position={[0, 0.03, 0]} raycast={NOOP_RAYCAST}>
+            <cylinderGeometry args={[0.022, 0.028, 0.06, 6]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0, 0.07, 0]} raycast={NOOP_RAYCAST}>
+            <cylinderGeometry args={[0.024, 0.022, 0.026, 6]} />
+            <meshStandardMaterial
+              color={nightGlow ? WARM_WINDOW_LIGHT : '#566475'}
+              emissive={nightGlow ? WARM_WINDOW_LIGHT : '#000000'}
+              emissiveIntensity={nightGlow ? 2.1 : 0}
+              flatShading
+            />
+          </mesh>
+        </group>
+      ))}
     </group>
   )
 }
@@ -1289,151 +1338,718 @@ function StructureMesh({
   }
 }
 
+const STRUCTURE_CUE_HEIGHT: Record<string, number> = {
+  solar_panel: 0.82,
+  battery: 0.84,
+  repair_workshop: 0.9,
+  ice_melter: 0.92,
+  oxygen_generator: 0.96,
+  steel_factory: 0.98,
+  greenhouse: 1.06,
+  habitat: 1.14,
+  nuclear_reactor: 1.16,
+  iron_refinery: 1.36,
+  mine: 1.44,
+}
+
+function getStructureCueHeight(type: string, size: number) {
+  return STRUCTURE_CUE_HEIGHT[type] ?? (size >= 2 ? 1.16 : 0.88)
+}
+
+interface DustCapPlacement {
+  pos: readonly [number, number, number]
+  rot?: readonly [number, number, number]
+  scale: readonly [number, number, number]
+}
+
+const DUST_CAPS_BY_TYPE: Record<string, ReadonlyArray<DustCapPlacement>> = {
+  solar_panel: [
+    { pos: [-0.14, 0.56, -0.02], rot: [0.48, 0.2, 0], scale: [0.22, 0.06, 0.16] },
+    { pos: [0.16, 0.52, 0.09], rot: [0.48, -0.3, 0], scale: [0.18, 0.05, 0.15] },
+  ],
+  battery: [
+    { pos: [-0.12, 0.68, 0.04], rot: [0, 0.4, 0], scale: [0.18, 0.07, 0.14] },
+    { pos: [0.15, 0.2, 0.24], rot: [0, -0.5, 0], scale: [0.16, 0.08, 0.12] },
+  ],
+  oxygen_generator: [
+    { pos: [-0.15, 0.85, -0.04], rot: [0, 0.3, 0], scale: [0.15, 0.05, 0.15] },
+    { pos: [-0.14, 0.22, 0.25], rot: [0, -0.4, 0], scale: [0.18, 0.08, 0.12] },
+  ],
+  ice_melter: [
+    { pos: [0.23, 0.43, 0.24], rot: [0, 0.5, 0], scale: [0.14, 0.06, 0.14] },
+    { pos: [-0.24, 0.22, 0.14], rot: [0, -0.3, 0], scale: [0.17, 0.08, 0.14] },
+  ],
+  repair_workshop: [
+    { pos: [0.2, 0.27, 0.22], rot: [0, 0.2, 0], scale: [0.16, 0.06, 0.14] },
+    { pos: [-0.1, 0.2, -0.24], rot: [0, -0.5, 0], scale: [0.18, 0.08, 0.12] },
+  ],
+  habitat: [
+    { pos: [0.72, 0.2, 0.18], rot: [0, 0.4, 0], scale: [0.22, 0.09, 0.16] },
+    { pos: [-0.46, 0.22, -0.46], rot: [0, -0.7, 0], scale: [0.24, 0.1, 0.2] },
+    { pos: [0.24, 0.72, -0.22], rot: [0.25, 0.4, -0.25], scale: [0.19, 0.07, 0.17] },
+  ],
+  greenhouse: [
+    { pos: [-0.64, 0.42, -0.18], rot: [0, 0.2, 0.3], scale: [0.14, 0.1, 0.18] },
+    { pos: [0.74, 0.2, 0.18], rot: [0, 0.5, 0], scale: [0.22, 0.09, 0.16] },
+    { pos: [0.05, 0.24, 0.56], rot: [0, 0.1, 0], scale: [0.34, 0.08, 0.14] },
+  ],
+  mine: [
+    { pos: [-0.32, 0.33, 0.32], rot: [0, 0.3, 0], scale: [0.22, 0.09, 0.2] },
+    { pos: [0.46, 0.2, 0.46], rot: [0, -0.4, 0], scale: [0.24, 0.09, 0.2] },
+  ],
+  iron_refinery: [
+    { pos: [-0.24, 0.24, 0.52], rot: [0, 0.2, 0], scale: [0.28, 0.09, 0.18] },
+    { pos: [0.42, 0.2, 0.48], rot: [0, -0.5, 0], scale: [0.24, 0.09, 0.2] },
+  ],
+  steel_factory: [
+    { pos: [0.22, 0.25, 0.56], rot: [0, 0.15, 0], scale: [0.24, 0.08, 0.2] },
+    { pos: [-0.38, 0.2, 0.56], rot: [0, -0.4, 0], scale: [0.26, 0.09, 0.18] },
+  ],
+  nuclear_reactor: [
+    { pos: [0.32, 0.22, 0.42], rot: [0, 0.3, 0], scale: [0.26, 0.09, 0.2] },
+    { pos: [-0.34, 0.22, -0.34], rot: [0, -0.6, 0], scale: [0.28, 0.09, 0.22] },
+  ],
+}
+
+const CUE_GEO = {
+  sparkBolt: (() => {
+    const s = new Shape()
+    s.moveTo(0.03, 0.24)
+    s.lineTo(-0.1, 0.035)
+    s.lineTo(-0.01, 0.035)
+    s.lineTo(-0.075, -0.2)
+    s.lineTo(0.11, 0.025)
+    s.lineTo(0.015, 0.025)
+    s.closePath()
+    const g = new ExtrudeGeometry(s, {
+      depth: 0.044,
+      bevelEnabled: false,
+    })
+    g.translate(0, 0, -0.022)
+    return g
+  })(),
+  hazardPrism: (() => {
+    const s = new Shape()
+    s.moveTo(0, 0.18)
+    s.lineTo(-0.15, -0.1)
+    s.lineTo(0.15, -0.1)
+    s.closePath()
+    const g = new ExtrudeGeometry(s, {
+      depth: 0.06,
+      bevelEnabled: true,
+      bevelThickness: 0.01,
+      bevelSize: 0.01,
+      bevelSegments: 1,
+    })
+    g.translate(0, 0, -0.03)
+    return g
+  })(),
+}
+
 function NonColorCueOverlay({
   cue,
   frosted,
   size,
+  type,
 }: {
   cue: NonColorCue
   frosted: boolean
   size: number
+  type: string
 }) {
-  const half = size * 0.42
+  const topY = getStructureCueHeight(type, size)
   return (
     <group>
-      {/* Construction scaffolding posts & crossbeams */}
-      {cue === 'construction' && (
-        <group>
-          {(
-            [
-              [-half, -half],
-              [half, -half],
-              [-half, half],
-              [half, half],
-            ] as const
-          ).map(([px, pz], idx) => (
-            <mesh key={idx} position={[px, 0.45, pz]}>
-              <cylinderGeometry args={[0.03, 0.03, 0.85, 6]} />
-              <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      {cue === 'construction' && <ConstructionCue size={size} topY={topY} />}
+      {cue === 'damage' && <DamageCue size={size} topY={topY} />}
+      {cue === 'dust' && <DustCue size={size} type={type} />}
+      {cue === 'sparks' && <SparksCue size={size} topY={topY} />}
+      {(cue === 'frost' || frosted) && <FrostCue />}
+    </group>
+  )
+}
+
+function ConstructionCue({ size, topY }: { size: number; topY: number }) {
+  const beaconMatRef = useRef<MeshStandardMaterial>(null)
+  const trolleyRef = useRef<Group>(null)
+  const hookRef = useRef<Group>(null)
+  const weldRef = useRef<Mesh>(null)
+  const weldMatRef = useRef<MeshStandardMaterial>(null)
+  const baseY = 0.14
+  const half = size * 0.435
+  const height = topY - baseY
+  const midY = baseY + height * 0.5
+  const postR = size >= 2 ? 0.028 : 0.021
+  const beamThick = size >= 2 ? 0.038 : 0.028
+  const cableLen = Math.max(0.16, height * 0.34)
+  const trolleyTravel = half * 0.68
+
+  const { diagBraces, span } = useMemo(() => {
+    const corners: ReadonlyArray<readonly [number, number]> = [
+      [-half, -half],
+      [half, -half],
+      [half, half],
+      [-half, half],
+    ]
+    const braces = corners.map(([ax, az], idx) => {
+      const [bx, bz] = corners[(idx + 1) % 4]!
+      return idx % 2 === 0
+        ? makeStrutTransform([ax, baseY + 0.04, az], [bx, topY - 0.03, bz])
+        : makeStrutTransform([bx, baseY + 0.04, bz], [ax, topY - 0.03, az])
+    })
+    return { diagBraces: braces, span: half * 2 + beamThick }
+  }, [half, baseY, topY, beamThick])
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime
+    if (beaconMatRef.current) {
+      beaconMatRef.current.emissiveIntensity = 0.4 + 0.85 * (0.5 + 0.5 * Math.sin(t * 5.2))
+    }
+    if (trolleyRef.current) {
+      trolleyRef.current.position.x = Math.sin(t * 1.15) * trolleyTravel
+    }
+    if (hookRef.current) {
+      const lift = 0.55 + 0.38 * Math.sin(t * 2.15 + 0.6)
+      hookRef.current.scale.y = lift
+      hookRef.current.position.y = -cableLen * lift * 0.5
+    }
+    if (weldRef.current && weldMatRef.current) {
+      const burst = Math.sin(t * 19.0) * Math.sin(t * 7.3)
+      const active = burst > 0.25 ? (burst - 0.25) / 0.75 : 0
+      const s = 0.35 + active * 1.25
+      weldRef.current.scale.set(s, s, s)
+      weldRef.current.rotation.y = t * 6.0
+      weldMatRef.current.emissiveIntensity = 0.15 + active * 2.4
+    }
+  })
+
+  return (
+    <group>
+      {/* Corner footplates and vertical gantry posts */}
+      {(
+        [
+          [-half, -half],
+          [half, -half],
+          [-half, half],
+          [half, half],
+        ] as const
+      ).map(([px, pz], idx) => (
+        <group key={`post-${idx}`} position={[px, 0, pz]}>
+          <mesh position={[0, baseY + 0.015, 0]} raycast={NOOP_RAYCAST}>
+            <boxGeometry args={[beamThick * 2.1, 0.03, beamThick * 2.1]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0, midY, 0]} raycast={NOOP_RAYCAST}>
+            <cylinderGeometry args={[postR, postR * 1.12, height, 6]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Solid low-poly top perimeter gantry frame */}
+      {([-half, half] as const).map((pz, idx) => (
+        <mesh key={`top-x-${idx}`} position={[0, topY, pz]} raycast={NOOP_RAYCAST}>
+          <boxGeometry args={[span, beamThick, beamThick]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+      ))}
+      {([-half, half] as const).map((px, idx) => (
+        <mesh key={`top-z-${idx}`} position={[px, topY, 0]} raycast={NOOP_RAYCAST}>
+          <boxGeometry args={[beamThick, beamThick, span]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+      ))}
+
+      {/* Mid-height horizontal tie rails on rear faces for clear scaffolding depth */}
+      <mesh position={[0, midY, -half]} raycast={NOOP_RAYCAST}>
+        <boxGeometry args={[span * 0.96, beamThick * 0.65, beamThick * 0.65]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <mesh position={[-half, midY, 0]} raycast={NOOP_RAYCAST}>
+        <boxGeometry args={[beamThick * 0.65, beamThick * 0.65, span * 0.96]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Diagonal truss cross-braces on all 4 gantry faces */}
+      {diagBraces.map((brace, idx) => (
+        <mesh
+          key={`brace-${idx}`}
+          position={brace.position}
+          quaternion={brace.quaternion}
+          raycast={NOOP_RAYCAST}
+        >
+          <cylinderGeometry args={[postR * 0.5, postR * 0.5, brace.length, 4]} />
+          <meshStandardMaterial color={idx < 2 ? SAFETY_ORANGE : METAL_DARK} flatShading />
+        </mesh>
+      ))}
+
+      {/* Overhead hoist bridge beam, sliding trolley crane & pulsing top beacon */}
+      <mesh position={[0, topY + beamThick * 0.9, 0]} raycast={NOOP_RAYCAST}>
+        <boxGeometry args={[span, beamThick * 1.15, beamThick * 1.5]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <group ref={trolleyRef} position={[0, topY + beamThick * 0.4, 0]}>
+        {/* Sliding hoist carriage */}
+        <mesh raycast={NOOP_RAYCAST}>
+          <boxGeometry args={[beamThick * 2.8, beamThick * 1.3, beamThick * 2.2]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+        {/* Extending hoist cable + suspended hull crate */}
+        <group ref={hookRef} position={[0, -cableLen * 0.5, 0]}>
+          <mesh raycast={NOOP_RAYCAST}>
+            <cylinderGeometry args={[0.008, 0.008, cableLen, 4]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0, -cableLen * 0.54, 0]} raycast={NOOP_RAYCAST}>
+            <boxGeometry args={[beamThick * 2.1, beamThick * 1.4, beamThick * 1.6]} />
+            <meshStandardMaterial color={HULL_GRAY} flatShading />
+          </mesh>
+        </group>
+      </group>
+
+      {/* Intermittent welding flash on the front-right scaffolding post */}
+      <mesh ref={weldRef} position={[half * 0.96, midY * 0.88, half * 0.96]} raycast={NOOP_RAYCAST}>
+        <octahedronGeometry args={[size >= 2 ? 0.065 : 0.048, 0]} />
+        <meshStandardMaterial
+          ref={weldMatRef}
+          color="#fff1b8"
+          emissive="#7ce8ff"
+          emissiveIntensity={1.2}
+          flatShading
+        />
+      </mesh>
+
+      <mesh position={[0, topY + beamThick * 2.1, 0]} raycast={NOOP_RAYCAST}>
+        <cylinderGeometry args={[beamThick * 1.35, beamThick * 1.75, beamThick * 1.6, 6]} />
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+      <mesh position={[0, topY + beamThick * 3.5, 0]} raycast={NOOP_RAYCAST}>
+        <octahedronGeometry args={[size >= 2 ? 0.085 : 0.065, 0]} />
+        <meshStandardMaterial
+          ref={beaconMatRef}
+          color="#ffb84d"
+          emissive="#ffb84d"
+          emissiveIntensity={0.85}
+          flatShading
+        />
+      </mesh>
+    </group>
+  )
+}
+
+const SMOKE_PHASES = [0, 0.33, 0.66] as const
+
+function DamageCue({ size, topY }: { size: number; topY: number }) {
+  const puff0Ref = useRef<Mesh>(null)
+  const puff1Ref = useRef<Mesh>(null)
+  const puff2Ref = useRef<Mesh>(null)
+  const mat0Ref = useRef<MeshStandardMaterial>(null)
+  const mat1Ref = useRef<MeshStandardMaterial>(null)
+  const mat2Ref = useRef<MeshStandardMaterial>(null)
+  const beaconGroupRef = useRef<Group>(null)
+  const beaconMatRef = useRef<MeshStandardMaterial>(null)
+
+  const scaleUnit = size >= 2 ? 1.18 : 0.9
+  const smokeBaseY = topY * 0.62
+  const riseSpan = 0.72 * scaleUnit
+  const edge = size * 0.36
+
+  useFrame(({ clock }) => {
+    const tNow = clock.elapsedTime
+    const puffs = [puff0Ref.current, puff1Ref.current, puff2Ref.current]
+    const mats = [mat0Ref.current, mat1Ref.current, mat2Ref.current]
+
+    for (let i = 0; i < 3; i++) {
+      const puff = puffs[i]
+      const mat = mats[i]
+      if (!puff || !mat) continue
+      const phase = (tNow * 0.42 + SMOKE_PHASES[i]!) % 1
+      const y = smokeBaseY + phase * riseSpan
+      const driftX = -0.06 + phase * 0.24 + Math.sin(tNow * 1.8 + i * 2.1) * 0.04
+      const driftZ = 0.04 - phase * 0.14 + Math.cos(tNow * 1.5 + i * 1.7) * 0.03
+      const radiusScale = (0.11 + Math.sin(phase * Math.PI) * 0.16) * scaleUnit
+      puff.position.set(driftX, y, driftZ)
+      puff.scale.set(radiusScale, radiusScale * 0.85, radiusScale)
+      puff.rotation.set(tNow * 0.4 + i, tNow * 0.6 + i, 0)
+      mat.opacity = Math.max(0.05, 0.88 * (1 - phase))
+    }
+
+    if (beaconGroupRef.current && beaconMatRef.current) {
+      beaconGroupRef.current.position.y = topY + 0.28 + Math.sin(tNow * 3.5) * 0.035
+      beaconGroupRef.current.rotation.y = Math.PI / 4 + Math.sin(tNow * 1.4) * 0.28
+      beaconMatRef.current.emissiveIntensity = 0.4 + 0.7 * (0.5 + 0.5 * Math.sin(tNow * 6.5))
+    }
+  })
+
+  return (
+    <group>
+      {/* Scorched & buckled debris plates settled on FoundationPad perimeter */}
+      <mesh position={[-edge, 0.158, edge]} rotation={[0.28, 0.5, -0.35]} raycast={NOOP_RAYCAST}>
+        <boxGeometry args={[0.16 * scaleUnit, 0.022, 0.11 * scaleUnit]} />
+        <meshStandardMaterial color={SMOKE_CHAR} flatShading />
+      </mesh>
+      <mesh
+        position={[edge, 0.16, edge * 0.72]}
+        rotation={[-0.22, -0.7, 0.4]}
+        raycast={NOOP_RAYCAST}
+      >
+        <boxGeometry args={[0.13 * scaleUnit, 0.02, 0.1 * scaleUnit]} />
+        <meshStandardMaterial color="#8a411f" flatShading />
+      </mesh>
+      <mesh
+        position={[edge * 0.8, 0.156, -edge]}
+        rotation={[0.32, 0.3, 0.28]}
+        raycast={NOOP_RAYCAST}
+      >
+        <boxGeometry args={[0.12 * scaleUnit, 0.02, 0.09 * scaleUnit]} />
+        <meshStandardMaterial color={SMOKE_CHAR} flatShading />
+      </mesh>
+
+      {/* Three rising & drifting dark low-poly smoke plumes */}
+      <mesh ref={puff0Ref} position={[0, smokeBaseY, 0]} raycast={NOOP_RAYCAST}>
+        <dodecahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial
+          ref={mat0Ref}
+          color={SMOKE_DARK}
+          transparent
+          opacity={0.8}
+          depthWrite={false}
+          flatShading
+        />
+      </mesh>
+      <mesh ref={puff1Ref} position={[0, smokeBaseY + 0.25, 0]} raycast={NOOP_RAYCAST}>
+        <dodecahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial
+          ref={mat1Ref}
+          color={SMOKE_CHAR}
+          transparent
+          opacity={0.65}
+          depthWrite={false}
+          flatShading
+        />
+      </mesh>
+      <mesh ref={puff2Ref} position={[0, smokeBaseY + 0.45, 0]} raycast={NOOP_RAYCAST}>
+        <dodecahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial
+          ref={mat2Ref}
+          color={SMOKE_DARK}
+          transparent
+          opacity={0.45}
+          depthWrite={false}
+          flatShading
+        />
+      </mesh>
+
+      {/* Pulsing hazard warning beacon (!) clearly above the structure, double-sided */}
+      <group ref={beaconGroupRef} position={[0, topY + 0.28, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <mesh geometry={CUE_GEO.hazardPrism} position={[0, 0.05, 0]} raycast={NOOP_RAYCAST}>
+          <meshStandardMaterial
+            ref={beaconMatRef}
+            color={SAFETY_ORANGE}
+            emissive={SAFETY_ORANGE}
+            emissiveIntensity={0.85}
+            flatShading
+          />
+        </mesh>
+        {([-0.038, 0.038] as const).map((zOff, idx) => (
+          <group key={idx} position={[0, 0, zOff]}>
+            <mesh position={[0, 0.09, 0]} raycast={NOOP_RAYCAST}>
+              <boxGeometry args={[0.04, 0.1, 0.016]} />
+              <meshStandardMaterial color={METAL_DARK} flatShading />
             </mesh>
-          ))}
-          <mesh position={[0, 0.86, 0]}>
-            <boxGeometry args={[size * 0.88, 0.04, size * 0.88]} />
-            <meshStandardMaterial color={SAFETY_ORANGE} wireframe />
-          </mesh>
-        </group>
-      )}
+            <mesh position={[0, 0.002, 0]} raycast={NOOP_RAYCAST}>
+              <boxGeometry args={[0.04, 0.036, 0.016]} />
+              <meshStandardMaterial color={METAL_DARK} flatShading />
+            </mesh>
+          </group>
+        ))}
+      </group>
+    </group>
+  )
+}
 
-      {/* Damaged cue: rising dark smoke puffs + floating warning cone */}
-      {cue === 'damage' && (
-        <group>
-          <mesh position={[-0.14, 0.88, 0.08]}>
-            <dodecahedronGeometry args={[0.16, 0]} />
-            <meshStandardMaterial color={SMOKE_DARK} flatShading />
-          </mesh>
-          <mesh position={[0.08, 1.12, -0.06]}>
-            <dodecahedronGeometry args={[0.22, 0]} />
-            <meshStandardMaterial color={SMOKE_DARK} flatShading />
-          </mesh>
-          <mesh position={[0, 1.42, 0]} rotation={[Math.PI, 0, 0]}>
-            <coneGeometry args={[0.16, 0.28, 3]} />
-            <meshStandardMaterial
-              color={SAFETY_ORANGE}
-              emissive={SAFETY_ORANGE}
-              emissiveIntensity={0.6}
-              flatShading
-            />
-          </mesh>
-        </group>
-      )}
+function DustCue({ size, type }: { size: number; type: string }) {
+  const edge = size * 0.44
+  const moundScale = size >= 2 ? 1.25 : 0.78
+  const caps = DUST_CAPS_BY_TYPE[type] ?? []
 
-      {/* Clogged cue: Martian dust drifts banked around and over the structure */}
-      {cue === 'dust' && (
-        <group>
-          <mesh position={[-half * 0.55, 0.22, half * 0.45]} scale={[1.3, 0.65, 1.1]}>
-            <dodecahedronGeometry args={[0.28 * size, 0]} />
-            <meshStandardMaterial color={DUST_DRIFT} flatShading />
-          </mesh>
-          <mesh position={[half * 0.5, 0.2, -half * 0.4]} scale={[1.2, 0.55, 1.2]}>
-            <dodecahedronGeometry args={[0.24 * size, 0]} />
-            <meshStandardMaterial color={MARS_ROCK} flatShading />
-          </mesh>
-          <mesh position={[0, 0.58, 0]} scale={[1.25, 0.4, 1.25]}>
-            <dodecahedronGeometry args={[0.22 * size, 0]} />
-            <meshStandardMaterial color={DUST_DRIFT} flatShading />
-          </mesh>
-        </group>
-      )}
+  return (
+    <group>
+      {/* Banked Martian sand drifts hugging FoundationPad perimeter & stilts */}
+      {(
+        [
+          { pos: [-edge * 0.92, 0.09, edge * 0.55], rot: [0, 0.4, 0], s: [0.3, 0.12, 0.22] },
+          { pos: [edge * 0.88, 0.09, edge * 0.62], rot: [0, -0.5, 0], s: [0.28, 0.11, 0.24] },
+          { pos: [0, 0.095, edge * 0.96], rot: [0, 0.15, 0], s: [0.36, 0.12, 0.2] },
+          { pos: [-edge * 0.96, 0.09, -edge * 0.35], rot: [0, 0.8, 0], s: [0.24, 0.11, 0.28] },
+          { pos: [edge * 0.95, 0.085, -edge * 0.42], rot: [0, -0.7, 0], s: [0.25, 0.1, 0.28] },
+          { pos: [-edge * 0.28, 0.09, -edge * 0.95], rot: [0, 0.2, 0], s: [0.34, 0.11, 0.2] },
+        ] as const
+      ).map((d, idx) => (
+        <mesh
+          key={`drift-${idx}`}
+          position={d.pos}
+          rotation={d.rot}
+          scale={[d.s[0] * moundScale, d.s[1] * moundScale, d.s[2] * moundScale]}
+          raycast={NOOP_RAYCAST}
+        >
+          <dodecahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial color={idx % 2 === 0 ? DUST_DRIFT : DUST_DRIFT_DARK} flatShading />
+        </mesh>
+      ))}
 
-      {/* Short-circuit cue: jagged electric spark shards + glowing hazard octahedron */}
-      {cue === 'sparks' && (
-        <group>
-          <mesh position={[-0.22, 0.78, 0.18]} rotation={[0.4, 0.3, -0.6]}>
-            <octahedronGeometry args={[0.16, 0]} />
+      {/* Smaller sand wedges climbing over pad corners */}
+      {(
+        [
+          [-edge * 0.78, 0.155, edge * 0.78, 0.4],
+          [edge * 0.78, 0.155, edge * 0.76, -0.6],
+          [-edge * 0.76, 0.155, -edge * 0.76, 0.9],
+        ] as const
+      ).map(([cx, cy, cz, ry], idx) => (
+        <mesh
+          key={`corner-dune-${idx}`}
+          position={[cx, cy, cz]}
+          rotation={[0, ry, 0]}
+          scale={[0.18 * moundScale, 0.065 * moundScale, 0.16 * moundScale]}
+          raycast={NOOP_RAYCAST}
+        >
+          <coneGeometry args={[1, 1.4, 5]} />
+          <meshStandardMaterial color={DUST_DRIFT} flatShading />
+        </mesh>
+      ))}
+
+      {/* Settled dust caps on actual structure intakes, louvers & panels */}
+      {caps.map((cap, idx) => (
+        <mesh
+          key={`cap-${idx}`}
+          position={cap.pos}
+          rotation={cap.rot ?? [0, 0, 0]}
+          scale={cap.scale}
+          raycast={NOOP_RAYCAST}
+        >
+          <dodecahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial color={idx % 2 === 0 ? DUST_DRIFT : DUST_DRIFT_DARK} flatShading />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function SparksCue({ size, topY }: { size: number; topY: number }) {
+  const arc0Ref = useRef<Mesh>(null)
+  const arc1Ref = useRef<Mesh>(null)
+  const arc2Ref = useRef<Mesh>(null)
+  const badgeRef = useRef<Group>(null)
+  const arc0MatRef = useRef<MeshStandardMaterial>(null)
+  const arc1MatRef = useRef<MeshStandardMaterial>(null)
+  const arc2MatRef = useRef<MeshStandardMaterial>(null)
+  const badgeMatRef = useRef<MeshStandardMaterial>(null)
+
+  const radius = size * 0.36
+  const arcScale = size >= 2 ? 1.25 : 0.94
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime
+    const arcs = [arc0Ref.current, arc1Ref.current, arc2Ref.current]
+    const mats = [arc0MatRef.current, arc1MatRef.current, arc2MatRef.current]
+    const anchors = [
+      [-radius, topY * 0.58, radius * 0.65],
+      [radius, topY * 0.68, -radius * 0.45],
+      [radius * 0.35, topY * 0.86, radius * 0.72],
+    ] as const
+    const baseYaws = [0.78, -0.45, 0.92] as const
+    const baseTilts = [0.48, -0.58, 0.92] as const
+
+    for (let i = 0; i < 3; i++) {
+      const mesh = arcs[i]
+      const mat = mats[i]
+      if (!mesh || !mat) continue
+      const [ax, ay, az] = anchors[i]!
+      // Discrete high-frequency electric crackle/jitter without allocating objects
+      const step = Math.floor(t * (11 + i * 3))
+      const jitterX = Math.sin(step * 12.9898 + i) * 0.045
+      const jitterY = Math.cos(step * 78.233 + i) * 0.04
+      const pulse = 0.78 + 0.45 * Math.sin(step * 4.7 + i * 2.1)
+      mesh.position.set(ax + jitterX, ay + jitterY, az)
+      mesh.rotation.set(
+        0.2 * i,
+        baseYaws[i]! + Math.sin(step * 3.1) * 0.25,
+        baseTilts[i]! + Math.cos(step * 2.3) * 0.25,
+      )
+      mesh.scale.setScalar(arcScale * pulse)
+      mat.emissiveIntensity = 0.75 + 0.85 * Math.max(0, Math.sin(t * (14 + i * 4) + i))
+    }
+
+    if (badgeRef.current && badgeMatRef.current) {
+      badgeRef.current.position.y = topY + 0.26 + Math.sin(t * 5) * 0.025
+      badgeRef.current.rotation.y = Math.PI / 4 + t * 1.4
+      badgeMatRef.current.emissiveIntensity = 0.65 + 0.65 * Math.abs(Math.sin(t * 7))
+    }
+  })
+
+  return (
+    <group>
+      {/* Three flickering jagged electric lightning arcs around structure */}
+      <mesh ref={arc0Ref} geometry={CUE_GEO.sparkBolt} raycast={NOOP_RAYCAST}>
+        <meshStandardMaterial
+          ref={arc0MatRef}
+          color={SPARK_YELLOW}
+          emissive={SPARK_YELLOW}
+          emissiveIntensity={1.1}
+          flatShading
+        />
+      </mesh>
+      <mesh ref={arc1Ref} geometry={CUE_GEO.sparkBolt} raycast={NOOP_RAYCAST}>
+        <meshStandardMaterial
+          ref={arc1MatRef}
+          color={SPARK_CYAN}
+          emissive={SPARK_CYAN}
+          emissiveIntensity={1.0}
+          flatShading
+        />
+      </mesh>
+      <mesh ref={arc2Ref} geometry={CUE_GEO.sparkBolt} raycast={NOOP_RAYCAST}>
+        <meshStandardMaterial
+          ref={arc2MatRef}
+          color={SPARK_YELLOW}
+          emissive={SPARK_YELLOW}
+          emissiveIntensity={1.1}
+          flatShading
+        />
+      </mesh>
+
+      {/* Distinct 3D crossed-fault + spark core indicator above structure */}
+      <group ref={badgeRef} position={[0, topY + 0.26, 0]}>
+        <mesh rotation={[0, 0, Math.PI / 4]} raycast={NOOP_RAYCAST}>
+          <boxGeometry args={[0.33 * arcScale, 0.062 * arcScale, 0.062 * arcScale]} />
+          <meshStandardMaterial
+            ref={badgeMatRef}
+            color="#ff5a5a"
+            emissive="#ff5a5a"
+            emissiveIntensity={0.95}
+            flatShading
+          />
+        </mesh>
+        <mesh rotation={[0, 0, -Math.PI / 4]} raycast={NOOP_RAYCAST}>
+          <boxGeometry args={[0.33 * arcScale, 0.062 * arcScale, 0.062 * arcScale]} />
+          <meshStandardMaterial
+            color="#ff5a5a"
+            emissive="#ff5a5a"
+            emissiveIntensity={0.95}
+            flatShading
+          />
+        </mesh>
+        {([-0.04, 0.04] as const).map((zOff, idx) => (
+          <mesh
+            key={idx}
+            position={[0, 0, zOff]}
+            scale={0.82 * arcScale}
+            geometry={CUE_GEO.sparkBolt}
+            raycast={NOOP_RAYCAST}
+          >
             <meshStandardMaterial
               color={SPARK_YELLOW}
               emissive={SPARK_YELLOW}
-              emissiveIntensity={0.9}
+              emissiveIntensity={1.1}
               flatShading
             />
           </mesh>
-          <mesh position={[0.24, 0.92, -0.15]} rotation={[-0.5, 0.2, 0.7]}>
-            <octahedronGeometry args={[0.14, 0]} />
-            <meshStandardMaterial
-              color={SPARK_YELLOW}
-              emissive={SPARK_YELLOW}
-              emissiveIntensity={0.9}
-              flatShading
-            />
-          </mesh>
-          <mesh position={[0, 1.32, 0]}>
-            <octahedronGeometry args={[0.18, 0]} />
-            <meshStandardMaterial
-              color="#ff5a5a"
-              emissive="#ff5a5a"
-              emissiveIntensity={0.85}
-              flatShading
-            />
-          </mesh>
-        </group>
-      )}
+        ))}
+      </group>
+    </group>
+  )
+}
 
-      {/* Unheated habitat frost cue: white/icy crystal spikes and frost cap on habitat dome */}
-      {(cue === 'frost' || frosted) && (
-        <group position={[0, 0.12, 0]}>
-          {/* Translucent frost shell matching the octagonal habitat hull */}
-          <mesh geometry={HABITAT_GEO.frostShell}>
+// Faceted ice shelves encrusting the dark FoundationPad corners for high daytime contrast
+const PAD_FROST_DRIFTS: ReadonlyArray<{
+  pos: readonly [number, number, number]
+  rotY: number
+  scale: readonly [number, number, number]
+}> = [
+  { pos: [0.64, 0.045, 0.64], rotY: 0.45, scale: [0.32, 0.14, 0.28] },
+  { pos: [-0.66, 0.04, 0.62], rotY: 1.9, scale: [0.3, 0.13, 0.26] },
+  { pos: [0.64, 0.04, -0.64], rotY: 3.6, scale: [0.3, 0.13, 0.25] },
+  { pos: [-0.62, 0.04, -0.66], rotY: 5.1, scale: [0.28, 0.12, 0.24] },
+  { pos: [0.16, 0.035, 0.68], rotY: 0.2, scale: [0.34, 0.11, 0.18] },
+  { pos: [0.68, 0.035, 0.22], rotY: 1.3, scale: [0.18, 0.11, 0.3] },
+]
+
+// Chunky pentagonal crystal clusters around dome shoulders, skirt, airlock & cupola
+const FROST_CLUSTERS: ReadonlyArray<{
+  pos: readonly [number, number, number]
+  rot: readonly [number, number, number]
+  r: number
+  h: number
+}> = [
+  // Dome shoulders (clear of airlock +X, armor plates pi/4 & -3pi/4, viewports, and comms mast)
+  { pos: [0.38, 0.52, -0.36], rot: [0.38, 0.4, -0.38], r: 0.115, h: 0.34 },
+  { pos: [0.48, 0.45, -0.24], rot: [0.44, 0.2, -0.48], r: 0.085, h: 0.25 },
+  { pos: [-0.36, 0.56, -0.35], rot: [-0.36, -0.3, -0.34], r: 0.11, h: 0.33 },
+  { pos: [0.35, 0.54, 0.36], rot: [0.38, 0.5, 0.36], r: 0.112, h: 0.32 },
+  { pos: [-0.46, 0.44, 0.22], rot: [0.24, 0.2, 0.5], r: 0.1, h: 0.29 },
+  // Lower base-skirt perimeter ice spires (visible contrast against pad + dark skirt)
+  { pos: [0.46, 0.18, 0.48], rot: [0.3, 0.3, -0.25], r: 0.095, h: 0.28 },
+  { pos: [-0.5, 0.18, 0.38], rot: [0.26, -0.2, 0.32], r: 0.09, h: 0.26 },
+  { pos: [0.06, 0.18, 0.58], rot: [0.34, 0.1, 0.05], r: 0.092, h: 0.25 },
+  // Airlock tunnel roof frost ridge (+X)
+  { pos: [0.58, 0.35, 0.04], rot: [0.16, 0.3, -0.24], r: 0.095, h: 0.29 },
+  { pos: [0.6, 0.33, -0.08], rot: [-0.18, 0, -0.3], r: 0.075, h: 0.22 },
+  // Cupola rim spires (clear of central skylight so night glow shines through)
+  { pos: [0.17, 0.81, -0.11], rot: [-0.15, 0.2, -0.22], r: 0.09, h: 0.28 },
+  { pos: [-0.16, 0.8, -0.12], rot: [-0.18, -0.3, 0.2], r: 0.08, h: 0.24 },
+]
+
+function FrostCue() {
+  return (
+    <group>
+      {/* Crusty glacial ice shelves around the dark FoundationPad deck */}
+      {PAD_FROST_DRIFTS.map((drift, idx) => (
+        <mesh
+          key={`pad-frost-${idx}`}
+          position={drift.pos}
+          rotation={[0, drift.rotY, 0]}
+          scale={drift.scale}
+          raycast={NOOP_RAYCAST}
+        >
+          <dodecahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial
+            color={idx % 2 === 0 ? FROST_ICE_DEEP : FROST_ICE}
+            emissive="#4da6d9"
+            emissiveIntensity={0.07}
+            roughness={0.35}
+            flatShading
+          />
+        </mesh>
+      ))}
+
+      <group position={[0, 0.12, 0]}>
+        {/* Saturated glacial-blue frost cap hugging upper dome above perimeter glowBand */}
+        <mesh geometry={HABITAT_GEO.frostShell} raycast={NOOP_RAYCAST}>
+          <meshStandardMaterial
+            color={FROST_ICE_DEEP}
+            emissive="#4da6d9"
+            emissiveIntensity={0.07}
+            transparent
+            opacity={0.56}
+            depthWrite={false}
+            roughness={0.35}
+            flatShading
+          />
+        </mesh>
+        {/* Faceted pentagonal ice crystal clusters seated cleanly on dome, skirt, airlock & cupola */}
+        {FROST_CLUSTERS.map((c, idx) => (
+          <mesh key={`frost-spire-${idx}`} position={c.pos} rotation={c.rot} raycast={NOOP_RAYCAST}>
+            <coneGeometry args={[c.r, c.h, 5]} />
             <meshStandardMaterial
-              color={FROST_ICE}
-              emissive={FROST_GLOW}
-              emissiveIntensity={0.3}
-              transparent
-              opacity={0.38}
+              color={idx % 2 === 0 ? FROST_ICE_DEEP : FROST_ICE}
+              emissive="#4da6d9"
+              emissiveIntensity={0.09}
+              roughness={0.3}
               flatShading
             />
           </mesh>
-          {/* Tapered ice crystal spires around the habitat */}
-          {(
-            [
-              [-0.44, 0.48, 0.34, 0.32, -0.24],
-              [0.42, 0.48, -0.32, -0.28, 0.3],
-              [-0.34, 0.6, -0.38, -0.24, -0.28],
-              [0.3, 0.62, 0.38, 0.26, 0.24],
-              [0, 0.92, 0, 0, 0],
-            ] as const
-          ).map(([fx, fy, fz, rx, rz], idx) => (
-            <mesh key={idx} position={[fx, fy, fz]} rotation={[rx, 0, rz]} scale={[0.7, 1.35, 0.7]}>
-              <octahedronGeometry args={[0.12, 0]} />
-              <meshStandardMaterial
-                color={FROST_ICE}
-                emissive={FROST_GLOW}
-                emissiveIntensity={0.5}
-                flatShading
-              />
-            </mesh>
-          ))}
-        </group>
-      )}
+        ))}
+      </group>
     </group>
   )
 }
