@@ -10,6 +10,8 @@ export interface ModalProps {
   size?: 'default' | 'wide'
   /** 'light' is the warm prototype look used by the build menu. */
   tone?: 'dark' | 'light'
+  /** 'alertdialog' for emergencies that need the player's attention right now. */
+  role?: 'dialog' | 'alertdialog'
   onClose?: () => void
   children: ReactNode
   footer?: ReactNode
@@ -20,6 +22,7 @@ export function Modal({
   title,
   size = 'default',
   tone = 'dark',
+  role = 'dialog',
   onClose,
   children,
   footer,
@@ -50,7 +53,7 @@ export function Modal({
         className={[styles.dialog, size === 'wide' && styles.wide, tone === 'light' && styles.light]
           .filter(Boolean)
           .join(' ')}
-        role="dialog"
+        role={role}
         aria-modal="true"
         aria-label={title}
         onClick={(e) => e.stopPropagation()}

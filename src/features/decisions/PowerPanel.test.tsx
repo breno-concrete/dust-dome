@@ -74,9 +74,9 @@ describe('PowerPanel', () => {
 
     const other = current === 'max' ? 'Min' : 'Max'
     await userEvent.click(within(group).getByRole('button', { name: other }))
-    expect(
-      within(group).getByRole('button', { name: other }).getAttribute('aria-pressed'),
-    ).toBe('true')
+    expect(within(group).getByRole('button', { name: other }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
     expect(useGameStore.getState().game!.powerModes[first.id]).toBe(other.toLowerCase())
   })
 
