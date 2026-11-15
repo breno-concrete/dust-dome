@@ -8,6 +8,7 @@ import {
   demolish,
   dismissBriefing,
   installUpgrade,
+  resumeJobs,
   setPowerMode,
   startRepair,
 } from './actions'
@@ -315,7 +316,7 @@ function withShelter(s: GameState): { s: GameState; shelter: StructureInstance }
 }
 
 describe('bringInside', () => {
-  it('brings one astronaut inside at once; their job goes back to the queue with its remaining time', () => {
+  it('brings one astronaut inside at once; their job pauses with its remaining time', () => {
     const s = working(spring(), 1, 6)
     const a = s.crew[0]
     const after = okState(bringInside(s, config, a.id))
@@ -326,10 +327,19 @@ describe('bringInside', () => {
       habitatId: a.habitatId,
     })
     expect(after.jobs[0]).toMatchObject({
-      status: 'queued',
+      status: 'held',
       astronautId: null,
       remainingSeconds: 6,
     })
+  })
+
+  it('nobody continues the paused job by themselves, even a free astronaut inside', () => {
+    const s = working(spring(), 1, 6)
+    const recalled = okState(bringInside(s, config, s.crew[0].id))
+    expect(recalled.crew[1]).toMatchObject({ location: 'inside', jobId: null, resting: false })
+    const later = updateJobs(recalled, config, 5)
+    expect(later.jobs[0]).toMatchObject({ status: 'held', astronautId: null, remainingSeconds: 6 })
+    expect(later.crew.every((x) => x.location === 'inside')).toBe(true)
   })
 
   it('a recalled astronaut rests (takes no job) until their exposure is back to 0', () => {
@@ -341,9 +351,10 @@ describe('bringInside', () => {
       { alive: false },
     ])
     const recalled = okState(bringInside(s, config, s.crew[0].id))
-    expect(updateJobs(recalled, config, 0).jobs[0].status).toBe('queued')
+    const resumed = okState(resumeJobs(recalled, config, recalled.jobs[0].structureId))
+    expect(updateJobs(resumed, config, 0).jobs[0].status).toBe('queued')
 
-    const rested = updateCrew(recalled, config, 1000)
+    const rested = updateCrew(resumed, config, 1000)
     expect(rested.crew[0]).toMatchObject({ exposure: 0, resting: false })
     expect(updateJobs(rested, config, 0).jobs[0]).toMatchObject({
       status: 'active',
@@ -388,18 +399,57 @@ describe('bringAllInside', () => {
     expect(after.jobs.every((j) => j.status === 'active' && j.remainingSeconds === 6)).toBe(true)
   })
 
-  it('brings every astronaut outside inside at once', () => {
+  it('brings every astronaut outside inside at once; their jobs pause', () => {
     const s = working(spring(), 3)
     const after = okState(bringAllInside(s, config))
     expect(after.crew.every((a) => a.location === 'inside' && a.jobId === null)).toBe(true)
     expect(after.crew.slice(0, 3).every((a) => a.resting)).toBe(true)
     expect(after.crew[3].resting).toBe(false)
-    expect(after.jobs.every((j) => j.status === 'queued' && j.astronautId === null)).toBe(true)
+    expect(after.jobs.every((j) => j.status === 'held' && j.astronautId === null)).toBe(true)
+  })
+
+  it('the astronaut who stayed inside does not go out for the paused jobs', () => {
+    const after = updateJobs(okState(bringAllInside(working(spring(), 3), config)), config, 1)
+    expect(after.crew[3]).toMatchObject({ location: 'inside', jobId: null })
+    expect(after.jobs.every((j) => j.status === 'held')).toBe(true)
   })
 
   it('rejects with not_allowed when nobody is outside', () => {
     const s = spring()
     expectRefused(bringAllInside(s, config), s, 'not_allowed')
+  })
+})
+
+describe('resumeJobs', () => {
+  it('puts the paused jobs of a structure back in the queue; the least exposed free astronaut takes them', () => {
+    const s = withCrew(okState(bringAllInside(working(spring(), 2, 6), config)), [
+      {},
+      {},
+      { exposure: 0.2 },
+      { exposure: 0.1 },
+    ])
+    const [first, second] = s.jobs
+    const resumed = okState(resumeJobs(s, config, first.structureId))
+    expect(resumed.jobs[0]).toMatchObject({ status: 'queued', remainingSeconds: 6 })
+    expect(resumed.jobs[1]).toMatchObject({ id: second.id, status: 'held' })
+
+    const next = updateJobs(resumed, config, 0)
+    expect(next.jobs[0]).toMatchObject({ status: 'active', astronautId: s.crew[3].id })
+    expect(next.jobs[1].status).toBe('held')
+  })
+
+  it('in winter darkness the resumed job waits in the queue until spring', () => {
+    const base = working(spring(), 1, 6)
+    const s = okState(bringInside(base, config, base.crew[0].id))
+    const dark = blocked(s)
+    const resumed = okState(resumeJobs(dark, config, s.jobs[0].structureId))
+    expect(updateJobs(resumed, config, 1).jobs[0]).toMatchObject({ status: 'queued' })
+  })
+
+  it('rejects with not_allowed when the structure has no paused job', () => {
+    const s = working(spring(), 1)
+    expectRefused(resumeJobs(s, config, s.jobs[0].structureId), s, 'not_allowed')
+    expectRefused(resumeJobs(s, config, 'nothing'), s, 'not_allowed')
   })
 })
 
@@ -421,6 +471,7 @@ describe('any action', () => {
       demolish(s, config, firstOf(s, 'mine').id),
       bringInside(s, config, s.crew[0].id),
       bringAllInside(s, config),
+      resumeJobs(s, config, habitat.id),
     ]
     for (const r of results) expectRefused(r, s, 'not_allowed')
   })
