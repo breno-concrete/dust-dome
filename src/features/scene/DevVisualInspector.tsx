@@ -5,6 +5,21 @@ import { useState } from 'react'
 import type { StructureStatus } from '../../engine/types'
 import { Button } from '../../ui-kit/Button'
 import styles from './DevVisualInspector.module.css'
+import { sound, type LoopId, type SoundId } from './sound'
+
+const ONE_SHOT_SOUNDS: ReadonlyArray<{ id: SoundId; label: string }> = [
+  { id: 'place-structure', label: '🏗️ Construir' },
+  { id: 'select-structure', label: '👆 Selecionar' },
+  { id: 'bolt-click', label: '🔩 Parafuso' },
+  { id: 'repair-success', label: '✅ Reparo ok' },
+  { id: 'repair-fail', label: '❌ Reparo falhou' },
+]
+
+const LOOP_SOUNDS: ReadonlyArray<{ id: LoopId; label: string }> = [
+  { id: 'radiation-alarm', label: '🚨 Alarme' },
+  { id: 'dust-storm-loop', label: '🌪️ Vento poeira' },
+  { id: 'radiation-storm-loop', label: '☢️ Tempestade radiação' },
+]
 
 export type DevWeatherPreset = 'auto' | 'summer' | 'dust_storm' | 'winter_dark'
 
@@ -44,6 +59,12 @@ export default function DevVisualInspector({
   selectedId: string | null
 }) {
   const [open, setOpen] = useState(false)
+  const [devLoop, setDevLoop] = useState<LoopId | null>(null)
+  const toggleLoop = (id: LoopId) => {
+    const next = devLoop === id ? null : id
+    sound.loop(next)
+    setDevLoop(next)
+  }
 
   return (
     <div className={styles.devPanel}>
@@ -91,6 +112,32 @@ export default function DevVisualInspector({
                 type="button"
                 className={chipClass(overrides.structureStatus === opt.id)}
                 onClick={() => onChange({ ...overrides, structureStatus: opt.id })}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.devSectionTitle}>Sons (US4 Dev)</div>
+          <div className={styles.devRow}>
+            {ONE_SHOT_SOUNDS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={styles.devChip}
+                onClick={() => sound.play(opt.id)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.devRow}>
+            {LOOP_SOUNDS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={chipClass(devLoop === opt.id)}
+                onClick={() => toggleLoop(opt.id)}
               >
                 {opt.label}
               </button>

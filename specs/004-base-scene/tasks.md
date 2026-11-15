@@ -128,15 +128,15 @@ description: "Task list for 004 Isometric Base Scene and Repair QTE"
 ### Tests for User Story 4 (Test-First — Constitution VIII) ⚠️
 
 - [ ] T019 [P] [US4] Write unit tests for pure astronaut straight-line marker interpolation (`astronautWaypoints` / `astronautPositionAt` from `game.crew` and `game.structures`) in `src/features/scene/astronautMarkers.test.ts`
-- [ ] T020 [P] [US4] Write unit tests for safe audio playback wrapper (no-throw when `AudioContext` / `HTMLAudioElement` is unavailable or blocked) in `src/features/scene/sound.test.ts`
+- [x] T020 [P] [US4] Write unit tests for safe audio playback wrapper (no-throw when `AudioContext` / `HTMLAudioElement` is unavailable or blocked) in `src/features/scene/sound.test.ts`
 
 ### Implementation for User Story 4
 
 - [ ] T021 [P] [US4] Implement pure waypoint & linear interpolation helper + thin `AstronautMarkers` R3F component (straight lines only, no physics or pathfinding, non-click-blocking) in `src/features/scene/AstronautMarkers.tsx`
-- [ ] T022 [P] [US4] Implement lightweight audio feedback helper (synthesized Web Audio tones or CC0 clips in `public/audio/` with mute support and safe autoplay handling) in `src/features/scene/sound.ts`
+- [x] T022 [P] [US4] Implement lightweight audio feedback helper (synthesized Web Audio tones or CC0 clips in `public/audio/` with mute support and safe autoplay handling) in `src/features/scene/sound.ts`
 - [ ] T023 [US4] Integrate `AstronautMarkers`, sound cues (structure placement, structure selection, radiation alarm), and a WebGL ErrorBoundary/capability fallback in `src/features/scene/Scene.tsx`
-- [ ] T024 [US4] Connect repair bolt click, success, and failure sound cues in `src/features/repair/RepairQte.tsx`
-- [ ] T025 [P] [US4] Document any third-party audio files added to `public/audio/` in `CREDITS.md` (Scene section)
+- [x] T024 [US4] Connect repair bolt click, success, and failure sound cues in `src/features/repair/RepairQte.tsx`
+- [x] T025 [P] [US4] Document any third-party audio files added to `public/audio/` in `CREDITS.md` (Scene section)
 - [ ] T026 [US4] Run `npx vitest run src/features/scene/ src/features/repair/` and `npm run check`
 
 **Checkpoint**: All 4 user stories are complete, tested, and ready for integration.
@@ -147,7 +147,7 @@ description: "Task list for 004 Isometric Base Scene and Repair QTE"
 
 **Purpose**: Final verification across all owned files, asset budget, and quickstart validation.
 
-- [ ] T027 [P] Verify combined size of `public/models/` and `public/audio/` is under 5 MB (`du -sh public/models/ public/audio/`)
+- [x] T027 [P] Verify combined size of `public/models/` and `public/audio/` is under 5 MB (`du -sh public/models/ public/audio/`)
 - [ ] T028 [P] Review `src/features/scene/` and `src/features/repair/` for draw-call efficiency (memoized geometries/materials, minimal per-frame allocations) for integrated-GPU laptops
 - [ ] T029 Run full `specs/004-base-scene/quickstart.md` validation and `npm run check`
 
