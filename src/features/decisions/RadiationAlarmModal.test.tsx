@@ -25,10 +25,10 @@ describe('RadiationAlarmModal', () => {
     act(() => useGameStore.getState().start(42))
     useLang.setState({ lang: 'en' })
   })
-  const original = useGameStore.getState().shelterAll
+  const original = useGameStore.getState().bringAllInside
   afterEach(() => {
     cleanup()
-    act(() => useGameStore.setState({ shelterAll: original }))
+    act(() => useGameStore.setState({ bringAllInside: original }))
   })
 
   it('stays hidden when there is no storm', () => {
@@ -69,12 +69,12 @@ describe('RadiationAlarmModal', () => {
   })
 
   it('sends the whole crew to shelter with one click', async () => {
-    const shelterAll = vi.fn()
-    act(() => useGameStore.setState({ shelterAll }))
+    const bringAllInside = vi.fn()
+    act(() => useGameStore.setState({ bringAllInside }))
     setStorm(makeStorm('warning', 110))
     render(<RadiationAlarmModal />)
     await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
-    expect(shelterAll).toHaveBeenCalledTimes(1)
+    expect(bringAllInside).toHaveBeenCalledTimes(1)
   })
 
   it('announces the emergency to screen readers', () => {
