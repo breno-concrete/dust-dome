@@ -964,6 +964,44 @@
   }
 }
 
+/* ---- Power switches: brownout and battery (playtest 2026-11-15) ---- */
+.segmented .segmentShed {
+  border-color: #e0b595;
+  background: #fae2d3;
+  color: #8a3f22;
+}
+
+.segmented .segmentChosen {
+  border: 1px dashed #8a7a66;
+}
+
+.powerShedNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8a3f22;
+}
+
+.powerBattery {
+  margin: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid rgb(148 119 91 / 20%);
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.powerBattery strong {
+  color: var(--color-text);
+}
+
+.shelterDanger {
+  font-weight: 800;
+  color: #9a2f1f;
+}
+
 /* ---- Commander Vega's tutorial ---- */
 .tutorialCard {
   --color-surface: rgb(251 246 234 / 96%);

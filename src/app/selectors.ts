@@ -5,7 +5,9 @@
 // loop (React error #185). Select the raw fields, then call these helpers in render.
 import { config } from '../config/loadConfig'
 import { winTargets } from '../engine/game'
+import { capacityOf, protects } from '../engine/habitats'
 import { footprint, placementError } from '../engine/placement'
+import { batteryCapacity } from '../engine/power'
 import type { StructureDef, Tile } from '../engine/types'
 import type { GameStore } from './store'
 
@@ -42,4 +44,21 @@ export function secondsLeftInSeason(store: Pick<GameStore, 'game'>): number {
   const g = store.game
   if (!g) return 0
   return Math.max(0, (seasonDef(g.time.season)?.durationSeconds ?? 0) - g.time.secondsIntoSeason)
+}
+
+/** Energy the finished battery banks can hold (EU); 0 when the base has none. */
+export function batteryCapacityEu(store: Pick<GameStore, 'game'>): number {
+  return store.game ? batteryCapacity(store.game, config) : 0
+}
+
+/** Machines switched off for lack of power come back at this battery share (II.7). */
+export const batteryRestoreShare = config.mission.batteryRestoreShare
+
+/** Places in finished habitats with a radiation shelter: who fits there survives the storm. */
+export function radiationShelterPlaces(store: Pick<GameStore, 'game'>): number {
+  const game = store.game
+  if (!game) return 0
+  return game.structures
+    .filter((s) => protects(config, s, 'radiation_shelter'))
+    .reduce((sum, s) => sum + capacityOf(config, s), 0)
 }

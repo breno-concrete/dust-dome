@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { framesForMood, moodForBriefing, VEGA_MOODS, type VegaMood } from './vegaPortrait'
+import { framesForMood, moodForBriefing, VEGA_MOODS, type VegaMood } from './vegaMood'
 
-describe('vegaPortrait', () => {
+describe('vegaMood', () => {
   it('picks distinct expressive moods across mission briefings', () => {
     expect(moodForBriefing(1, 'spring', false)).toBe('welcome')
     expect(moodForBriefing(1, 'summer', false)).toBe('neutral')

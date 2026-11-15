@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
-import { framesForMood, type VegaMood } from './vegaPortrait'
+import { framesForMood, type VegaMood } from './vegaMood'
 
 const FRAME_STEP_MS = 170
 

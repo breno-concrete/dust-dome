@@ -1,5 +1,11 @@
 // Owner: Dev B. Prototype-inspired HUD for reserves, time, materials, energy and crew.
-import { secondsLeftInSeason, seasonDef, targets } from '../../app/selectors'
+import {
+  batteryCapacityEu,
+  batteryRestoreShare,
+  secondsLeftInSeason,
+  seasonDef,
+  targets,
+} from '../../app/selectors'
 import { useGameStore, type Speed } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import type { ResourceId } from '../../engine/types'
@@ -14,6 +20,15 @@ const strings = {
   pause: { en: 'Pause', pt: 'Pausar' },
   resume: { en: 'Resume', pt: 'Continuar' },
   power: { en: 'Power', pt: 'Energia' },
+  battery: { en: 'Battery', pt: 'Bateria' },
+  noBattery: { en: 'No battery', pt: 'Sem bateria' },
+  charging: { en: 'Charging', pt: 'Carregando' },
+  inUse: { en: 'In use', pt: 'Em uso' },
+  full: { en: 'Full', pt: 'Cheia' },
+  batteryMark: {
+    en: 'Machines switched off for lack of power come back on at this mark',
+    pt: 'As máquinas desligadas por falta de energia voltam a ligar nesta marca',
+  },
   crew: { en: 'Crew', pt: 'Tripulação' },
   inside: { en: 'Sheltered', pt: 'Abrigado' },
   outside: { en: 'EVA', pt: 'Externo' },
@@ -62,6 +77,19 @@ export function Hud() {
   if (!game) return null
   const season = seasonDef(game.time.season)
   const isPowerDeficit = game.power.balanceKw < 0
+  const batteryCapacity = batteryCapacityEu({ game })
+  const batteryEu = Math.round(game.batteryEu)
+  const batteryShare = batteryCapacity > 0 ? game.batteryEu / batteryCapacity : 0
+  const batteryState =
+    batteryCapacity === 0
+      ? null
+      : batteryEu >= batteryCapacity
+        ? strings.full
+        : game.power.balanceKw > 0
+          ? strings.charging
+          : game.power.balanceKw < 0 && batteryEu > 0
+            ? strings.inUse
+            : null
   const isPaused = speed === 0
 
   // What a screen reader hears when something needs attention (kept quiet otherwise).
@@ -194,6 +222,46 @@ export function Hud() {
               {game.power.balanceKw}
               <em> kW</em>
             </strong>
+          </span>
+        </div>
+        <div
+          data-testid="battery"
+          className={[styles.material, styles.energyStat, styles.batteryStat].join(' ')}
+        >
+          <span className={styles.materialIcon}>
+            <Icon name="battery" size={24} />
+          </span>
+          <span className={styles.materialValues}>
+            <small>
+              {t(strings.battery)}
+              {batteryState && <span className={styles.batteryState}> · {t(batteryState)}</span>}
+            </small>
+            {batteryCapacity > 0 ? (
+              <>
+                <strong>{Math.round(batteryShare * 100)}%</strong>
+                <span
+                  className={styles.batteryBar}
+                  role="progressbar"
+                  aria-label={t(strings.battery)}
+                  aria-valuemin={0}
+                  aria-valuemax={batteryCapacity}
+                  aria-valuenow={batteryEu}
+                >
+                  <span
+                    className={styles.batteryFill}
+                    style={{ width: `${Math.min(1, batteryShare) * 100}%` }}
+                  />
+                  <span
+                    className={styles.batteryMark}
+                    data-testid="battery-restore-mark"
+                    title={t(strings.batteryMark)}
+                    style={{ left: `${batteryRestoreShare * 100}%` }}
+                  />
+                </span>
+              </>
+            ) : (
+              <strong>{t(strings.noBattery)}</strong>
+            )}
           </span>
         </div>
       </section>
