@@ -775,6 +775,107 @@ const WORK_GEO = {
   ]),
 }
 
+// ============================================================================
+// STEEL FACTORY GEOMETRY (2x2 Alloy Rolling Mill + Carbon Gas Tanks + I-Beams)
+// ============================================================================
+
+const STEEL_BASE_Y = 0.14
+
+function buildSteelMillHall(): ExtrudeGeometry {
+  const geo = new ExtrudeGeometry(makeChamferedArchShape(0.54, 0.48, 0.13), {
+    depth: 0.64,
+    bevelEnabled: true,
+    bevelThickness: 0.02,
+    bevelSize: 0.02,
+    bevelSegments: 1,
+    curveSegments: 4,
+  })
+  geo.translate(0, 0, -0.32)
+  geo.computeVertexNormals()
+  return geo
+}
+
+function buildSteelClerestory(): ExtrudeGeometry {
+  const geo = new ExtrudeGeometry(makeChamferedArchShape(0.36, 0.12, 0.05), {
+    depth: 0.44,
+    bevelEnabled: true,
+    bevelThickness: 0.012,
+    bevelSize: 0.012,
+    bevelSegments: 1,
+    curveSegments: 4,
+  })
+  geo.translate(0, 0, -0.22)
+  geo.computeVertexNormals()
+  return geo
+}
+
+const STEEL_GEO = {
+  millHall: buildSteelMillHall(),
+  clerestory: buildSteelClerestory(),
+  gasTank: latheOctagon([
+    [0, -0.31],
+    [0.078, -0.285],
+    [0.115, -0.22],
+    [0.115, 0.22],
+    [0.078, 0.285],
+    [0, 0.31],
+  ]),
+  converterVessel: latheOctagon([
+    [0.165, 0],
+    [0.175, 0.08],
+    [0.155, 0.38],
+    [0.108, 0.5],
+    [0.108, 0.66],
+    [0, 0.66],
+  ]),
+  steelCoil: latheOctagon([
+    [0.038, 0],
+    [0.088, 0],
+    [0.088, 0.13],
+    [0.038, 0.13],
+    [0.038, 0],
+  ]),
+  // Manifold pipe from front-inner gas tank into mill hall
+  tankPipeA: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(-0.3, 0.25, 0.28),
+      new Vector3(-0.3, 0.38, 0.21),
+      new Vector3(-0.24, 0.39, 0.08),
+      new Vector3(-0.18, 0.33, -0.06),
+    ]),
+    12,
+    0.025,
+    6,
+    false,
+  ),
+  // High-arch manifold pipe from front-outer orange tank cleanly clearing tank A
+  tankPipeB: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(-0.44, 0.25, 0.56),
+      new Vector3(-0.44, 0.48, 0.43),
+      new Vector3(-0.38, 0.49, 0.15),
+      new Vector3(-0.28, 0.36, -0.06),
+    ]),
+    14,
+    0.025,
+    6,
+    false,
+  ),
+  // Off-gas duct bridging converter tower across clear air gap into mill hall roof
+  converterDuct: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(-0.63, 0.56, -0.36),
+      new Vector3(-0.54, 0.65, -0.36),
+      new Vector3(-0.42, 0.6, -0.36),
+      new Vector3(-0.34, 0.47, -0.36),
+    ]),
+    12,
+    0.042,
+    6,
+    false,
+  ),
+}
+
 const DEFAULT_VISUAL: VisualState = {
   light: 1,
   dustHaze: 0,
@@ -1007,32 +1108,13 @@ function StructureMesh({
 
     case 'steel_factory':
       return (
-        <group position={[0, 0.12, 0]}>
-          {/* Main alloy mill hall (2x2) */}
-          <mesh position={[0, 0.36, -0.15]}>
-            <boxGeometry args={[1.4, 0.68, 0.95]} />
-            <meshStandardMaterial
-              color={hullColor}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          {/* Horizontal carbon gas tanks (Lote 2 img3) */}
-          <mesh position={[-0.35, 0.28, 0.5]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.18, 0.18, 0.62, 8]} />
-            <meshStandardMaterial color={secondaryColor} flatShading />
-          </mesh>
-          <mesh position={[0.35, 0.28, 0.5]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.18, 0.18, 0.62, 8]} />
-            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
-          </mesh>
-          {/* Roof ridge */}
-          <mesh position={[0, 0.78, -0.15]}>
-            <boxGeometry args={[1.2, 0.16, 0.4]} />
-            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
-          </mesh>
-        </group>
+        <SteelFactoryMesh
+          hullColor={hullColor}
+          secondaryColor={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          nightGlow={nightGlow}
+        />
       )
 
     case 'nuclear_reactor':
@@ -2470,6 +2552,266 @@ function RepairWorkshopMesh({
         </group>
       </group>
     )
+}
+
+function SteelFactoryMesh({
+  hullColor,
+  secondaryColor,
+  emissive,
+  emissiveIntensity,
+  nightGlow,
+}: {
+  hullColor: string
+  secondaryColor: string
+  emissive: string
+  emissiveIntensity: number
+  nightGlow: boolean
+}) {
+  const glowFactor = nightGlow ? 1 : 0
+  const furnaceEmissive = emissiveIntensity > 0 ? emissive : SAFETY_ORANGE
+  const furnaceEmissiveIntensity =
+    emissiveIntensity > 0 ? emissiveIntensity : 0.65 + 0.55 * glowFactor
+  const clerestoryEmissive = emissiveIntensity > 0 ? emissive : WARM_WINDOW_LIGHT
+  const clerestoryEmissiveIntensity =
+    emissiveIntensity > 0 ? emissiveIntensity : 0.32 + 0.68 * glowFactor
+
+  return (
+    <group position={[0, STEEL_BASE_Y, 0]}>
+      {/* Main beveled alloy rolling mill hall (-Z, offset slightly +X) */}
+      <group position={[0.16, 0, -0.36]}>
+        <mesh geometry={STEEL_GEO.millHall} castShadow receiveShadow>
+          <meshStandardMaterial
+            color={hullColor}
+            emissive={emissive}
+            emissiveIntensity={emissiveIntensity}
+            flatShading
+          />
+        </mesh>
+
+        {/* Exterior side structural buttress ribs */}
+        {([-0.2, 0, 0.2] as const).map((rz, idx) => (
+          <mesh key={`rib-${idx}`} position={[0, 0.2, rz]} castShadow>
+            <boxGeometry args={[1.15, 0.36, 0.055]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+        ))}
+
+        {/* Raised monitor clerestory roof + illuminated side strip windows */}
+        <mesh geometry={STEEL_GEO.clerestory} position={[0, 0.495, 0]} castShadow>
+          <meshStandardMaterial
+            color={SAFETY_ORANGE}
+            emissive={emissive}
+            emissiveIntensity={emissiveIntensity * 0.5}
+            flatShading
+          />
+        </mesh>
+        <mesh position={[0, 0.515, 0.02]}>
+          <boxGeometry args={[0.76, 0.055, 0.42]} />
+          <meshStandardMaterial
+            color={WARM_WINDOW_LIGHT}
+            emissive={clerestoryEmissive}
+            emissiveIntensity={clerestoryEmissiveIntensity}
+            flatShading
+          />
+        </mesh>
+
+        {/* Mill exit rolling portal (+Z wall aligned with roller conveyor at world x=+0.22) */}
+        <mesh position={[0.06, 0.14, 0.34]} castShadow>
+          <boxGeometry args={[0.3, 0.25, 0.04]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0.06, 0.11, 0.35]}>
+          <boxGeometry args={[0.21, 0.16, 0.024]} />
+          <meshStandardMaterial
+            color={SAFETY_ORANGE}
+            emissive={furnaceEmissive}
+            emissiveIntensity={furnaceEmissiveIntensity}
+            flatShading
+          />
+        </mesh>
+
+        {/* Rear -Z exhaust intake louver & vertical cooling conduits */}
+        <group position={[0, 0.21, -0.342]}>
+          <mesh>
+            <boxGeometry args={[0.42, 0.2, 0.02]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          {([-0.055, 0, 0.055] as const).map((ly, idx) => (
+            <mesh key={`slat-${idx}`} position={[0, ly, -0.012]}>
+              <boxGeometry args={[0.34, 0.024, 0.01]} />
+              <meshStandardMaterial color={secondaryColor} flatShading />
+            </mesh>
+          ))}
+        </group>
+        {([-0.34, 0.34] as const).map((px, idx) => (
+          <mesh key={`conduit-${idx}`} position={[px, 0.22, -0.352]} rotation={[0, HAB_PHI, 0]}>
+            <cylinderGeometry args={[0.024, 0.024, 0.4, 8]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+      </group>
+
+      {/* External electric-arc converter & off-gas stack (-X / -Z) */}
+      <group position={[-0.63, 0, -0.36]}>
+        <mesh geometry={STEEL_GEO.converterVessel} castShadow>
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Glowing converter collar ring */}
+        <mesh position={[0, 0.38, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.165, 0.165, 0.05, 8]} />
+          <meshStandardMaterial
+            color={SAFETY_ORANGE}
+            emissive={furnaceEmissive}
+            emissiveIntensity={0.45 + 0.55 * glowFactor}
+            flatShading
+          />
+        </mesh>
+        {/* Stack rim cap */}
+        <mesh position={[0, 0.675, 0]} rotation={[0, HAB_PHI, 0]} castShadow>
+          <cylinderGeometry args={[0.135, 0.12, 0.035, 8]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+      </group>
+      {/* Off-gas duct bridging converter crown to mill hall */}
+      <mesh geometry={STEEL_GEO.converterDuct} castShadow>
+        <meshStandardMaterial color={secondaryColor} flatShading />
+      </mesh>
+
+      {/* Paired horizontal pressurized CO2 / carbon gas tanks on cradles (-X / +Z, Lote 2 img3) */}
+      {(
+        [
+          { z: 0.28, color: secondaryColor, band: SAFETY_ORANGE },
+          { z: 0.56, color: SAFETY_ORANGE, band: METAL_DARK },
+        ] as const
+      ).map(({ z, color, band }, tIdx) => (
+        <group key={`tank-${tIdx}`} position={[-0.38, 0, z]}>
+          {/* Paired steel support cradles */}
+          {([-0.16, 0.16] as const).map((cx, cIdx) => (
+            <mesh key={`cradle-${cIdx}`} position={[cx, 0.06, 0]} castShadow>
+              <boxGeometry args={[0.05, 0.12, 0.2]} />
+              <meshStandardMaterial color={METAL_DARK} flatShading />
+            </mesh>
+          ))}
+          {/* Horizontal chamfered domed cylinder */}
+          <mesh geometry={STEEL_GEO.gasTank} position={[0, 0.155, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+            <meshStandardMaterial
+              color={color}
+              emissive={emissive}
+              emissiveIntensity={emissiveIntensity * 0.6}
+              flatShading
+            />
+          </mesh>
+          {/* Twin pressure saddle straps */}
+          {([-0.16, 0.16] as const).map((bx, bIdx) => (
+            <mesh key={`band-${bIdx}`} position={[bx, 0.155, 0]} rotation={[HAB_PHI, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.123, 0.123, 0.03, 8]} />
+              <meshStandardMaterial color={band} flatShading />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {/* Overhead curved gas feed manifolds into mill hall */}
+      <mesh geometry={STEEL_GEO.tankPipeA} castShadow>
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <mesh geometry={STEEL_GEO.tankPipeB} castShadow>
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Continuous hot steel rolling conveyor line & rolling press cages (+X / +Z) */}
+      <group position={[0.22, 0, 0.34]}>
+        {/* Conveyor roller table frame */}
+        <mesh position={[0, 0.04, 0]} castShadow receiveShadow>
+          <boxGeometry args={[0.26, 0.08, 0.68]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Conveyor side rails */}
+        {([-0.12, 0.12] as const).map((rx, idx) => (
+          <mesh key={`rail-${idx}`} position={[rx, 0.092, 0]}>
+            <boxGeometry args={[0.025, 0.026, 0.68]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+        ))}
+        {/* Hot glowing rolled steel slab emerging from mill portal */}
+        <mesh position={[0, 0.096, -0.14]} castShadow>
+          <boxGeometry args={[0.15, 0.034, 0.28]} />
+          <meshStandardMaterial
+            color={SAFETY_ORANGE}
+            emissive={furnaceEmissive}
+            emissiveIntensity={furnaceEmissiveIntensity}
+            flatShading
+          />
+        </mesh>
+        {/* Cooled pressed steel plate exiting second rolling stand */}
+        <mesh position={[0, 0.092, 0.18]} castShadow>
+          <boxGeometry args={[0.17, 0.022, 0.24]} />
+          <meshStandardMaterial color="#8fa0b3" flatShading />
+        </mesh>
+        {/* Twin heavy rolling mill press stand arches straddling the slab */}
+        {([-0.14, 0.12] as const).map((sz, sIdx) => (
+          <group key={`stand-${sIdx}`} position={[0, 0, sz]}>
+            <mesh position={[-0.14, 0.16, 0]} castShadow>
+              <boxGeometry args={[0.055, 0.24, 0.07]} />
+              <meshStandardMaterial color={METAL_DARK} flatShading />
+            </mesh>
+            <mesh position={[0.14, 0.16, 0]} castShadow>
+              <boxGeometry args={[0.055, 0.24, 0.07]} />
+              <meshStandardMaterial color={METAL_DARK} flatShading />
+            </mesh>
+            <mesh position={[0, 0.265, 0]} castShadow>
+              <boxGeometry args={[0.35, 0.055, 0.085]} />
+              <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
+      {/* Finished structural steel yard: stacked I-beams + coiled steel rolls (+X edge) */}
+      <group position={[0.59, 0, 0.34]}>
+        {/* Timber/steel dunnage sleepers */}
+        {([-0.14, 0.14] as const).map((dz, idx) => (
+          <mesh key={`dun-${idx}`} position={[0, 0.015, dz]} castShadow>
+            <boxGeometry args={[0.26, 0.03, 0.04]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+        {/* Three stacked structural steel I-beams (flange + web silhouettes) */}
+        {(
+          [
+            [-0.07, 0.06],
+            [0.04, 0.06],
+            [-0.015, 0.118],
+          ] as const
+        ).map(([bx, by], idx) => (
+          <group key={`beam-${idx}`} position={[bx, by, 0]}>
+            <mesh castShadow>
+              <boxGeometry args={[0.075, 0.016, 0.38]} />
+              <meshStandardMaterial color="#96a3b5" flatShading />
+            </mesh>
+            <mesh castShadow>
+              <boxGeometry args={[0.024, 0.06, 0.38]} />
+              <meshStandardMaterial color="#586778" flatShading />
+            </mesh>
+            <mesh position={[0, 0.03, 0]} castShadow>
+              <boxGeometry args={[0.075, 0.016, 0.38]} />
+              <meshStandardMaterial color="#96a3b5" flatShading />
+            </mesh>
+          </group>
+        ))}
+        {/* Pair of upright coiled sheet steel rolls */}
+        {(
+          [
+            [-0.04, 0.31],
+            [0.1, 0.28],
+          ] as const
+        ).map(([cx, cz], idx) => (
+          <mesh key={`coil-${idx}`} geometry={STEEL_GEO.steelCoil} position={[cx, 0, cz]} castShadow>
+            <meshStandardMaterial color={idx === 0 ? '#96a3b5' : secondaryColor} flatShading />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  )
 }
 
 function BatteryMesh({
