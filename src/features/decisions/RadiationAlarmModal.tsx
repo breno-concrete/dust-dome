@@ -2,10 +2,10 @@
 // Shows the seconds left, the real NASA DONKI event it is modeled on and a one-click shelter.
 import { useGameStore } from '../../app/store'
 import { Button } from '../../ui-kit/Button'
-import { Icon } from '../../ui-kit/Icon'
 import { Modal } from '../../ui-kit/Modal'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
+import { VegaPortrait } from './VegaPortrait'
 
 const strings = {
   title: { en: 'Radiation storm!', pt: 'Tempestade de radiação!' },
@@ -49,9 +49,7 @@ export function RadiationAlarmModal() {
       }
     >
       <div className={styles.alarm}>
-        <span className={styles.alarmIcon}>
-          <Icon name="radiation" size={34} />
-        </span>
+        <VegaPortrait mood="alert" variant="alarm" />
         <div>
           <p>{t(isWarning ? strings.warning : strings.active)}</p>
           {isWarning && (
