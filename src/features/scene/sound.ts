@@ -155,5 +155,63 @@ export function createSoundPlayer(
   }
 }
 
+/**
+ * Web Audio backend: downloads and decodes every sound once, then plays it from memory,
+ * so a click sounds right away. Until a file is ready it falls back to an <audio> element.
+ */
+export function webAudioFactory(
+  ctx: AudioContext,
+  load: (src: string) => Promise<ArrayBuffer>,
+  fallback: (src: string) => AudioLike,
+): (src: string) => AudioLike {
+  const buffers = new Map<string, AudioBuffer>()
+  for (const src of Object.values(SOUND_FILES)) {
+    load(src)
+      .then((data) => ctx.decodeAudioData(data))
+      .then((buffer) => buffers.set(src, buffer))
+      .catch(() => {})
+  }
+
+  return (src) => {
+    const buffer = buffers.get(src)
+    if (!buffer) return fallback(src)
+    let source: AudioBufferSourceNode | null = null
+    const handle: AudioLike = {
+      loop: false,
+      volume: 1,
+      playbackRate: 1,
+      currentTime: 0,
+      play() {
+        if (ctx.state === 'suspended') void ctx.resume().catch(() => {})
+        const gain = ctx.createGain()
+        gain.gain.value = handle.volume
+        source = ctx.createBufferSource()
+        source.buffer = buffer
+        source.loop = handle.loop
+        source.playbackRate.value = handle.playbackRate
+        source.connect(gain).connect(ctx.destination)
+        source.start()
+      },
+      pause() {
+        source?.stop()
+        source = null
+      },
+    }
+    return handle
+  }
+}
+
+function browserAudio(): (src: string) => AudioLike {
+  const htmlAudio = (src: string) => new Audio(src)
+  try {
+    if (typeof AudioContext === 'undefined' || typeof fetch === 'undefined') return htmlAudio
+    const load = (src: string) =>
+      fetch(src).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(src))))
+    return webAudioFactory(new AudioContext(), load, htmlAudio)
+  } catch {
+    return htmlAudio
+  }
+}
+
 /** The one player the game uses (real browser audio). */
-export const sound = createSoundPlayer((src) => new Audio(src), readMuted())
+export const sound = createSoundPlayer(browserAudio(), readMuted())
