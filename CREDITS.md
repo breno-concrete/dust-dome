@@ -17,9 +17,10 @@ All data sources used by the game are also listed in-game on the sources screen.
 
 ## 3D models, textures and sound (Dev C)
 
-| Asset                                                                                                                                         | Author                            | License          | Link            |
-| --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ---------------- | --------------- |
-| Sound effects in `public/audio/` (placement, selection, radiation alarm, dust and radiation storm loops, bolt click, repair success and fail) | Breno (team), original recordings | Made by the team | `public/audio/` |
+| Asset                                                                                                                                         | Author                              | License          | Link               |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ---------------- | ------------------ |
+| Sound effects in `public/audio/` (placement, selection, radiation alarm, dust and radiation storm loops, bolt click, repair success and fail) | Breno (team), original recordings   | Made by the team | `public/audio/`    |
+| Commander Vega 2.5D portrait sprites in `public/narrator/`                                                                                    | Pedro Melo (team), crafted in Figma | Made by the team | `public/narrator/` |
 
 ## Fonts, icons and UI art (Dev B)
 

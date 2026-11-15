@@ -137,6 +137,8 @@
 }
 
 .light .content {
+  min-height: 0;
+  overflow: auto;
   color-scheme: light;
   scrollbar-color: rgb(148 119 91 / 45%) transparent;
 }

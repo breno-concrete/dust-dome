@@ -14,16 +14,16 @@ export const VEGA_MOODS = [
 export type VegaMood = (typeof VEGA_MOODS)[number]
 
 const MOOD_FRAMES: Record<VegaMood, readonly string[]> = {
-  neutral: ['/narrator/vega-neutral.png'],
+  neutral: ['/narrator/vega-neutral.webp'],
   welcome: [
-    '/narrator/vega-welcome-mid1.png',
-    '/narrator/vega-welcome-mid2.png',
-    '/narrator/vega-welcome.png',
+    '/narrator/vega-welcome-mid1.webp',
+    '/narrator/vega-welcome-mid2.webp',
+    '/narrator/vega-welcome.webp',
   ],
-  warning: ['/narrator/vega-warning-mid.png', '/narrator/vega-warning.png'],
-  caring: ['/narrator/vega-caring-mid.png', '/narrator/vega-caring.png'],
-  celebrating: ['/narrator/vega-celebrating-mid.png', '/narrator/vega-celebrating.png'],
-  alert: ['/narrator/vega-alert-mid.png', '/narrator/vega-alert.png'],
+  warning: ['/narrator/vega-warning-mid.webp', '/narrator/vega-warning.webp'],
+  caring: ['/narrator/vega-caring-mid.webp', '/narrator/vega-caring.webp'],
+  celebrating: ['/narrator/vega-celebrating-mid.webp', '/narrator/vega-celebrating.webp'],
+  alert: ['/narrator/vega-alert-mid.webp', '/narrator/vega-alert.webp'],
 }
 
 export function moodForBriefing(cycle: number, season: SeasonId, hasWarning: boolean): VegaMood {
