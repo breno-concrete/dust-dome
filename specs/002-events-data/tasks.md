@@ -179,7 +179,7 @@ limites de entrega.
 
 - [ ] T028 [P] Revisar `specs/002-events-data/quickstart.md`, `specs/002-events-data/data-model.md` e `specs/002-events-data/contracts/` em relação ao comportamento implementado e atualizar somente a documentação diretamente relacionada.
 - [ ] T029 Executar `npm run check` na raiz do repositório usando os scripts em `package.json` e corrigir somente falhas causadas pela implementação de Eventos e Dados da NASA.
-- [ ] T030 Executar a validação de ownership do CI para a branch `data/002-events-data` e confirmar que todo arquivo-fonte alterado está dentro dos caminhos do DEV A listados em `CONTRIBUTING.md`.
+- [ ] T030 Executar a validação de ownership do CI para a branch `data/us4-debrief-sources` e confirmar que todo arquivo-fonte alterado está dentro dos caminhos do DEV A listados em `CONTRIBUTING.md`.
 
 ---
 

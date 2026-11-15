@@ -170,7 +170,10 @@ fonte é identificada.
    marcará regras simplificadas ou exclusivas do jogo como simplificações.
 4. **Dado** o evento de radiação DONKI arquivado, **quando** a tela de fontes for exibida,
    **então** ela nomeará o evento e fornecerá seu link da NASA sem afirmar que os dados são atuais
-   ou ao vivo.
+   ou ao vivo. O nome é o rótulo "NASA DONKI solar event (archived)" mais o id tirado do fim do
+   link; a data do evento não aparece na tela, porque só `src/data/` a conhece e um componente não
+   importa essa camada. Sem partida em andamento, a tela mostra só a fonte genérica do DONKI,
+   marcada como "archived snapshot".
 5. **Dado** um texto de evento ou debrief voltado ao jogador, **quando** for exibido, **então**
    haverá versão em inglês e as palavras serão simples o suficiente para idades de 7 a 12 anos.
 
