@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { hasPausedJob } from './selectors'
 import { useGameStore } from './store'
 
 describe('store', () => {
@@ -31,6 +32,36 @@ describe('store', () => {
     useGameStore.getState().start(42)
     useGameStore.getState().bringInside('no-such-astronaut')
     expect(useGameStore.getState().lastError).not.toBeNull()
+  })
+
+  it('resumeJobs() puts the jobs paused by "Bring inside" back in the queue', () => {
+    const game = useGameStore.getState().game!
+    const habitat = game.structures.find((x) => x.type === 'habitat')!
+    useGameStore.setState({
+      game: {
+        ...game,
+        jobs: [
+          {
+            id: 'j99',
+            kind: 'upgrade',
+            structureId: habitat.id,
+            upgradeId: 'thermal_insulation',
+            astronautId: null,
+            remainingSeconds: 5,
+            status: 'held',
+          },
+        ],
+      },
+    })
+    expect(hasPausedJob(useGameStore.getState(), habitat.id)).toBe(true)
+
+    useGameStore.getState().resumeJobs(habitat.id)
+    expect(useGameStore.getState().lastError).toBeNull()
+    expect(useGameStore.getState().game!.jobs[0].status).toBe('queued')
+    expect(hasPausedJob(useGameStore.getState(), habitat.id)).toBe(false)
+
+    useGameStore.getState().resumeJobs(habitat.id)
+    expect(useGameStore.getState().lastError).toBe('not_allowed')
   })
 
   it('placeAt() does nothing when no structure is being placed', () => {

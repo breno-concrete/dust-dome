@@ -176,15 +176,22 @@ Tolerance used everywhere below: `EPS = 1e-9` (floating-point only, not a balanc
 
 - **Decision**: new actions `bringInside(state, config, astronautId)` and
   `bringAllInside(state, config)` (they replace the unused `shelterAll`). The astronaut must be
-  alive and outside, otherwise `not_allowed` (for "all": nobody outside). The job goes back to
-  `queued` with its remaining time.
+  alive and outside, otherwise `not_allowed` (for "all": nobody outside).
   - No radiation storm: the astronaut goes into their current habitat and gets `resting = true`;
-    a resting astronaut takes no job until exposure ≤ EPS, then `resting = false`.
+    a resting astronaut takes no job until exposure ≤ EPS, then `resting = false`. Their job
+    becomes `held` with its remaining time (constitution 3.2.0, II.9, issue #50): `assign` skips
+    it, so nobody continues it, not even an astronaut who was already inside.
   - Radiation storm (warning or active): the astronaut goes into a finished habitat with a
-    radiation shelter that has room; no such habitat → `not_allowed`. No `resting` flag: R8
-    already keeps everyone inside until the storm ends, then the jobs resume.
+    radiation shelter that has room; no such habitat → `not_allowed`. No `resting` flag and the
+    job goes back to `queued`: R8 already keeps everyone inside until the storm ends, then the
+    jobs resume.
+  - `resumeJobs(state, config, structureId)` ("Resume" on the structure): every `held` job of
+    the structure goes back to `queued`, and `assign` gives it to the least exposed free
+    astronaut. In winter darkness it waits in the queue until spring. No held job →
+    `not_allowed`.
 - **Rationale**: FR-026 and US5 scenarios 8–10. Without the resting flag, the recalled astronaut
-  would take the same job again on the next step.
+  would take the same job again on the next step. Without `held`, another free astronaut would
+  (playtest of 2026-11-15: "Everyone inside" sent someone straight back out).
 - **Alternatives**: keeping `shelterAll` next to the two new actions (three actions for two
   ideas); resting until the exposure falls below the warning level (an astronaut recalled at 30 %
   would go straight back out).

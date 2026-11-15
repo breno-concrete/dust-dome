@@ -32,6 +32,11 @@ export function placementPreview(store: Pick<GameStore, 'game' | 'placing' | 'ho
   }
 }
 
+/** The structure has a job paused by "Bring inside": show its Resume button. */
+export function hasPausedJob(store: Pick<GameStore, 'game'>, structureId: string): boolean {
+  return store.game?.jobs.some((j) => j.structureId === structureId && j.status === 'held') ?? false
+}
+
 /** Seconds left in the current season. */
 export function secondsLeftInSeason(store: Pick<GameStore, 'game'>): number {
   const g = store.game
