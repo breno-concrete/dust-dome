@@ -14,17 +14,29 @@ export function rotateStep(step: RotationStep, delta: 1 | -1): RotationStep {
   return ((((step + delta) % 4) + 4) % 4) as RotationStep
 }
 
-/** Isometric camera orbit position for a 90° rotation step around the origin. */
-export function cameraPositionForStep(step: RotationStep, distance = 14): [number, number, number] {
+/** Clamp a camera pan target (x, z) to stay within the outpost grid boundaries. */
+export function clampPanTarget(x: number, z: number, grid: Grid): [number, number] {
+  const halfW = grid.width / 2
+  const halfH = grid.height / 2
+  return [Math.max(-halfW, Math.min(halfW, x)), Math.max(-halfH, Math.min(halfH, z))]
+}
+
+/** Isometric camera orbit position for a 90° rotation step around an XZ target. */
+export function cameraPositionForStep(
+  step: RotationStep,
+  distance = 14,
+  target: readonly [number, number] = [0, 0],
+): [number, number, number] {
+  const [tx, tz] = target
   switch (step) {
     case 0:
-      return [distance, distance, distance]
+      return [tx + distance, distance, tz + distance]
     case 1:
-      return [-distance, distance, distance]
+      return [tx - distance, distance, tz + distance]
     case 2:
-      return [-distance, distance, -distance]
+      return [tx - distance, distance, tz - distance]
     case 3:
-      return [distance, distance, -distance]
+      return [tx + distance, distance, tz - distance]
   }
 }
 

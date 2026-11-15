@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   cameraPositionForStep,
+  clampPanTarget,
   rotateStep,
   tileCenter,
   worldToTile,
@@ -86,5 +87,20 @@ describe('iso grid math', () => {
         expect(worldToTile(hitX, hitZ, grid)).toEqual(tile)
       }
     }
+  })
+
+  it('clamps camera pan target within the 12x12 grid bounds', () => {
+    expect(clampPanTarget(0, 0, grid)).toEqual([0, 0])
+    expect(clampPanTarget(-6, 6, grid)).toEqual([-6, 6])
+    expect(clampPanTarget(-15, 22, grid)).toEqual([-6, 6])
+    expect(clampPanTarget(9.5, -12, grid)).toEqual([6, -6])
+  })
+
+  it('orbits around the panned target when rotating in 90° steps', () => {
+    const target = [3, -4] as const
+    expect(cameraPositionForStep(0, 14, target)).toEqual([17, 14, 10])
+    expect(cameraPositionForStep(1, 14, target)).toEqual([-11, 14, 10])
+    expect(cameraPositionForStep(2, 14, target)).toEqual([-11, 14, -18])
+    expect(cameraPositionForStep(3, 14, target)).toEqual([17, 14, -18])
   })
 })
