@@ -155,9 +155,9 @@ de apresentação podem ser testados independentemente com estados criados manua
 
 > **TDD**: Escreva estes testes primeiro e confirme que falham pelo comportamento ausente esperado.
 
-- [ ] T020 [P] [US4] Adicionar testes de comportamento em `src/features/end/EndScreen.test.tsx` para missões vencidas e perdidas, agrupamento por ciclo/estação, cada causa de perda registrada, debriefs sem perdas e reinício usando a store real. Incluir a entrada `radiation_storm` nos dois formatos de `ref`: com a `url` do evento DONKI citado e com a palavra `radiation_storm` (sem evento), que não pode virar uma citação inventada.
-- [ ] T021 [P] [US4] Adicionar testes de comportamento em `src/features/sources/SourcesScreen.test.tsx` para fontes deduplicadas, classificações científicas, rótulo DONKI arquivado e texto voltado ao jogador em inglês.
-- [ ] T022 [US4] Executar `npx vitest run src/features/end/EndScreen.test.tsx src/features/sources/SourcesScreen.test.tsx` e registrar que os novos testes da US4 falham antes da implementação.
+- [x] T020 [P] [US4] Adicionar testes de comportamento em `src/features/end/EndScreen.test.tsx` para missões vencidas e perdidas, agrupamento por ciclo/estação, cada causa de perda registrada, debriefs sem perdas e reinício usando a store real. Incluir a entrada `radiation_storm` nos dois formatos de `ref`: com a `url` do evento DONKI citado e com a palavra `radiation_storm` (sem evento), que não pode virar uma citação inventada.
+- [x] T021 [P] [US4] Adicionar testes de comportamento em `src/features/sources/SourcesScreen.test.tsx` para fontes deduplicadas, classificações científicas, rótulo DONKI arquivado e texto voltado ao jogador em inglês.
+- [x] T022 [US4] Executar `npx vitest run src/features/end/EndScreen.test.tsx src/features/sources/SourcesScreen.test.tsx` e registrar que os novos testes da US4 falham antes da implementação. Registro: `npx vitest run src/features/end src/features/sources` dá 62 testes, 56 falhando por asserção (esqueletos `debrief.ts` e `sources.ts` devolvem vazio; as telas ainda não têm o debrief nem o rótulo de arquivado). Os 6 que passam guardam comportamento que já existe e deve continuar: tela vazia sem partida, botão "Back", link único por URL, rótulo de classificação e os dois casos em que `donkiCitation` devolve `null`.
 
 ### Implementação da User Story 4
 
