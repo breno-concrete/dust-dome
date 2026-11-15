@@ -17,6 +17,9 @@ const strings = {
   crew: { en: 'Crew', pt: 'Tripulação' },
   inside: { en: 'Sheltered', pt: 'Abrigado' },
   outside: { en: 'EVA', pt: 'Externo' },
+  allInside: { en: 'All inside', pt: 'Todos para dentro' },
+  bringInside: { en: 'Bring {name} inside', pt: 'Trazer {name} para dentro' },
+  bringInsideShort: { en: 'Bring in', pt: 'Trazer' },
   deceased: { en: 'Lost', pt: 'Perdido' },
   lifeSupport: { en: 'Life support reserves', pt: 'Reservas vitais' },
   gameClock: { en: 'Game clock', pt: 'Relógio do jogo' },
@@ -44,6 +47,8 @@ export function Hud() {
   const game = useGameStore((s) => s.game)
   const speed = useGameStore((s) => s.speed)
   const setSpeed = useGameStore((s) => s.setSpeed)
+  const bringInside = useGameStore((s) => s.bringInside)
+  const bringAllInside = useGameStore((s) => s.bringAllInside)
   const left = useGameStore((s) => secondsLeftInSeason(s))
   const t = useT()
 
@@ -177,7 +182,17 @@ export function Hud() {
         data-testid="crew-panel"
         aria-label={t(strings.crew)}
       >
-        <h2 className={styles.crewHeading}>{t(strings.crew)}</h2>
+        <div className={styles.crewHeader}>
+          <h2 className={styles.crewHeading}>{t(strings.crew)}</h2>
+          <button
+            type="button"
+            className={styles.crewButton}
+            disabled={!game.crew.some((a) => a.alive && a.location === 'outside')}
+            onClick={bringAllInside}
+          >
+            {t(strings.allInside)}
+          </button>
+        </div>
         {game.crew.map((astronaut) => {
           const isWarning = astronaut.exposure >= 0.75
           const exposurePercent = Math.round(astronaut.exposure * 100)
@@ -209,6 +224,19 @@ export function Hud() {
                 </span>
               ) : (
                 <span className={styles.deceasedLabel}>{t(strings.deceased)}</span>
+              )}
+              {astronaut.alive && astronaut.location === 'outside' && (
+                <button
+                  type="button"
+                  className={styles.crewButton}
+                  aria-label={t(strings.bringInside).replace(
+                    '{name}',
+                    astronaut.name.split(' ')[0]!,
+                  )}
+                  onClick={() => bringInside(astronaut.id)}
+                >
+                  {t(strings.bringInsideShort)}
+                </button>
               )}
             </div>
           )

@@ -611,3 +611,17 @@
   color: #8a4a33;
   font-weight: 700;
 }
+
+/* ---- Repair / Clean / Demolish on the selected structure ---- */
+.structureActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.hint {
+  margin: 0 0 var(--space-1);
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
