@@ -7,6 +7,7 @@ import { Button } from '../../ui-kit/Button'
 import { Icon } from '../../ui-kit/Icon'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
+import { useTutorialUi } from './tutorial'
 
 const strings = {
   title: { en: 'Power switches', pt: 'Controle de energia' },
@@ -26,6 +27,7 @@ export function PowerPanel() {
   const game = useGameStore((s) => s.game)
   const setPowerMode = useGameStore((s) => s.setPowerMode)
   const [isOpen, setIsOpen] = useState(false)
+  const pointedOut = useTutorialUi((s) => s.highlight === 'power')
   const t = useT()
   if (!game) return null
 
@@ -36,7 +38,13 @@ export function PowerPanel() {
     <>
       <button
         type="button"
-        className={[styles.powerDock, isOpen && styles.powerDockActive].filter(Boolean).join(' ')}
+        className={[
+          styles.powerDock,
+          isOpen && styles.powerDockActive,
+          pointedOut && styles.tutorialPulse,
+        ]
+          .filter(Boolean)
+          .join(' ')}
         aria-expanded={isOpen}
         aria-controls="power-panel"
         onClick={() => setIsOpen((open) => !open)}

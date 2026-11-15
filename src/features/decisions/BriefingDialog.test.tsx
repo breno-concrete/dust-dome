@@ -10,7 +10,10 @@ import { BriefingDialog } from './BriefingDialog'
 function openBriefing(cycle: number, season: 'spring' | 'summer' | 'autumn' | 'winter') {
   act(() => {
     const g = useGameStore.getState().game!
-    useGameStore.setState({ game: { ...g, briefing: { cycle, season } } })
+    // The game has already started (elapsed > 0): a brand new game opens with the tutorial first.
+    useGameStore.setState({
+      game: { ...g, time: { ...g.time, elapsed: 1 }, briefing: { cycle, season } },
+    })
   })
 }
 
