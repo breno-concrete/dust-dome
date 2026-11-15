@@ -13,6 +13,8 @@ export type Highlight = 'build' | 'power' | null
 export interface TutorialStep {
   id: string
   kind: 'read' | 'do'
+  /** Chapter title, shown as the dialog title. */
+  chapter: LocalizedText & { pt: string }
   /** Which Vega portrait goes with the step. */
   mood: VegaMood
   text: LocalizedText & { pt: string }
@@ -21,86 +23,186 @@ export interface TutorialStep {
   highlight?: Highlight
 }
 
+const ch = (en: string, pt: string) => ({ en, pt })
+const MISSION = ch('The mission', 'A missão')
+const TIME = ch('Time and seasons', 'Tempo e estações')
+const CREW = ch('Your crew', 'Sua tripulação')
+const MATERIALS = ch('Materials', 'Materiais')
+const POWER = ch('Power', 'Energia')
+const LIFE = ch('Life support', 'Suporte à vida')
+const DANGERS = ch('Dangers of Mars', 'Perigos de Marte')
+const PRACTICE = ch("Let's practice", 'Vamos praticar')
+const READY = ch('Ready!', 'Pronto!')
+
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'welcome',
     kind: 'read',
+    chapter: MISSION,
     mood: 'welcome',
     text: {
-      en: "Hi, cadet! I'm Commander Vega. Our 4 astronauts and I just landed on Mars, in a place called Hellas Planitia. In 4 Martian years, 32 colonists will arrive. Our mission: get the base ready for them!",
-      pt: 'Oi, cadete! Eu sou a Comandante Vega. Nossos 4 astronautas e eu acabamos de pousar em Marte, num lugar chamado Hellas Planitia. Em 4 anos marcianos, 32 colonos vão chegar. Nossa missão: deixar a base pronta para eles!',
+      en: "Hi, cadet! I'm Commander Vega. Our 4 astronauts landed on Mars at Hellas Planitia, where NASA radar found ice buried underground. In 4 Martian years, 32 colonists will arrive. Your job: get the base ready for them!",
+      pt: 'Oi, cadete! Eu sou a Comandante Vega. Nossos 4 astronautas pousaram em Marte, em Hellas Planitia, onde o radar da NASA achou gelo enterrado. Em 4 anos marcianos, 32 colonos vão chegar. Seu trabalho: deixar a base pronta para eles!',
     },
   },
   {
     id: 'goal',
     kind: 'read',
+    chapter: MISSION,
     mood: 'neutral',
     text: {
-      en: 'Look at the three bars at the top: oxygen, water and food. The little white mark on each bar is our goal. When the colonists land, every bar must reach its mark. If a bar hits zero, our crew is in danger!',
-      pt: 'Olhe as três barras no topo: oxigênio, água e comida. A marquinha branca em cada barra é a nossa meta. Quando os colonos pousarem, todas as barras precisam chegar na marca. Se uma barra zerar, a tripulação corre perigo!',
+      en: 'To win, when the 32 colonists land at the end of year 4, the base must store 36 oxygen, 36 water and 36 food (one season for 36 people) and have 6 habitat modules to sleep in. The white mark on each top bar is that goal. You lose if all 4 astronauts are lost.',
+      pt: 'Para vencer, quando os 32 colonos pousarem no fim do ano 4, a base precisa guardar 36 de oxigênio, 36 de água e 36 de comida (uma estação para 36 pessoas) e ter 6 módulos habitacionais para dormir. A marquinha branca em cada barra do topo é essa meta. Você perde se os 4 astronautas forem perdidos.',
     },
   },
   {
-    id: 'time',
+    id: 'year',
     kind: 'read',
+    chapter: TIME,
     mood: 'neutral',
     text: {
-      en: 'Time on Mars flows in real time. A year has four seasons: spring, summer, autumn and winter, and each one changes the weather. Use the clock to pause or speed things up. I pause the game whenever I need to talk to you.',
-      pt: 'O tempo em Marte passa em tempo real. Um ano tem quatro estações: primavera, verão, outono e inverno, e cada uma muda o clima. Use o relógio para pausar ou acelerar. Eu pauso o jogo sempre que preciso falar com você.',
+      en: "A Martian year has 4 seasons and lasts 20 minutes of play. Mars' south is wild: summer is short and stormy, winter is long, dark and freezing. Use the clock to pause, or to go 2× or 4× faster. I pause the game whenever I talk to you.",
+      pt: 'Um ano marciano tem 4 estações e dura 20 minutos de jogo. O sul de Marte é selvagem: o verão é curto e cheio de tempestades, o inverno é longo, escuro e gelado. Use o relógio para pausar ou acelerar 2× ou 4×. Eu pauso o jogo sempre que falo com você.',
     },
   },
   {
-    id: 'materials',
+    id: 'briefings',
     kind: 'read',
+    chapter: TIME,
     mood: 'neutral',
     text: {
-      en: 'Building needs materials, shown at the top right. The mine digs hematite and regolith. The iron refinery turns hematite into iron, the steel factory turns iron into steel, and the repair workshop makes repair parts.',
-      pt: 'Construir precisa de materiais, mostrados no canto superior direito. A mina cava hematita e regolito. A refinaria transforma hematita em ferro, a fábrica transforma ferro em aço, e a oficina faz peças de reparo.',
-    },
-  },
-  {
-    id: 'power',
-    kind: 'read',
-    mood: 'neutral',
-    text: {
-      en: 'Machines need power. Solar panels make it, but less in winter and when dust covers them. With too little power, machines shut down one by one. Use Power switches to set each kind of machine to Off, Min or Max.',
-      pt: 'As máquinas precisam de energia. Os painéis solares a geram, mas menos no inverno e quando a poeira os cobre. Com pouca energia, as máquinas desligam uma a uma. Use o Controle de energia para deixar cada tipo de máquina em Off, Mín ou Máx.',
+      en: 'At the start of every season I will brief you: dust devils in spring, storms in summer, cold in autumn and winter. Each year is harder than the last. Read my briefings, because I always tell you what to prepare!',
+      pt: 'No começo de cada estação eu vou avisar você: redemoinhos de poeira na primavera, tempestades no verão, frio no outono e no inverno. Cada ano é mais difícil que o anterior. Leia meus avisos, porque eu sempre digo o que preparar!',
     },
   },
   {
     id: 'crew',
     kind: 'read',
+    chapter: CREW,
     mood: 'caring',
     text: {
-      en: 'Our 4 astronauts do the outside jobs, like building. Outside, they get radiation, shown as a percentage by their name. When it gets high, they come back inside on their own. You can also call them in with the Bring in buttons.',
-      pt: 'Nossos 4 astronautas fazem os trabalhos lá fora, como construir. Fora da base, eles recebem radiação, mostrada em porcentagem ao lado do nome. Quando fica alta, eles voltam para dentro sozinhos. Você também pode chamá-los com os botões Trazer.',
+      en: 'We have only 4 astronauts, and they do every job outside the base: building, upgrading, repairing and cleaning. Each astronaut does one job at a time, so choose what comes first. Their names and radiation are at the bottom left.',
+      pt: 'Temos só 4 astronautas, e eles fazem todos os trabalhos fora da base: construir, melhorar, consertar e limpar. Cada astronauta faz um trabalho por vez, então escolha o que vem primeiro. Os nomes e a radiação deles ficam no canto inferior esquerdo.',
     },
   },
   {
-    id: 'hazards',
+    id: 'radiation',
     kind: 'read',
+    chapter: CREW,
     mood: 'warning',
     text: {
-      en: 'Mars fights back! Dust devils break machines: repair them with repair parts. Dust clogs panels: clean them. From year 3, winter is deadly cold, so build Thermal insulation on the habitat. Against solar storms, build the Radiation shelter and press Take shelter.',
-      pt: 'Marte reage! Redemoinhos de poeira quebram máquinas: conserte com peças de reparo. A poeira entope os painéis: limpe. A partir do ano 3, o inverno é gelado demais, então construa o Isolamento térmico no habitat. Contra as tempestades solares, construa o Abrigo antirradiação e aperte Abrigar tripulação.',
+      en: "Mars has no thick air or magnetic shield, so outside an astronaut's radiation keeps rising. At 75% they stop and come back inside to rest. You can also press Bring in to call someone home earlier. Radiation never kills by itself, but it keeps the crew from working.",
+      pt: 'Marte não tem ar grosso nem escudo magnético, então fora da base a radiação do astronauta só sobe. Ao chegar em 75%, ele para e volta para descansar. Você também pode apertar Trazer para chamar alguém antes. A radiação sozinha não mata, mas impede a tripulação de trabalhar.',
+    },
+  },
+  {
+    id: 'raw',
+    kind: 'read',
+    chapter: MATERIALS,
+    mood: 'neutral',
+    text: {
+      en: 'The mine digs two raw materials: hematite and regolith. Hematite builds the first machines. Regolith is Martian soil, used for foundations and thick walls against cold and radiation. Your stock is the box at the top right.',
+      pt: 'A mina cava dois materiais brutos: hematita e regolito. A hematita constrói as primeiras máquinas. O regolito é o solo marciano, usado em fundações e paredes grossas contra o frio e a radiação. Seu estoque é a caixa no canto superior direito.',
+    },
+  },
+  {
+    id: 'chain',
+    kind: 'read',
+    chapter: MATERIALS,
+    mood: 'neutral',
+    text: {
+      en: 'Better machines need better materials. The iron refinery turns hematite into iron and unlocks level 2. The steel factory turns iron into steel and unlocks level 3. The repair workshop turns iron into repair parts. Build the refinery early!',
+      pt: 'Máquinas melhores precisam de materiais melhores. A refinaria transforma hematita em ferro e libera o nível 2. A fábrica de aço transforma ferro em aço e libera o nível 3. A oficina transforma ferro em peças de reparo. Construa a refinaria cedo!',
+    },
+  },
+  {
+    id: 'solar',
+    kind: 'read',
+    chapter: POWER,
+    mood: 'neutral',
+    text: {
+      en: 'Machines run on power. Solar panels make it: a lot in spring and summer, less in autumn, very little in winter and almost none in a dust storm. A battery saves extra power for bad days. The nuclear reactor makes power in any weather.',
+      pt: 'As máquinas funcionam com energia. Os painéis solares a geram: muita na primavera e no verão, menos no outono, quase nada no inverno e quase nada em tempestade de poeira. A bateria guarda energia extra para os dias ruins. O reator nuclear gera energia com qualquer clima.',
+    },
+  },
+  {
+    id: 'switches',
+    kind: 'read',
+    chapter: POWER,
+    mood: 'neutral',
+    text: {
+      en: 'Every kind of machine has a switch: Off, Min or Max. Max makes more but burns more power. When power runs out, machines shut down one by one, so watch the Power number at the top. In a crisis, switch to Min!',
+      pt: 'Cada tipo de máquina tem uma chave: Off, Mín ou Máx. O Máx produz mais, mas gasta mais energia. Quando a energia acaba, as máquinas desligam uma a uma, então olhe o número de Energia no topo. Numa crise, mude para Mín!',
+    },
+  },
+  {
+    id: 'survive',
+    kind: 'read',
+    chapter: LIFE,
+    mood: 'neutral',
+    text: {
+      en: "Three machines keep us alive: the oxygen generator (it turns the carbon dioxide of Mars into oxygen, like NASA's MOXIE), the ice melter (water from underground ice) and the greenhouse (food, and it needs water too). Each astronaut uses 1 oxygen, 1 water and 1 food per season.",
+      pt: 'Três máquinas mantêm a gente vivo: o gerador de oxigênio (transforma o gás carbônico de Marte em oxigênio, como o MOXIE da NASA), o derretedor de gelo (água do gelo subterrâneo) e a estufa (comida, e ela também gasta água). Cada astronauta usa 1 de oxigênio, 1 de água e 1 de comida por estação.',
+    },
+  },
+  {
+    id: 'empty',
+    kind: 'read',
+    chapter: LIFE,
+    mood: 'warning',
+    text: {
+      en: 'If oxygen, water or food reaches zero, or the habitat has no heat, an astronaut is lost after 15 seconds, and another one every 15 seconds. A bar blinks when it holds less than one season for the crew. Act before it hits zero!',
+      pt: 'Se o oxigênio, a água ou a comida chegar a zero, ou se o habitat ficar sem aquecimento, um astronauta é perdido depois de 15 segundos, e outro a cada 15 segundos. A barra pisca quando guarda menos que uma estação para a tripulação. Aja antes de zerar!',
+    },
+  },
+  {
+    id: 'dust',
+    kind: 'read',
+    chapter: DANGERS,
+    mood: 'warning',
+    text: {
+      en: 'Dust devils damage machines: they work at half power until repaired. A repair costs 4 repair parts and a quick bolt game. Dust also clogs machines: cleaning needs no parts, but an astronaut goes outside for a while. Select a machine to repair or clean it.',
+      pt: 'Redemoinhos de poeira danificam as máquinas: elas funcionam com metade da força até serem consertadas. Um conserto custa 4 peças de reparo e um jogo rápido de parafusos. A poeira também entope as máquinas: limpar não gasta peças, mas um astronauta sai por um tempo. Selecione uma máquina para consertar ou limpar.',
+    },
+  },
+  {
+    id: 'cold',
+    kind: 'read',
+    chapter: DANGERS,
+    mood: 'warning',
+    text: {
+      en: 'Autumn and winter are cold, so habitats burn more power for heat. Before the winter of year 3, build Thermal insulation on the habitat: without it, the astronauts freeze when winter starts. In deep winter it is also too dark and cold to go outside.',
+      pt: 'O outono e o inverno são frios, então os habitats gastam mais energia para aquecer. Antes do inverno do ano 3, construa o Isolamento térmico no habitat: sem ele, os astronautas congelam quando o inverno começa. No inverno profundo também fica escuro e frio demais para sair.',
+    },
+  },
+  {
+    id: 'storm',
+    kind: 'read',
+    chapter: DANGERS,
+    mood: 'alert',
+    text: {
+      en: 'From year 2, solar storms can hit, like the real ones NASA tracks. An alarm gives you 10 seconds. Astronauts who are not inside a habitat with a Radiation shelter are lost. Build that upgrade, then press Take shelter to bring everyone in!',
+      pt: 'A partir do ano 2, tempestades solares podem chegar, como as reais que a NASA acompanha. Um alarme dá 10 segundos para você. Astronautas que não estiverem num habitat com Abrigo antirradiação são perdidos. Construa essa melhoria e aperte Abrigar tripulação para trazer todos para dentro!',
     },
   },
   {
     id: 'do-pick',
     kind: 'do',
-    mood: 'neutral',
+    chapter: PRACTICE,
     check: 'pick',
     highlight: 'build',
+    mood: 'neutral',
     text: {
-      en: "Now it's your turn! We need more power. Press the Build base button and choose a Solar panel.",
-      pt: 'Agora é com você! Precisamos de mais energia. Aperte o botão Construir e escolha um Painel solar.',
+      en: "Now it's your turn! We need more power. Press the Build base button and choose a Solar panel. Read its science card first!",
+      pt: 'Agora é com você! Precisamos de mais energia. Aperte o botão Construir e escolha um Painel solar. Leia a ficha de ciência dele primeiro!',
     },
   },
   {
     id: 'do-place',
     kind: 'do',
-    mood: 'neutral',
+    chapter: PRACTICE,
     check: 'place',
+    mood: 'neutral',
     text: {
       en: 'Great! Now click a free spot on the ground to place the panel. An astronaut will go outside to build it.',
       pt: 'Ótimo! Agora clique num espaço livre no chão para colocar o painel. Um astronauta vai sair para construí-lo.',
@@ -109,19 +211,21 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'do-select',
     kind: 'do',
-    mood: 'neutral',
+    chapter: PRACTICE,
     check: 'select',
+    mood: 'neutral',
     text: {
-      en: 'Well done! Now click any machine on the ground. You will see its name, what it makes and what it uses.',
-      pt: 'Muito bem! Agora clique em qualquer máquina no chão. Você vai ver o nome dela, o que ela produz e o que ela gasta.',
+      en: 'Well done! Now click any machine on the ground. You will see its name, its state, what it makes and what it uses.',
+      pt: 'Muito bem! Agora clique em qualquer máquina no chão. Você vai ver o nome, o estado, o que ela produz e o que ela gasta.',
     },
   },
   {
     id: 'do-switch',
     kind: 'do',
-    mood: 'neutral',
+    chapter: PRACTICE,
     check: 'switch',
     highlight: 'power',
+    mood: 'neutral',
     text: {
       en: 'Last one: open Power switches and change one switch, for example from Min to Max. You can change it back anytime.',
       pt: 'Só falta uma: abra o Controle de energia e mude uma chave, por exemplo de Mín para Máx. Você pode voltar atrás quando quiser.',
@@ -130,10 +234,11 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'bye',
     kind: 'read',
+    chapter: READY,
     mood: 'celebrating',
     text: {
-      en: 'You are ready, cadet! Keep the bars growing, keep the power on and keep the crew safe. Next I will tell you about the first season. Good luck!',
-      pt: 'Você está pronto, cadete! Faça as barras crescerem, mantenha a energia ligada e a tripulação a salvo. Agora vou contar sobre a primeira estação. Boa sorte!',
+      en: 'Your first goals: add solar panels and a battery, build the iron refinery to reach level 2, and keep the three bars growing. I will be watching from Earth. Good luck, cadet!',
+      pt: 'Seus primeiros objetivos: coloque mais painéis solares e uma bateria, construa a refinaria de ferro para chegar ao nível 2 e faça as três barras crescerem. Vou acompanhar da Terra. Boa sorte, cadete!',
     },
   },
 ]

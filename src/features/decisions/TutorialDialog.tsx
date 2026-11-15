@@ -12,7 +12,6 @@ import { isStepDone, TUTORIAL_STEPS, useTutorialUi, type StepContext } from './t
 
 const strings = {
   commander: { en: 'Commander Vega', pt: 'Comandante Vega' },
-  title: { en: 'Mission training', pt: 'Treinamento da missão' },
   next: { en: 'Next', pt: 'Próximo' },
   back: { en: 'Back', pt: 'Voltar' },
   start: { en: 'Start', pt: 'Começar' },
@@ -102,7 +101,7 @@ export function TutorialDialog({ onDone }: { onDone: () => void }) {
     <Modal
       isOpen
       tone="light"
-      title={t(strings.title)}
+      title={t(step.chapter)}
       footer={
         <div className={styles.tutorialFooter}>
           <span className={styles.tutorialCounter}>{counter}</span>
