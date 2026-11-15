@@ -1,6 +1,14 @@
 <!--
 Sync Impact Report
-Version: 3.0.0 → 3.1.0 (MINOR: event rules made precise from the POs' 25 answers of 2026-11-14)
+Version: 3.1.0 → 3.2.0 (MINOR: bringing an astronaut inside pauses their job until Resume)
+Modified sections: II.9 (a job paused by "Bring inside" / "Everyone inside" waits for the
+  player's Resume; the least exposed free astronaut then takes it; radiation storms, the 75%
+  automatic return and winter are unchanged)
+Follow-up TODOs:
+  - Engine (Breno): player-paused job, resumeJobs action and store contract (issue #50).
+  - UI (jvsauma): Resume button on the selected structure (issue #50).
+Source: playtest of 2026-11-15 ("Everyone inside" sent another astronaut straight back out)
+Previous: 3.0.0 → 3.1.0 (MINOR: event rules made precise from the POs' 25 answers of 2026-11-14)
 Modified sections: II.2 (extreme cold at the first instant of winter, no grace period), II.9
   (winter blocks every external job from the first second; running jobs pause and wait for
   spring), II.10 (only cleaning is blocked during a storm; one state per structure by severity;
@@ -407,6 +415,12 @@ Ice melter (takes no insulation):
     continue it;
   - an astronaut takes a new job only when their meter is back to 25% or less;
   - exposure never kills: nobody stays outside past 75%.
+- **Bringing astronauts inside** (one, or everyone): the astronaut comes in to rest and their job
+  **pauses** with its remaining time. Nobody continues a paused job until the player taps
+  **Resume** on its structure; then the job goes back to the queue and the least exposed free
+  astronaut takes it. This holds for every external job. During a radiation storm the jobs
+  resume by themselves when the storm ends (II.11). An astronaut who finishes a job still takes
+  the next job in the queue by themselves.
 - **Winter, cycles 2–4:** from the first second of winter, every external job (build, upgrade,
   repair, clean, demolish) is blocked. A job already running pauses, its astronaut comes back
   inside, and the job keeps its remaining time in the queue until spring. A panel broken in
@@ -609,4 +623,4 @@ Amendments go through a `shared/` pull request approved by a second team member;
 Part II also need one product owner's approval. Every pull request must respect the ownership
 table and the principles above.
 
-**Version**: 3.1.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-14
+**Version**: 3.2.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-15
