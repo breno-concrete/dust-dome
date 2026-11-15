@@ -8,7 +8,6 @@ import { Icon } from '../../ui-kit/Icon'
 import { Modal } from '../../ui-kit/Modal'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
-import { RadiationAlarmModal } from './RadiationAlarmModal'
 
 const strings = {
   commander: { en: 'Commander Vega', pt: 'Comandante Vega' },
@@ -20,8 +19,7 @@ export function BriefingDialog() {
   const briefing = useGameStore((s) => s.game?.briefing)
   const dismiss = useGameStore((s) => s.dismissBriefing)
   const t = useT()
-  // The radiation alarm lives here because this component is already mounted by the app shell.
-  if (!briefing) return <RadiationAlarmModal />
+  if (!briefing) return null
   const season = seasonDef(briefing.season)
   const text = config.narrator.briefings[String(briefing.cycle)]?.[briefing.season]
 
