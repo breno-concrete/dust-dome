@@ -32,15 +32,11 @@ function warningStorm(briefingOpen: boolean) {
 }
 
 describe('App shell: radiation alarm', () => {
-  const original = useGameStore.getState().shelterAll
   beforeEach(() => {
     act(() => useGameStore.getState().start(42))
     useLang.setState({ lang: 'en' })
   })
-  afterEach(() => {
-    cleanup()
-    act(() => useGameStore.setState({ shelterAll: original }))
-  })
+  afterEach(cleanup)
 
   it('shows the alarm with its countdown even while a briefing is open', () => {
     warningStorm(true)
@@ -49,12 +45,19 @@ describe('App shell: radiation alarm', () => {
     expect(screen.getByTestId('storm-countdown').textContent).toContain('10')
   })
 
-  it('"Take shelter" shelters the whole crew', async () => {
-    const shelterAll = vi.fn()
-    act(() => useGameStore.setState({ shelterAll }))
+  // Checks the result, not which store action the button calls (shelterAll or bringAllInside).
+  it('"Take shelter" brings the whole crew inside', async () => {
     warningStorm(true)
+    act(() => {
+      const g = useGameStore.getState().game!
+      useGameStore.setState({
+        game: { ...g, crew: g.crew.map((a) => ({ ...a, location: 'outside' as const })) },
+      })
+    })
     render(<App />)
     await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
-    expect(shelterAll).toHaveBeenCalledTimes(1)
+    const crew = useGameStore.getState().game!.crew
+    expect(crew.length).toBeGreaterThan(0)
+    expect(crew.every((a) => a.location === 'inside')).toBe(true)
   })
 })
