@@ -65,6 +65,14 @@ describe('Tutorial', () => {
     expect(screen.getByText(config.narrator.briefings['1']!.summer.text.en)).toBeDefined()
   })
 
+  it('names the chapter in the dialog title, and changes it with the chapter', async () => {
+    render(<BriefingDialog />)
+    expect(screen.getByRole('dialog', { name: TUTORIAL_STEPS[0]!.chapter.en })).toBeDefined()
+    const other = TUTORIAL_STEPS.findIndex((s) => s.chapter.en !== TUTORIAL_STEPS[0]!.chapter.en)
+    for (let i = 0; i < other; i++) await next()
+    expect(screen.getByRole('dialog', { name: TUTORIAL_STEPS[other]!.chapter.en })).toBeDefined()
+  })
+
   it('shows where the player is: step 1 of N', () => {
     render(<BriefingDialog />)
     expect(screen.getByText(`1 / ${TUTORIAL_STEPS.length}`)).toBeDefined()
@@ -201,7 +209,7 @@ describe('Tutorial', () => {
 
     it('looks serious when she talks about the dangers', async () => {
       render(<BriefingDialog />)
-      const hazards = TUTORIAL_STEPS.findIndex((s) => s.id === 'hazards')
+      const hazards = TUTORIAL_STEPS.findIndex((s) => s.mood === 'warning')
       for (let i = 0; i < hazards; i++) await next()
       expect(screen.getByText(TUTORIAL_STEPS[hazards]!.text.en)).toBeDefined()
       expect(screen.getByRole('img', { name: /serious warning/ })).toBeDefined()
