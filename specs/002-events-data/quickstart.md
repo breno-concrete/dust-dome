@@ -39,9 +39,20 @@ ciência, valores do jogo, simplificações e dados DONKI arquivados.
 
 Use o script existente somente ao atualizar um intervalo de arquivo explicitamente aprovado:
 
+Coloque a chave de api.nasa.gov no arquivo `.env.local` na raiz do projeto (ele já é ignorado
+pelo git, pela regra `*.local`; nunca use `.env` sem confirmar que está ignorado):
+
+```text
+NASA_API_KEY=<sua chave>
+```
+
 ```powershell
 npm run data:fetch -- 2024-05-01 2024-05-31
 ```
+
+O script lê `NASA_API_KEY` da variável de ambiente ou, se ela não existir, do `.env.local`; sem
+chave, usa `DEMO_KEY` (limite baixo). O intervalo deve ficar dentro de um único mês; o script
+recusa o que cruza meses. A chave nunca vai para o repositório.
 
 O snapshot resultante deve ser versionado em `src/data/snapshots/`, revisado quanto aos campos SEP
 esperados e nunca buscado pelo navegador em runtime.

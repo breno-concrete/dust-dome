@@ -11,11 +11,19 @@
   eventos sob responsabilidade da área; colocá-la na store violaria o limite do engine puro e
   faria os testes determinísticos dependerem do estado do React.
 
-## Decisão: Usar `state.rng` para toda escolha aleatória
+## Decisão: Usar `state.rng` para toda escolha aleatória do clima
 
 - **Decisão**: Usar `nextRange` para selecionar intervalos, `nextIndex` para selecionar
-  estruturas e eventos DONKI e `nextFloat` para a `clogChance`, gravando cada valor RNG retornado
-  no próximo estado. Sorteio sem repetição (vários painéis): tirar o escolhido da lista de
+  estruturas e `nextFloat` para a `clogChance`, gravando cada valor RNG retornado no próximo
+  estado.
+- **Exceção, a tempestade de radiação (US3)**: o horário e o evento DONKI citado vêm de
+  `radiationPlan(seed, cycle, config)`, que usa os mesmos helpers de `rng.ts` num fluxo próprio,
+  iniciado pela seed misturada com o ciclo e uma constante fixa. Esse fluxo não lê nem grava o
+  `state.rng`, então a regra "gravar cada valor no próximo estado" não se aplica a ele: o plano é
+  recalculado da seed a cada tick. Motivo: o `GameState` não tem campo para uma tempestade que
+  ainda não começou (os testes da US1 reservam `nextEventAt` às regras de clima), e assim
+  tempestade e poeira não deslocam os sorteios uma da outra (testado). Custo: o HUD não pode
+  mostrar "tempestade em X segundos", o que combina com um alarme surpresa. Sorteio sem repetição (vários painéis): tirar o escolhido da lista de
   elegíveis antes do próximo `nextIndex`. A lista de elegíveis segue a ordem de
   `state.structures`, para o mesmo índice apontar a mesma estrutura.
 - **Motivo**: `src/engine/rng.ts` é o gerador com seed estabelecido, e a constituição exige que
@@ -101,6 +109,20 @@
   base real.
 - **Alternativas consideradas**: Buscar o DONKI durante uma missão tornaria o comportamento
   irreprodutível, exigiria rede e apresentaria dados arquivados incorretamente como atuais.
+
+## Decisão: Dividir os eventos DONKI em grupos por tempestade
+
+- **Decisão**: O evento citado por cada tempestade é sorteado com `nextIndex` só dentro do seu
+  grupo (posição `i % grupos`); o número de grupos vem da configuração. Ver
+  [data-model.md](data-model.md).
+- **Motivo**: Sortear na lista inteira podia citar o mesmo evento em duas tempestades da mesma
+  partida (cerca de 20% de chance com 14 eventos e 3 tempestades). Os grupos não se cruzam, não
+  exigem estado novo nem o log, e mantêm a seed e o `nextIndex`.
+- **Alternativas consideradas**: Lembrar os eventos já citados (depende do log ou de um campo de
+  estado do contrato) e sortear sem reposição (exige estado). Custo da escolha: cada tempestade
+  escolhe entre 4 ou 5 eventos, não entre 14.
+- **Também decidido**: `events.ts` importa `sepEvents()` de `src/data/donki` e a lógica fica numa
+  função interna que recebe a lista (ver `contracts/events-engine.md`).
 
 ## Decisão: Derivar o debrief de `GameState.log`
 

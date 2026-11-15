@@ -124,16 +124,16 @@ fases do motor podem ser escritos em paralelo antes da integração.
 
 > **TDD**: Escreva estes testes primeiro e confirme que falham pelo comportamento ausente esperado.
 
-- [ ] T013 [P] [US3] Substituir os casos `it.todo` de tempestade de radiação em `src/engine/events/events.test.ts` por testes de estações permitidas, quantidade por ciclo, duração do aviso, duração ativa, resultados de abrigo, trabalhos pausados e citação DONKI.
-- [ ] T014 [P] [US3] Substituir os casos `it.todo` de DONKI em `src/data/donki.test.ts` por testes de leitura do snapshot, seleção estável por índice com seed e comportamento para snapshot vazio ou inválido.
-- [ ] T015 [US3] Executar `npx vitest run src/engine/events/events.test.ts src/data/donki.test.ts` e registrar que os novos testes da US3 falham antes da implementação.
-
+- [x] T013 [P] [US3] Substituir os casos `it.todo` de tempestade de radiação em `src/engine/events/events.test.ts` por testes de estações permitidas, quantidade por ciclo, duração do aviso, duração ativa, resultados de abrigo, trabalhos pausados e citação DONKI. Os testes da lógica chamam a função interna `updateRadiationStorm(state, config, dt, events)` com uma lista de fixtures, sem mocks. Incluir: com 14 eventos e várias seeds, as tempestades dos ciclos 2, 3 e 4 citam 3 eventos diferentes; a mesma seed cita os mesmos eventos; com 1 ou 2 eventos não quebra (grupo vazio usa a lista inteira); com lista vazia, `basedOn` é `null`; o número de grupos vem da config (`fromCycle`, `perCycle`, `cycles`). Incluir também um teste de integração que passa por `updateEvents` e confere que `basedOn` bate (`date` e `url`) com um dos registros de `2024-05.json` e que a mesma seed devolve o mesmo evento. Esse teste só passa depois do T016, que fornece o fixture.
+- [x] T014 [P] [US3] Substituir os casos `it.todo` de DONKI em `src/data/donki.test.ts` por testes de leitura do snapshot, seleção estável por índice com seed e comportamento para snapshot vazio ou inválido. Incluir: `readSepSnapshot(raw)` converte `eventTime` e `link` em `{ date, url }`; mês vazio (`sep: []`) devolve `events: []` e `problems: []`; snapshot corrompido, ou registro sem horário válido ou sem link `https://`, devolve `problems` preenchido, descarta o registro ruim e não lança erro. Os casos ruins são sintéticos e marcados como tal; o caso válido usa o fixture real. Incluir também: `sepGroup` divide a lista por posição (`i % grupos`), na ordem original, sem cruzar grupos; grupo vazio devolve a lista inteira; `sepEvents()` devolve a lista em cache, congelada (mutar lança erro); `readSepSnapshot` mantém a ordem do snapshot. Os problemas de um snapshot corrompido são conferidos em `problems` na função pura, sem depender do `console.warn`.
+- [x] T015 [US3] Executar `npx vitest run src/engine/events/events.test.ts src/data/donki.test.ts` e registrar que os novos testes da US3 falham antes da implementação.
+ 
 ### Implementação da User Story 3
 
-- [ ] T016 [US3] Implementar a leitura do snapshot SEP versionado e a seleção determinística segura para valores nulos em `src/data/donki.ts`, com um fixture aprovado em `src/data/snapshots/2024-05.json`.
-- [ ] T017 [US3] Completar o fluxo aprovado de busca e gravação offline do snapshot DONKI em `scripts/fetch-donki.ts`, preservando o formato `{ range, fetchedAt, flr, sep, cme }` e nunca buscando dados durante o jogo.
-- [ ] T018 [US3] Implementar o agendamento de uma tempestade de radiação por ciclo, as transições aviso-atividade, a atribuição DONKI, as verificações de abrigo, a pausa de trabalhos, os resultados letais, o log e a reinicialização ao fim da tempestade em `src/engine/events/events.ts`.
-- [ ] T019 [US3] Executar `npx vitest run src/engine/events/events.test.ts src/data/donki.test.ts` e confirmar que todos os testes das US1, US2 e US3 passam juntos.
+- [x] T016 [US3] Implementar a leitura do snapshot SEP versionado e a seleção determinística segura para valores nulos em `src/data/donki.ts`, com um fixture aprovado em `src/data/snapshots/2024-05.json`. A validação fica na função pura `readSepSnapshot(raw: unknown): { events: SepEvent[]; problems: string[] }`; `sepEvents()` a chama sobre o snapshot commitado, devolve só `events`, guarda o resultado em cache na primeira chamada (lista e registros congelados com `Object.freeze`) e emite `console.warn` com os `problems` uma só vez, ao montar o cache, e só se houver problemas. Implementar também `sepGroup(events, group, groups)`. `SepEvent` continua `{ date, url }`. Fazer este T016 antes do T018 (o teste de integração do T013 depende do fixture).
+- [x] T017 [US3] Completar o fluxo aprovado de busca e gravação offline do snapshot DONKI em `scripts/fetch-donki.ts`, gravando `{ range, fetchedAt, sep }`; `flr` e `cme` são opcionais e ficam fora (o jogo só lê `sep`), omitindo as chaves em vez de gravar `[]`; o parser ignora essas chaves se existirem. Nunca buscar dados durante o jogo. Usar `api.nasa.gov` com a chave `NASA_API_KEY`, lida da variável de ambiente ou, se ela não existir, do arquivo `.env.local` na raiz via `process.loadEnvFile('.env.local')` do Node (sem dependência nova e sem mexer no `package.json`); sem chave, usar `DEMO_KEY`. O `.env.local` já é ignorado pelo git (`*.local` no `.gitignore`), e a chave nunca vai para a URL registrada nem para o snapshot, e recusar com erro claro um intervalo que cruze meses (o arquivo é `<AAAA-MM>.json`).
+- [x] T018 [US3] Implementar o agendamento de uma tempestade de radiação por ciclo, as transições aviso-atividade, a atribuição DONKI, as verificações de abrigo, a pausa de trabalhos, os resultados letais, o log e a reinicialização ao fim da tempestade em `src/engine/events/events.ts`. A lógica fica na função interna `updateRadiationStorm(state, config, dt, events: SepEvent[])`; `updateEvents` mantém a assinatura, importa `sepEvents()` de `src/data/donki` e a chama só quando uma tempestade vai começar. O evento citado vem de `sepGroup` (número de grupos calculado da config) com um `nextIndex` da seed.
+- [x] T019 [US3] Executar `npx vitest run src/engine/events/events.test.ts src/data/donki.test.ts` e confirmar que todos os testes das US1, US2 e US3 passam juntos.
 
 **Checkpoint**: A US3 é testável de forma independente e prova que o comportamento de radiação é
 determinístico, offline e atribuído honestamente a um evento NASA arquivado.
@@ -155,7 +155,7 @@ de apresentação podem ser testados independentemente com estados criados manua
 
 > **TDD**: Escreva estes testes primeiro e confirme que falham pelo comportamento ausente esperado.
 
-- [ ] T020 [P] [US4] Adicionar testes de comportamento em `src/features/end/EndScreen.test.tsx` para missões vencidas e perdidas, agrupamento por ciclo/estação, cada causa de perda registrada, debriefs sem perdas e reinício usando a store real.
+- [ ] T020 [P] [US4] Adicionar testes de comportamento em `src/features/end/EndScreen.test.tsx` para missões vencidas e perdidas, agrupamento por ciclo/estação, cada causa de perda registrada, debriefs sem perdas e reinício usando a store real. Incluir a entrada `radiation_storm` nos dois formatos de `ref`: com a `url` do evento DONKI citado e com a palavra `radiation_storm` (sem evento), que não pode virar uma citação inventada.
 - [ ] T021 [P] [US4] Adicionar testes de comportamento em `src/features/sources/SourcesScreen.test.tsx` para fontes deduplicadas, classificações científicas, rótulo DONKI arquivado e texto voltado ao jogador em inglês.
 - [ ] T022 [US4] Executar `npx vitest run src/features/end/EndScreen.test.tsx src/features/sources/SourcesScreen.test.tsx` e registrar que os novos testes da US4 falham antes da implementação.
 
@@ -222,7 +222,9 @@ atribuição DONKI.
 - T013 e T014 podem ser escritos em paralelo porque alteram arquivos de teste diferentes.
 - T020 e T021 podem ser escritos em paralelo porque alteram arquivos de teste de telas diferentes.
 - T016 e T017 podem ser desenvolvidos em paralelo depois que o formato do snapshot DONKI for
-  acordado.
+  acordado, mas o fixture `src/data/snapshots/2024-05.json` só é gerado quando o script do T017
+  funciona (snapshots nunca são editados à mão). Os testes do parser (T014) usam registros
+  sintéticos até o fixture existir; o teste de integração do T013 e o T018 esperam o fixture.
 - PRs de stories diferentes podem ser preparados por desenvolvedores diferentes somente depois
   que suas dependências forem integradas; alterações compartilhadas em `src/engine/events/events.ts`
   devem continuar serializadas.

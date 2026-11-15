@@ -1,16 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import { config } from '../../config/loadConfig'
+import type { SepEvent } from '../../data/donki'
+import { bringAllInside } from '../actions'
+import { updateCrew } from '../crew'
 import { createGame } from '../game'
+import { updateJobs } from '../jobs'
+import { withCrew, withJobs, withStructures } from '../testState'
 import type {
   ActiveEvent,
   EventRule,
   GameConfig,
   GameState,
+  GameTime,
+  RadiationStorm,
   SeasonId,
   StructureInstance,
   StructureStatus,
 } from '../types'
-import { updateEvents } from './events'
+import { radiationPlan, updateEvents, updateRadiationStorm } from './events'
 
 const SEASON_START = 1000
 const SEASONS_IN_ORDER: SeasonId[] = ['spring', 'summer', 'autumn', 'winter']
@@ -849,14 +856,618 @@ describe('dust event determinism (US2)', () => {
   })
 })
 
-// US3 (Dev A) — radiation storm
-describe('radiation storm', () => {
-  it.todo(
-    'happens perCycle times per cycle from fromCycle, at a seeded time in the allowed seasons',
-  )
-  it.todo('starts with a warning phase of warningSeconds, then an active phase of durationSeconds')
-  it.todo(
-    'when the active phase starts, astronauts outside or in a habitat without shelter are hit',
-  )
-  it.todo('carries the date and link of the real DONKI event it is based on')
+// US3 (Dev A) — radiation storm. Constitution II.2, II.11 and VII; spec 002, US3 scenarios 1–7;
+// data-model "Tempestade de radiação". Times, counts and seasons come from the config (or from a
+// config changed in the test), never from the canon. The storm logic is tested through
+// updateRadiationStorm(state, config, dt, events) with a list of events built in the test; the
+// committed DONKI snapshot is only used by the integration test through updateEvents.
+
+const STORM = config.mission.radiationStorm
+const CYCLE_SECONDS = config.seasons.seasons.reduce((sum, s) => sum + s.durationSeconds, 0)
+const MISSION_SECONDS = config.seasons.cycles * CYCLE_SECONDS
+const cycleStart = (cycle: number) => (cycle - 1) * CYCLE_SECONDS
+const STORM_SEEDS = SEEDS.slice(0, 12)
+const SHELTER = config.upgrades.find((u) => u.effect === 'radiation_shelter')!.id
+const EPSILON = 1e-9
+
+/** SYNTHETIC SEP events, not real NASA records: only their position in the list matters. */
+const fakeSep = (count: number): SepEvent[] =>
+  Array.from({ length: count }, (_, i) => ({
+    date: `2099-01-${String(i + 1).padStart(2, '0')}T00:00Z`,
+    url: `https://example.test/synthetic-sep/${i}`,
+  }))
+const SEP14 = fakeSep(14)
+
+function stormRules(over: Partial<GameConfig['mission']['radiationStorm']>): GameConfig {
+  return { ...config, mission: { ...config.mission, radiationStorm: { ...STORM, ...over } } }
+}
+
+/** How many groups the event list is split into (data-model), computed from the config. */
+const groupsOf = (cfg: GameConfig) => {
+  const { fromCycle, perCycle } = cfg.mission.radiationStorm
+  return (cfg.seasons.cycles - fromCycle + 1) * perCycle
+}
+
+/** The mission clock at game time t, as advanceTime keeps it (seasons and cycles in order). */
+function clock(cfg: GameConfig, t: number): GameTime {
+  const seasons = cfg.seasons.seasons
+  const length = seasons.reduce((sum, s) => sum + s.durationSeconds, 0)
+  const cycle = Math.min(Math.floor(t / length) + 1, cfg.seasons.cycles)
+  let into = t - (cycle - 1) * length
+  for (const s of seasons) {
+    if (into < s.durationSeconds) {
+      return { cycle, season: s.id, secondsIntoSeason: into, elapsed: t }
+    }
+    into -= s.durationSeconds
+  }
+  const last = seasons[seasons.length - 1]
+  return { cycle, season: last.id, secondsIntoSeason: last.durationSeconds, elapsed: t }
+}
+
+/** A new game (briefing closed) with the clock at game time t. */
+function gameAtTime(seed: number, t = 0, cfg: GameConfig = config): GameState {
+  return { ...createGame(cfg, seed), briefing: null, time: clock(cfg, t) }
+}
+
+type Update = (state: GameState, dt: number) => GameState
+
+const stormOnly =
+  (cfg: GameConfig, events: SepEvent[]): Update =>
+  (s, dt) =>
+    updateRadiationStorm(s, cfg, dt, () => events)
+
+/** The real path: updateEvents reads the committed snapshot itself. */
+const allEvents =
+  (cfg: GameConfig): Update =>
+  (s, dt) =>
+    updateEvents(s, cfg, dt)
+
+/** The parts of tick() a radiation storm touches, in tick order: events, jobs, crew. */
+const withEngine: Update = (s, dt) =>
+  updateCrew(updateJobs(updateEvents(s, config, dt), config, dt), config, dt)
+
+/** Moves the clock forward by dt (crossing seasons and cycles), then runs the update. */
+const stepWith = (state: GameState, cfg: GameConfig, dt: number, update: Update): GameState =>
+  update({ ...state, time: clock(cfg, state.time.elapsed + dt) }, dt)
+
+interface Frame {
+  elapsed: number
+  cycle: number
+  season: SeasonId
+  storm: RadiationStorm | null
+}
+
+/** Runs from the state's clock to game time `until` in steps of dt, recording every step. */
+function play(start: GameState, cfg: GameConfig, dt: number, until: number, update: Update) {
+  let state = update(start, 0)
+  const frames: Frame[] = []
+  while (state.time.elapsed < until - EPSILON) {
+    state = stepWith(state, cfg, Math.min(dt, until - state.time.elapsed), update)
+    const { elapsed, cycle, season } = state.time
+    frames.push({ elapsed, cycle, season, storm: state.radiationStorm })
+  }
+  return { state, frames }
+}
+
+interface StormSeen {
+  /** Game time the warning began: the warning's phaseEndsAt minus warningSeconds. */
+  startsAt: number
+  /** Cycle and season of startsAt. */
+  cycle: number
+  season: SeasonId
+  warningEndsAt: number
+  activeEndsAt: number
+  basedOn: RadiationStorm['basedOn']
+  /** Phases in the order they were seen, without repeats. */
+  phases: RadiationStorm['phase'][]
+  frames: Frame[]
+}
+
+/** Splits the recorded steps into storms, from their first step to their last. */
+function stormsIn(frames: Frame[], cfg: GameConfig): StormSeen[] {
+  const out: StormSeen[] = []
+  let current: StormSeen | null = null
+  for (const f of frames) {
+    if (!f.storm) {
+      current = null
+      continue
+    }
+    if (!current || (f.storm.phase === 'warning' && current.phases.at(-1) === 'active')) {
+      current = {
+        startsAt: NaN,
+        cycle: f.cycle,
+        season: f.season,
+        warningEndsAt: NaN,
+        activeEndsAt: NaN,
+        basedOn: f.storm.basedOn,
+        phases: [],
+        frames: [],
+      }
+      out.push(current)
+    }
+    current.frames.push(f)
+    if (current.phases.at(-1) !== f.storm.phase) current.phases.push(f.storm.phase)
+    if (f.storm.phase === 'warning') current.warningEndsAt = f.storm.phaseEndsAt
+    else current.activeEndsAt = f.storm.phaseEndsAt
+  }
+  for (const s of out) {
+    s.startsAt = s.warningEndsAt - cfg.mission.radiationStorm.warningSeconds
+    const at = clock(cfg, s.startsAt)
+    s.cycle = at.cycle
+    s.season = at.season
+  }
+  return out
+}
+
+/** A whole mission with only the radiation storm running, in steps of dt. */
+function mission(seed: number, cfg: GameConfig = config, events: SepEvent[] = SEP14, dt = 1) {
+  const run = play(gameAtTime(seed, 0, cfg), cfg, dt, MISSION_SECONDS, stormOnly(cfg, events))
+  return { ...run, storms: stormsIn(run.frames, cfg) }
+}
+
+const defaultRuns = new Map<number, ReturnType<typeof mission>>()
+/** The default mission of a seed, computed once because several tests read it. */
+function missionOf(seed: number) {
+  if (!defaultRuns.has(seed)) defaultRuns.set(seed, mission(seed))
+  return defaultRuns.get(seed)!
+}
+
+/** Position of the cited event in the list, or -1 when it is not one of them. */
+const citedIndex = (events: SepEvent[], basedOn: RadiationStorm['basedOn']) =>
+  events.findIndex((e) => e.date === basedOn?.date && e.url === basedOn?.url)
+
+/** Storms of one cycle, in time order. */
+const stormsOfCycle = (storms: StormSeen[], cycle: number) =>
+  storms.filter((s) => s.cycle === cycle).sort((a, b) => a.startsAt - b.startsAt)
+
+/** Steps 1 s at a time until the warning starts; fails when no storm comes within a cycle. */
+function untilWarning(start: GameState, update: Update): GameState {
+  let s = update(start, 0)
+  for (let t = 0; t < CYCLE_SECONDS; t++) {
+    s = stepWith(s, config, 1, update)
+    if (s.radiationStorm) return s
+  }
+  throw new Error('no radiation storm came')
+}
+
+/** Steps 1 s at a time while the warning lasts: the first state of the hit. */
+function untilHit(start: GameState, update: Update): GameState {
+  let s = start
+  for (let t = 0; t <= STORM.warningSeconds + 1 && s.radiationStorm?.phase === 'warning'; t++) {
+    s = stepWith(s, config, 1, update)
+  }
+  return s
+}
+
+/** Steps 1 s at a time while the storm lasts: the first state without it. */
+function throughStorm(start: GameState, update: Update): GameState {
+  let s = start
+  const limit = STORM.warningSeconds + STORM.durationSeconds + 5
+  for (let t = 0; t < limit && s.radiationStorm; t++) s = stepWith(s, config, 1, update)
+  return s
+}
+
+function deepFreeze<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.freeze(value)
+    for (const v of Object.values(value)) deepFreeze(v)
+  }
+  return value
+}
+
+/** The start of cycle fromCycle, with a habitat with a radiation shelter next to the first one. */
+const shelteredBase = (seed = 3) =>
+  withStructures(gameAtTime(seed, cycleStart(STORM.fromCycle)), config, [
+    { type: 'habitat', tile: [5, 7], upgrades: [SHELTER] },
+  ])
+
+describe('radiation storm: when it comes (US3 scenario 1, FR-007)', () => {
+  it('comes perCycle times in every cycle from fromCycle, and never before', () => {
+    for (const seed of STORM_SEEDS) {
+      const { storms } = missionOf(seed)
+      for (let cycle = 1; cycle <= config.seasons.cycles; cycle++) {
+        const expected = cycle >= STORM.fromCycle ? STORM.perCycle : 0
+        expect(stormsOfCycle(storms, cycle), `seed ${seed}, cycle ${cycle}`).toHaveLength(expected)
+      }
+    }
+  })
+
+  it('from the warning to the end, it only exists in the allowed seasons', () => {
+    for (const seed of STORM_SEEDS) {
+      for (const f of missionOf(seed).frames.filter((x) => x.storm)) {
+        expect(STORM.seasons, `seed ${seed} at ${f.elapsed}`).toContain(f.season)
+        expect(f.cycle).toBeGreaterThanOrEqual(STORM.fromCycle)
+      }
+    }
+  })
+
+  it('starts at a seeded time: the same seed gives the same times, and seeds use every allowed season', () => {
+    const times = (seed: number) => mission(seed).storms.map((s) => s.startsAt)
+    expect(times(5)).toEqual(missionOf(5).storms.map((s) => s.startsAt))
+
+    const starts = STORM_SEEDS.flatMap((seed) => missionOf(seed).storms)
+    expect(new Set(starts.map((s) => s.season))).toEqual(new Set(STORM.seasons))
+    const firstCycle = starts.filter((s) => s.cycle === STORM.fromCycle).map((s) => s.startsAt)
+    expect(new Set(firstCycle).size).toBeGreaterThan(1)
+  })
+
+  it('reads fromCycle from the config', () => {
+    const later = stormRules({ fromCycle: STORM.fromCycle + 1 })
+    const { storms } = mission(2, later)
+    expect(stormsOfCycle(storms, STORM.fromCycle)).toHaveLength(0)
+    for (let cycle = STORM.fromCycle + 1; cycle <= config.seasons.cycles; cycle++) {
+      expect(stormsOfCycle(storms, cycle)).toHaveLength(STORM.perCycle)
+    }
+  })
+
+  it('reads perCycle from the config: 0 means no storm, 2 means two storms that never overlap', () => {
+    const none = mission(2, stormRules({ perCycle: 0 }))
+    expect(none.frames.some((f) => f.storm)).toBe(false)
+
+    const twice = mission(2, stormRules({ perCycle: 2 }))
+    for (let cycle = STORM.fromCycle; cycle <= config.seasons.cycles; cycle++) {
+      const inCycle = stormsOfCycle(twice.storms, cycle)
+      expect(inCycle, `cycle ${cycle}`).toHaveLength(2)
+      expect(inCycle[1].startsAt).toBeGreaterThanOrEqual(inCycle[0].activeEndsAt)
+    }
+  })
+
+  it('reads the allowed seasons from the config', () => {
+    const autumnOnly = stormRules({ seasons: ['autumn'] })
+    for (const seed of STORM_SEEDS.slice(0, 4)) {
+      const { frames, storms } = mission(seed, autumnOnly)
+      expect(storms.length).toBeGreaterThan(0)
+      for (const f of frames.filter((x) => x.storm)) expect(f.season).toBe('autumn')
+    }
+  })
+})
+
+describe('radiation storm: warning, hit and end (US3 scenarios 1 and 4, FR-008)', () => {
+  // Odd numbers, so a test cannot pass by matching the canon by chance.
+  const timed = stormRules({ warningSeconds: 7, durationSeconds: 13 })
+
+  it('starts with a warning of warningSeconds when the seeded time comes, then an active phase of durationSeconds, then ends', () => {
+    for (const seed of STORM_SEEDS.slice(0, 4)) {
+      const { frames, storms } = mission(seed, timed)
+      expect(storms.length).toBeGreaterThan(0)
+      for (const storm of storms) {
+        expect(storm.phases).toEqual(['warning', 'active'])
+        expect(storm.activeEndsAt - storm.warningEndsAt).toBeCloseTo(13)
+        for (const f of storm.frames) {
+          if (f.storm!.phase === 'warning') {
+            expect(f.elapsed).toBeGreaterThanOrEqual(storm.startsAt)
+            expect(f.elapsed).toBeLessThan(storm.warningEndsAt)
+          } else {
+            expect(f.elapsed).toBeGreaterThanOrEqual(storm.warningEndsAt)
+            expect(f.elapsed).toBeLessThan(storm.activeEndsAt)
+          }
+        }
+        // Not a moment early, and gone for good once it is over.
+        const first = frames.indexOf(storm.frames[0])
+        expect(frames[first - 1].elapsed).toBeLessThan(storm.startsAt)
+        const after = frames[frames.indexOf(storm.frames.at(-1)!) + 1]
+        expect(after.storm).toBeNull()
+        expect(after.elapsed).toBeGreaterThanOrEqual(storm.activeEndsAt)
+      }
+    }
+  })
+
+  it('the next season does not inherit the storm: it is over before a season outside the allowed ones', () => {
+    for (const seed of STORM_SEEDS) {
+      const { frames } = missionOf(seed)
+      for (let i = 1; i < frames.length; i++) {
+        const seasonChanged = frames[i].season !== frames[i - 1].season
+        if (seasonChanged && !STORM.seasons.includes(frames[i].season)) {
+          expect(frames[i].storm, `seed ${seed} at ${frames[i].elapsed}`).toBeNull()
+        }
+      }
+    }
+  })
+
+  it('phase times and the cited event do not depend on the tick size', () => {
+    const summary = (dt: number) => {
+      const run = mission(7, config, SEP14, dt)
+      return {
+        storms: run.storms.map(({ cycle, warningEndsAt, activeEndsAt, basedOn }) => ({
+          cycle,
+          warningEndsAt,
+          activeEndsAt,
+          basedOn,
+        })),
+        logged: run.state.log.filter((e) => e.kind === 'radiation_storm').length,
+      }
+    }
+    const reference = summary(1)
+    expect(reference.storms.length).toBeGreaterThan(0)
+    expect(summary(0.5)).toEqual(reference)
+    expect(summary(2.5)).toEqual(reference)
+  })
+
+  it('a tick that crosses several phase changes moves the storm one phase at a time, so the warning is always seen and the hit always lands', () => {
+    const update = stormOnly(config, SEP14)
+    // A seed whose first storm starts early enough for a long tick to stay in allowed seasons.
+    const seed = STORM_SEEDS.find((x) =>
+      ['spring', 'summer'].includes(missionOf(x).storms[0]?.season),
+    )
+    expect(seed).toBeDefined()
+    const seen = missionOf(seed!).storms[0]
+
+    let before = update(gameAtTime(seed!, 0), 0)
+    while (before.time.elapsed + 1 < seen.startsAt) before = stepWith(before, config, 1, update)
+    expect(before.radiationStorm).toBeNull()
+
+    const jump = STORM.warningSeconds + STORM.durationSeconds + 1
+    const warned = stepWith(before, config, jump, update)
+    expect(warned.radiationStorm).toMatchObject({ phase: 'warning' })
+    expect(warned.radiationStorm!.phaseEndsAt).toBeCloseTo(seen.warningEndsAt)
+    const hit = stepWith(warned, config, 1, update)
+    expect(hit.radiationStorm).toMatchObject({ phase: 'active' })
+    expect(hit.radiationStorm!.phaseEndsAt).toBeCloseTo(seen.activeEndsAt)
+    expect(stepWith(hit, config, 1, update).radiationStorm).toBeNull()
+  })
+})
+
+describe('radiation storm: the real DONKI event (US3 scenarios 1, 5 and 7, FR-011, FR-012)', () => {
+  it('names one of the archived events, and keeps the same one from the warning to the end', () => {
+    for (const seed of STORM_SEEDS) {
+      for (const storm of missionOf(seed).storms) {
+        expect(citedIndex(SEP14, storm.basedOn), `seed ${seed}`).toBeGreaterThanOrEqual(0)
+        for (const f of storm.frames) expect(f.storm!.basedOn).toEqual(storm.basedOn)
+      }
+    }
+  })
+
+  it('with 14 events, the storms of one mission cite different events, for every seed', () => {
+    for (const seed of STORM_SEEDS) {
+      const cited = missionOf(seed).storms.map((s) => citedIndex(SEP14, s.basedOn))
+      expect(cited).toHaveLength(groupsOf(config))
+      expect(new Set(cited).size, `seed ${seed}: ${cited.join(', ')}`).toBe(cited.length)
+    }
+  })
+
+  it('each storm draws from its own group: event i is in group i % groups, groups come from the config', () => {
+    const configs = [
+      config,
+      stormRules({ fromCycle: STORM.fromCycle + 1 }),
+      stormRules({ perCycle: 2 }),
+    ]
+    for (const cfg of configs) {
+      const { fromCycle, perCycle } = cfg.mission.radiationStorm
+      const groups = groupsOf(cfg)
+      for (const seed of STORM_SEEDS.slice(0, 4)) {
+        const { storms } = mission(seed, cfg)
+        expect(storms).toHaveLength(groups)
+        for (let cycle = fromCycle; cycle <= cfg.seasons.cycles; cycle++) {
+          stormsOfCycle(storms, cycle).forEach((storm, n) => {
+            const i = citedIndex(SEP14, storm.basedOn)
+            expect(i, `seed ${seed}, cycle ${cycle}, storm ${n}`).toBeGreaterThanOrEqual(0)
+            expect(i % groups, `seed ${seed}, cycle ${cycle}, storm ${n}`).toBe(
+              (cycle - fromCycle) * perCycle + n,
+            )
+          })
+        }
+      }
+    }
+  })
+
+  it('the same seed cites the same events, and the seed picks which event of the group', () => {
+    const cited = (seed: number) => mission(seed).storms.map((s) => s.basedOn)
+    expect(cited(9)).toEqual(missionOf(9).storms.map((s) => s.basedOn))
+
+    const firstStorm = STORM_SEEDS.map((seed) =>
+      citedIndex(SEP14, missionOf(seed).storms[0]?.basedOn ?? null),
+    )
+    expect(new Set(firstStorm).size).toBeGreaterThan(1)
+  })
+
+  it('with fewer events than storms it still works: an empty group draws from the whole list', () => {
+    const one = fakeSep(1)
+    const withOne = mission(4, config, one).storms
+    expect(withOne).toHaveLength(groupsOf(config))
+    for (const storm of withOne) expect(storm.basedOn).toEqual(one[0])
+
+    // Two events and three groups: groups 0 and 1 hold one event each, group 2 is empty.
+    const two = fakeSep(2)
+    const withTwo = mission(4, config, two).storms
+    expect(withTwo).toHaveLength(groupsOf(config))
+    withTwo.forEach((storm, n) => {
+      if (n < two.length) expect(storm.basedOn).toEqual(two[n])
+      else expect(two).toContainEqual(storm.basedOn)
+    })
+  })
+
+  it('with no event at all, the storm still comes, citing nothing (basedOn null)', () => {
+    const { storms } = mission(4, config, [])
+    expect(storms).toHaveLength(groupsOf(config))
+    for (const storm of storms) {
+      expect(storm.phases).toEqual(['warning', 'active'])
+      expect(storm.basedOn).toBeNull()
+    }
+  })
+})
+
+describe('radiation storm: log and purity (US3, FR-002, FR-017)', () => {
+  it('logs one radiation_storm entry per storm, when it starts, in its cycle', () => {
+    for (const seed of STORM_SEEDS.slice(0, 4)) {
+      const { state, storms } = missionOf(seed)
+      const entries = state.log.filter((e) => e.kind === 'radiation_storm')
+      expect(storms.length).toBeGreaterThan(0)
+      expect(entries).toHaveLength(storms.length)
+      entries.forEach((entry, i) => {
+        expect(entry.at).toBeCloseTo(storms[i].startsAt)
+        expect(entry.cycle).toBe(storms[i].cycle)
+        expect(STORM.seasons).toContain(entry.season)
+        expect(entry.ref).toEqual(expect.any(String))
+        expect(entry.ref).not.toBe('')
+      })
+    }
+  })
+
+  it('does not change the state or the event list it receives', () => {
+    const events = deepFreeze(fakeSep(14))
+    const frozen: Update = (s, dt) => updateRadiationStorm(deepFreeze(s), config, dt, () => events)
+    const start = gameAtTime(6, cycleStart(STORM.fromCycle))
+    const run = play(start, config, 1, cycleStart(STORM.fromCycle + 1), frozen)
+    expect(stormsIn(run.frames, config)).toHaveLength(STORM.perCycle)
+  })
+
+  it('returns the same state when there is nothing to do', () => {
+    const update = stormOnly(config, SEP14)
+    const lastSeason = config.seasons.seasons.at(-1)!
+    const quiet = cycleStart(STORM.fromCycle + 1) - lastSeason.durationSeconds / 2
+    const { state } = play(gameAtTime(6, 0), config, 1, quiet, update)
+    expect(state.log.some((e) => e.kind === 'radiation_storm')).toBe(true)
+    expect(state.radiationStorm).toBeNull()
+    const input = { ...state, time: clock(config, quiet + 1) }
+    expect(updateRadiationStorm(input, config, 1, () => SEP14)).toBe(input)
+  })
+})
+
+describe('radiation storm with the engine: shelter and jobs (US3 scenarios 2 to 4, FR-009, FR-010)', () => {
+  it('when the storm hits, an astronaut left outside dies and the crew inside goes to the shelter and lives', () => {
+    const warned = untilWarning(shelteredBase(), withEngine)
+    expect(warned.radiationStorm).toMatchObject({ phase: 'warning' })
+    const outsider = warned.crew[0].id
+    const hit = untilHit(withCrew(warned, [{ location: 'outside', jobId: null }]), withEngine)
+
+    expect(hit.radiationStorm).toMatchObject({ phase: 'active' })
+    expect(hit.crew.find((a) => a.id === outsider)!.alive).toBe(false)
+    expect(hit.crew.filter((a) => a.alive)).toHaveLength(config.mission.crew - 1)
+    expect(hit.log).toContainEqual(
+      expect.objectContaining({ kind: 'death', ref: outsider, cause: 'radiation_storm' }),
+    )
+  })
+
+  it('without any radiation shelter, everyone dies when the storm hits', () => {
+    const warned = untilWarning(gameAtTime(3, cycleStart(STORM.fromCycle)), withEngine)
+    const hit = untilHit(warned, withEngine)
+    expect(hit.radiationStorm).toMatchObject({ phase: 'active' })
+    expect(hit.crew.every((a) => !a.alive)).toBe(true)
+  })
+
+  it('taking shelter during the warning keeps every astronaut alive', () => {
+    const warned = untilWarning(shelteredBase(), withEngine)
+    const out = withCrew(warned, [{ location: 'outside', jobId: null }])
+    const sheltered = bringAllInside(out, config)
+    expect(sheltered.ok).toBe(true)
+    const after = throughStorm(sheltered.state, withEngine)
+    expect(after.radiationStorm).toBeNull()
+    expect(after.crew.every((a) => a.alive)).toBe(true)
+  })
+
+  it('no job starts from the warning until the storm is over, then the waiting job starts', () => {
+    const warned = untilWarning(shelteredBase(), withEngine)
+    const site = withStructures(warned, config, [
+      { type: 'solar_panel', tile: [0, 0], status: 'building' },
+    ])
+    let s = withJobs(site, config, [{ kind: 'build', structureId: site.structures.at(-1)!.id }])
+    const limit = STORM.warningSeconds + STORM.durationSeconds + 5
+    for (let t = 0; t < limit && s.radiationStorm; t++) {
+      s = stepWith(s, config, 1, withEngine)
+      if (s.radiationStorm) {
+        expect(s.jobs[0]).toMatchObject({ status: 'queued', astronautId: null })
+        expect(s.crew.some((a) => a.location === 'outside')).toBe(false)
+      }
+    }
+    expect(s.radiationStorm).toBeNull()
+    expect(s.jobs[0].status).toBe('active')
+  })
+})
+
+describe('radiation storm: its own seeded plan (US3 review)', () => {
+  /** Game time of every planned storm of the mission, from radiationPlan. */
+  const planned = (seed: number, cfg: GameConfig = config) =>
+    Array.from({ length: cfg.seasons.cycles }, (_, i) => i + 1).flatMap((cycle) =>
+      radiationPlan(seed, cycle, cfg).map((slot) => cycleStart(cycle) + slot.offset),
+    )
+
+  it('the storms of a mission are the ones radiationPlan gives, cycle by cycle', () => {
+    for (const seed of STORM_SEEDS) {
+      const seen = missionOf(seed).storms.map((s) => s.startsAt)
+      const plan = planned(seed)
+      expect(seen).toHaveLength(plan.length)
+      seen.forEach((at, i) => expect(at).toBeCloseTo(plan[i]))
+    }
+  })
+
+  it('plans nothing before fromCycle or after the last cycle', () => {
+    for (let cycle = 0; cycle < STORM.fromCycle; cycle++) {
+      expect(radiationPlan(1, cycle, config)).toEqual([])
+    }
+    expect(radiationPlan(1, config.seasons.cycles + 1, config)).toEqual([])
+  })
+
+  it('mixes the cycle into the seed: the cycles of one mission get different times', () => {
+    for (const seed of STORM_SEEDS) {
+      const offsets = Array.from(
+        { length: config.seasons.cycles - STORM.fromCycle + 1 },
+        (_, i) => radiationPlan(seed, STORM.fromCycle + i, config)[0].offset,
+      )
+      expect(new Set(offsets).size, `seed ${seed}`).toBe(offsets.length)
+    }
+  })
+
+  it('never starts in the first warningSeconds of a season, when the briefing pauses the game', () => {
+    const timed = stormRules({ warningSeconds: 7, durationSeconds: 13 })
+    for (const cfg of [config, timed]) {
+      const margin = cfg.mission.radiationStorm.warningSeconds
+      for (const seed of SEEDS) {
+        for (const at of planned(seed, cfg)) {
+          expect(clock(cfg, at).secondsIntoSeason, `seed ${seed}`).toBeGreaterThanOrEqual(margin)
+        }
+      }
+    }
+  })
+
+  it('never draws from state.rng', () => {
+    const { frames, state } = play(gameAtTime(8, 0), config, 1, MISSION_SECONDS, (s, dt) => {
+      const next = updateRadiationStorm(s, config, dt, () => SEP14)
+      expect(next.rng).toBe(s.rng)
+      return next
+    })
+    expect(frames.some((f) => f.storm)).toBe(true)
+    expect(state.rng).toBe(gameAtTime(8, 0).rng)
+  })
+
+  it('does not change the dust draws: the same climate events with and without storms', () => {
+    const climate = (s: GameState) => ({
+      rng: s.rng,
+      structures: s.structures,
+      activeEvents: s.activeEvents,
+      nextEventAt: s.nextEventAt,
+      log: s.log.filter((e) => e.kind !== 'radiation_storm'),
+    })
+    const until = cycleStart(STORM.fromCycle + 1)
+    const start = withStructures(gameAtTime(11, cycleStart(STORM.fromCycle)), config, [
+      { type: 'solar_panel', tile: [0, 0] },
+    ])
+    const withStorms = play(start, config, 1, until, allEvents(config))
+    const without = play(start, config, 1, until, allEvents(stormRules({ perCycle: 0 })))
+    expect(withStorms.frames.some((f) => f.storm)).toBe(true)
+    expect(climate(withStorms.state)).toEqual(climate(without.state))
+  })
+})
+
+// The committed snapshot (T016/T017), loaded with import.meta.glob so that a missing file fails
+// only this test instead of the whole file.
+const SNAPSHOT_FILE = '../../data/snapshots/2024-05.json'
+const snapshots = import.meta.glob<{ sep: { eventTime: string; link: string }[] }>(
+  '../../data/snapshots/2024-05.json',
+  { eager: true, import: 'default' },
+)
+
+describe('radiation storm through updateEvents (US3, committed DONKI snapshot)', () => {
+  it('cites a record of the 2024-05 snapshot (date = eventTime, url = link), the same one for the same seed', () => {
+    const snapshot = snapshots[SNAPSHOT_FILE]
+    expect(snapshot, 'src/data/snapshots/2024-05.json is missing (T016/T017)').toBeDefined()
+    const records = snapshot!.sep.map((r) => ({ date: r.eventTime, url: r.link }))
+
+    const cited = (seed: number) =>
+      untilWarning(gameAtTime(seed, cycleStart(STORM.fromCycle)), allEvents(config)).radiationStorm!
+        .basedOn
+    const first = cited(5)
+    expect(first).not.toBeNull()
+    expect(records).toContainEqual(first)
+    expect(cited(5)).toEqual(first)
+  })
 })
