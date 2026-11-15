@@ -23,6 +23,7 @@ import {
   type RotationStep,
 } from './iso'
 import styles from './Scene.module.css'
+import { sound, soundscape } from './sound'
 import { StructureModel } from './StructureModel'
 import { Terrain } from './Terrain'
 import { visualState, type VisualState } from './visualState'
@@ -59,6 +60,8 @@ function applyDevVisualOverrides(base: VisualState, dev: DevVisualOverrides): Vi
 const strings = {
   rotateLeft: { en: 'Rotate ↺ (Q)', pt: 'Girar ↺ (Q)' },
   rotateRight: { en: 'Rotate ↻ (E)', pt: 'Girar ↻ (E)' },
+  soundOn: { en: '🔊 Sound on', pt: '🔊 Som ligado' },
+  soundOff: { en: '🔇 Sound off', pt: '🔇 Som desligado' },
 }
 
 export default function Scene() {
@@ -69,7 +72,17 @@ export default function Scene() {
   const placeAt = useGameStore((s) => s.placeAt)
   const placing = useGameStore((s) => s.placing)
   const selectStructure = useGameStore((s) => s.selectStructure)
+  const speed = useGameStore((s) => s.speed)
+  const [muted, setMuted] = useState(() => sound.isMuted())
   const [rotationStep, setRotationStep] = useState<RotationStep>(0)
+
+  // Alarm and storm loops follow the game state, so they last exactly as long as the
+  // config says. Silent while paused (briefings) or once the game is over.
+  const loopId = game && game.status === 'running' && speed > 0 ? soundscape(game) : null
+  useEffect(() => {
+    sound.loop(muted ? null : loopId)
+  }, [loopId, muted])
+  useEffect(() => () => sound.loop(null), [])
   const [devOverrides, setDevOverrides] = useState<DevVisualOverrides>(INITIAL_DEV_OVERRIDES)
   const controlsRef = useRef<ComponentRef<typeof MapControls>>(null)
   const t = useT()
@@ -122,8 +135,18 @@ export default function Scene() {
   const onGroundLeave = () => hoverAt(null)
   const onGroundClick = (e: ThreeEvent<MouseEvent>) => {
     const tile = worldToTile(e.point.x, e.point.z, grid)
-    if (placing && tile) placeAt(tile)
-    else selectStructure(null)
+    if (placing && tile) {
+      if (placementPreview({ game, placing, hoverTile: tile })?.valid) sound.play('place-structure')
+      placeAt(tile)
+    } else selectStructure(null)
+  }
+  const onStructureSelect = (id: string) => {
+    sound.play('select-structure')
+    selectStructure(id)
+  }
+  const toggleMuted = () => {
+    sound.setMuted(!muted)
+    setMuted(!muted)
   }
 
   return (
@@ -194,7 +217,7 @@ export default function Scene() {
               size={size}
               position={[x, 0, z]}
               selected={s.id === selectedId}
-              onSelect={selectStructure}
+              onSelect={onStructureSelect}
               visual={look}
             />
           )
@@ -265,6 +288,9 @@ export default function Scene() {
           aria-label={t(strings.rotateRight)}
         >
           {t(strings.rotateRight)}
+        </Button>
+        <Button variant="secondary" onClick={toggleMuted} aria-pressed={muted}>
+          {t(muted ? strings.soundOff : strings.soundOn)}
         </Button>
       </div>
     </div>

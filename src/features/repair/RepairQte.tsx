@@ -6,7 +6,11 @@ import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import { Button } from '../../ui-kit/Button'
 import { useT } from '../../ui-kit/i18n'
+import { sound } from '../scene/sound'
 import styles from './RepairQte.module.css'
+
+// Each bolt clicks a little higher, so the player hears the repair getting closer.
+const BOLT_PITCH_STEP = 0.08
 
 const strings = {
   title: { en: 'Tighten every bolt!', pt: 'Aperte todos os parafusos!' },
@@ -25,9 +29,20 @@ function Bolts() {
   const [left, setLeft] = useState(config.mission.repair.qteBolts)
   const t = useT()
 
+  const total = config.mission.repair.qteBolts
+
   const hit = () => {
-    if (left === 1) finishQte(true)
-    else setLeft(left - 1)
+    if (left === 1) {
+      sound.play('repair-success')
+      finishQte(true)
+    } else {
+      sound.play('bolt-click', { rate: 1 + BOLT_PITCH_STEP * (total - left) })
+      setLeft(left - 1)
+    }
+  }
+  const giveUp = () => {
+    sound.play('repair-fail')
+    finishQte(false)
   }
 
   return (
@@ -37,7 +52,7 @@ function Bolts() {
         <Button onClick={hit}>
           {t(strings.bolt)} ({left})
         </Button>
-        <Button variant="secondary" onClick={() => finishQte(false)}>
+        <Button variant="secondary" onClick={giveUp}>
           {t(strings.giveUp)}
         </Button>
       </div>

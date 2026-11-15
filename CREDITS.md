@@ -13,8 +13,9 @@ All data sources used by the game are also listed in-game on the sources screen.
 
 ## 3D models, textures and sound (Dev C)
 
-| Asset | Author | License | Link |
-| ----- | ------ | ------- | ---- |
+| Asset                                                                                                                                         | Author                            | License          | Link            |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ---------------- | --------------- |
+| Sound effects in `public/audio/` (placement, selection, radiation alarm, dust and radiation storm loops, bolt click, repair success and fail) | Breno (team), original recordings | Made by the team | `public/audio/` |
 
 ## Fonts, icons and UI art (Dev B)
 
@@ -35,5 +36,6 @@ GitHub Spec Kit (MIT) for spec-driven development.
 - UI kit components and HUD implementation assistance: Google DeepMind Antigravity CLI.
 - Sprint 2 construction and upgrade UI, and adaptation of the supplied Figma Make icons: GitHub Copilot.
 - Review and fixes of the sprint 2 construction/upgrade UI and HUD: Claude Code (Anthropic).
+- Sound playback code for the scene and repair QTE (`sound.ts` and its tests): Claude Code (Anthropic).
 
 <!-- Add where and how AI tools were used. AI images/videos need a visible watermark. -->
