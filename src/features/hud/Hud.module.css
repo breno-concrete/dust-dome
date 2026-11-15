@@ -104,8 +104,8 @@
 }
 
 .speeds .timeButton {
-  min-width: 38px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   gap: 5px;
   padding: 0 9px;
   border: 0;
@@ -405,8 +405,8 @@
   }
 
   .speeds .timeButton {
-    min-width: 32px;
-    min-height: 34px;
+    min-width: 44px;
+    min-height: 44px;
     padding: 0 6px;
     font-size: 12px;
   }
@@ -446,7 +446,7 @@
 
   .crewPanel {
     bottom: 10px;
-    width: var(--hud-crew-width);
+    width: calc(var(--hud-crew-width) + 56px);
     padding: 8px 10px;
   }
 
@@ -504,6 +504,116 @@
   .crewPanel {
     bottom: 10px;
     left: 10px;
-    width: 135px;
+    width: min(220px, calc(100vw - 20px));
+  }
+}
+
+/* Read by screen readers only. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Phones held sideways: very little height, so everything goes in rows ---- */
+@media (orientation: landscape) and (max-height: 520px) {
+  .hud {
+    --hud-inset: 8px;
+
+    grid-template-columns: minmax(0, 1.6fr) auto minmax(0, 1.1fr);
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .lifePanel {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .timePanel {
+    grid-column: 2;
+    grid-row: 1;
+    flex-wrap: nowrap;
+    justify-self: center;
+    min-height: 0;
+    padding: 6px 8px;
+  }
+
+  .timeDivider {
+    display: none;
+  }
+
+  .date strong {
+    font-size: 14px;
+  }
+
+  .speeds .timeButton {
+    padding: 0 8px;
+    font-size: 13px;
+  }
+
+  /* Six values in three columns and two rows, instead of a tall stack. */
+  .materials {
+    grid-column: 3;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    align-items: center;
+    justify-content: start;
+    min-height: 0;
+    padding: 6px 10px;
+    gap: 4px 10px;
+  }
+
+  .energyStat {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .materialIcon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .materialValues strong {
+    font-size: 14px;
+  }
+
+  /* The crew becomes a strip in the bottom-left corner, beside the two docks. */
+  .crewPanel {
+    bottom: 8px;
+    left: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 8px;
+    width: auto;
+    max-width: calc(100vw - 330px);
+    padding: 6px 8px;
+  }
+
+  .crewHeader {
+    flex: 0 0 auto;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .crewMember {
+    padding: 0;
+    border-top: 0;
+  }
+
+  .astronautName {
+    display: none;
   }
 }

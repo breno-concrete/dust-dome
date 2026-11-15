@@ -120,4 +120,18 @@ describe('BuildMenu', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(screen.getByTestId('upgrade-thermal_insulation')).toBeDefined()
   })
+
+  it('rounds what is missing up to a whole number, never a long decimal', async () => {
+    const structure = config.structures.find((s) => (s.cost.hematite ?? 0) > 0)!
+    const cost = structure.cost.hematite!
+    // The stock holds a fraction (production adds small amounts every step).
+    act(() =>
+      setMaterials({ hematite: cost - 5.5426546235, regolith: 1000, iron: 1000, steel: 1000 }),
+    )
+    render(<BuildMenu />)
+    await userEvent.click(screen.getByRole('button', { name: 'Build base' }))
+    const text = screen.getByTestId(`missing-${structure.id}-hematite`).textContent ?? ''
+    expect(text).toContain('Missing 6 ')
+    expect(text).not.toMatch(/\d\.\d/)
+  })
 })

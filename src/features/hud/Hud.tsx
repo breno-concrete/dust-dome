@@ -27,6 +27,13 @@ const strings = {
   powerDeficit: { en: 'Warning: power deficit!', pt: 'Alerta: falta de energia!' },
   powerStable: { en: 'Power grid stable', pt: 'Rede de energia estável' },
   radiation: { en: 'Radiation', pt: 'Radiação' },
+  speedControls: { en: 'Game speed controls', pt: 'Controles de velocidade' },
+  speedLabel: { en: '{n}x speed', pt: 'Velocidade {n}x' },
+  lowReserve: { en: 'Low reserve: {name}', pt: 'Reserva baixa: {name}' },
+  exposureAlert: {
+    en: '{name} is getting too much radiation',
+    pt: '{name} está recebendo muita radiação',
+  },
   materialsAndEnergy: { en: 'Materials and energy', pt: 'Materiais e energia' },
 }
 
@@ -57,8 +64,22 @@ export function Hud() {
   const isPowerDeficit = game.power.balanceKw < 0
   const isPaused = speed === 0
 
+  // What a screen reader hears when something needs attention (kept quiet otherwise).
+  const alerts = [
+    ...VITALS.filter((id) => (game.stock[id] ?? 0) < crewNeed(id)).map((id) =>
+      t(strings.lowReserve).replace('{name}', t(config.resources.find((r) => r.id === id)?.name)),
+    ),
+    ...(isPowerDeficit ? [t(strings.powerDeficit)] : []),
+    ...game.crew
+      .filter((a) => a.alive && a.exposure >= 0.75)
+      .map((a) => t(strings.exposureAlert).replace('{name}', a.name.split(' ')[0]!)),
+  ]
+
   return (
     <header className={styles.hud} role="banner" aria-label={t(strings.missionHud)}>
+      <div role="status" aria-live="polite" className={styles.srOnly}>
+        {alerts.join('. ')}
+      </div>
       <section
         className={[styles.panel, styles.lifePanel].join(' ')}
         aria-label={t(strings.lifeSupport)}
@@ -101,7 +122,7 @@ export function Hud() {
           </span>
         </div>
         <div className={styles.timeDivider} aria-hidden="true" />
-        <div className={styles.speeds} role="group" aria-label="Game speed controls">
+        <div className={styles.speeds} role="group" aria-label={t(strings.speedControls)}>
           <Button
             className={[styles.timeButton, isPaused && styles.selectedTimeButton]
               .filter(Boolean)
@@ -122,7 +143,7 @@ export function Hud() {
                 .join(' ')}
               variant={speed === x ? 'active' : 'secondary'}
               onClick={() => setSpeed(x)}
-              aria-label={`${x}x speed`}
+              aria-label={t(strings.speedLabel).replace('{n}', String(x))}
               aria-pressed={speed === x}
             >
               {x}×

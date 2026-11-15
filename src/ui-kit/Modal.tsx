@@ -1,8 +1,14 @@
 // Owner: Dev B. Accessible dialog modal with backdrop and escape key support.
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { Button } from './Button'
 import { Icon } from './Icon'
+import { useT } from './i18n'
 import styles from './Modal.module.css'
+
+const strings = { close: { en: 'Close dialog', pt: 'Fechar janela' } }
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 export interface ModalProps {
   isOpen: boolean
@@ -27,6 +33,44 @@ export function Modal({
   children,
   footer,
 }: ModalProps) {
+  const t = useT()
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Keyboard focus: move into the dialog when it opens, keep Tab inside it, and give focus back
+  // to whatever had it before when it closes.
+  useEffect(() => {
+    if (!isOpen) return
+    const before = document.activeElement as HTMLElement | null
+    const dialog = dialogRef.current
+    const first = dialog?.querySelector<HTMLElement>(FOCUSABLE)
+    ;(first ?? dialog)?.focus()
+    const trap = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !dialog) return
+      const items = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)]
+      if (items.length === 0) {
+        e.preventDefault()
+        return
+      }
+      const firstItem = items[0]!
+      const lastItem = items[items.length - 1]!
+      if (
+        e.shiftKey &&
+        (document.activeElement === firstItem || !dialog.contains(document.activeElement))
+      ) {
+        e.preventDefault()
+        lastItem.focus()
+      } else if (!e.shiftKey && document.activeElement === lastItem) {
+        e.preventDefault()
+        firstItem.focus()
+      }
+    }
+    document.addEventListener('keydown', trap)
+    return () => {
+      document.removeEventListener('keydown', trap)
+      before?.focus?.()
+    }
+  }, [isOpen])
+
   useEffect(() => {
     if (!isOpen || !onClose) return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -50,6 +94,8 @@ export function Modal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={[styles.dialog, size === 'wide' && styles.wide, tone === 'light' && styles.light]
           .filter(Boolean)
           .join(' ')}
@@ -65,7 +111,7 @@ export function Modal({
               variant="secondary"
               className={styles.closeBtn}
               onClick={onClose}
-              aria-label="Close dialog"
+              aria-label={t(strings.close)}
             >
               <Icon name="close" size={16} />
             </Button>

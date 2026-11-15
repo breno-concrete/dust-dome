@@ -140,7 +140,8 @@ export function BuildMenu() {
                         </p>
                         {missing.map(([resourceId, amount]) => {
                           const resource = config.resources.find(({ id }) => id === resourceId)
-                          const amountMissing = amount - (game.stock[resourceId] ?? 0)
+                          // The stock holds fractions; the HUD shows whole units, so say how many whole ones are missing.
+                          const amountMissing = Math.ceil(amount - (game.stock[resourceId] ?? 0))
                           return (
                             <p
                               key={resourceId}

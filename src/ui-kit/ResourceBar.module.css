@@ -221,3 +221,42 @@
     height: 5px;
   }
 }
+
+/* Phones held sideways: three bars share a narrow row, so each one shrinks. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .hud {
+    gap: 6px;
+  }
+
+  .hudIcon {
+    flex-basis: 24px;
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+  }
+
+  .hudIcon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .hud .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    font-size: 11px;
+    line-height: 1.15;
+  }
+
+  .hud .current {
+    font-size: 12px;
+  }
+
+  .hud .target {
+    font-size: 10px;
+  }
+
+  .hud .track {
+    height: 6px;
+  }
+}

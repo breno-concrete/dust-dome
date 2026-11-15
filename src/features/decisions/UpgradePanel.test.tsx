@@ -80,4 +80,21 @@ describe('UpgradePanel', () => {
     await userEvent.click(document.body)
     expect(useGameStore.getState().selectedStructureId).toBeNull()
   })
+
+  it('rounds what is missing up to a whole number, never a long decimal', () => {
+    const habitat = selectHabitat()
+    const upgradeId = config.structures.find(({ id }) => id === habitat.type)!.upgrades[0]!
+    const upgrade = config.upgrades.find(({ id }) => id === upgradeId)!
+    const [resourceId, amount] = Object.entries(upgrade.cost)[0]!
+    act(() => {
+      const g = useGameStore.getState().game!
+      useGameStore.setState({
+        game: { ...g, stock: { ...g.stock, [resourceId]: amount - 3.3333333333 } },
+      })
+    })
+    render(<UpgradePanel />)
+    const text = screen.getByTestId(`missing-upgrade-${upgrade.id}-${resourceId}`).textContent ?? ''
+    expect(text).toContain('Missing 4 ')
+    expect(text).not.toMatch(/\d\.\d/)
+  })
 })
