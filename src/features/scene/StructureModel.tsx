@@ -629,6 +629,86 @@ const ICE_GEO = {
   ),
 }
 
+// Shared datum & static procedural geometries for Iron Refinery (2x2 footprint <= 1.76 x 1.76)
+const IRON_BASE_Y = 0.022
+
+const IRON_GEO = {
+  // Chamfered industrial smelting hall nave
+  smelterHall: (() => {
+    const g = new ExtrudeGeometry(makeChamferedArchShape(0.28, 0.42, 0.075), {
+      depth: 0.48,
+      bevelEnabled: true,
+      bevelThickness: 0.015,
+      bevelSize: 0.015,
+      bevelSegments: 1,
+    })
+    g.rotateY(Math.PI / 2)
+    g.translate(-0.24, 0, 0)
+    return g
+  })(),
+  // Tapered octagonal blast furnace shaft & top bell hopper
+  blastFurnace: latheOctagon(
+    [
+      [0, 0],
+      [0.3, 0.02],
+      [0.3, 0.16],
+      [0.255, 0.24],
+      [0.255, 0.44],
+      [0.215, 0.78],
+      [0.16, 0.9],
+      [0.195, 0.95],
+      [0.195, 1.02],
+      [0.105, 1.07],
+      [0, 1.08],
+    ],
+    8,
+  ),
+  // Open foundry pouring ladle cup
+  crucibleCup: latheOctagon(
+    [
+      [0, 0],
+      [0.11, 0.015],
+      [0.165, 0.06],
+      [0.175, 0.22],
+      [0.132, 0.22],
+      [0.118, 0.1],
+      [0, 0.1],
+    ],
+    8,
+  ),
+  // Trapezoidal cast-iron ingot prism
+  ingotBar: (() => {
+    const s = new Shape()
+    s.moveTo(-0.052, 0)
+    s.lineTo(0.052, 0)
+    s.lineTo(0.036, 0.042)
+    s.lineTo(-0.036, 0.042)
+    s.closePath()
+    const g = new ExtrudeGeometry(s, {
+      depth: 0.15,
+      bevelEnabled: true,
+      bevelThickness: 0.005,
+      bevelSize: 0.005,
+      bevelSegments: 1,
+    })
+    g.translate(0, 0, -0.075)
+    return g
+  })(),
+  // Hot-blast gas downcomer pipe connecting furnace crown to twin preheater stacks
+  hotBlastPipe: new TubeGeometry(
+    new CatmullRomCurve3([
+      new Vector3(0.38, IRON_BASE_Y + 0.86, -0.22),
+      new Vector3(0.24, IRON_BASE_Y + 0.98, -0.34),
+      new Vector3(0.02, IRON_BASE_Y + 0.92, -0.45),
+      new Vector3(-0.14, IRON_BASE_Y + 0.76, -0.48),
+    ]),
+    12,
+    0.042,
+    6,
+    false,
+  ),
+}
+
 const DEFAULT_VISUAL: VisualState = {
   light: 1,
   dustHaze: 0,
@@ -826,38 +906,13 @@ function StructureMesh({
 
     case 'iron_refinery':
       return (
-        <group position={[0, 0.12, 0]}>
-          {/* Smelter base hall (2x2) */}
-          <mesh position={[-0.2, 0.3, 0]}>
-            <boxGeometry args={[0.95, 0.56, 1.1]} />
-            <meshStandardMaterial
-              color={secondaryColor}
-              emissive={emissive}
-              emissiveIntensity={emissiveIntensity}
-              flatShading
-            />
-          </mesh>
-          {/* Blast furnace cone */}
-          <mesh position={[0.42, 0.55, -0.25]}>
-            <cylinderGeometry args={[0.22, 0.38, 1.05, 8]} />
-            <meshStandardMaterial color={hullColor} flatShading />
-          </mesh>
-          {/* Twin exhaust stacks */}
-          <mesh position={[0.42, 0.62, 0.35]}>
-            <cylinderGeometry args={[0.12, 0.16, 1.15, 6]} />
-            <meshStandardMaterial color={METAL_DARK} flatShading />
-          </mesh>
-          {/* Glowing furnace core */}
-          <mesh position={[0.42, 0.25, -0.25]}>
-            <cylinderGeometry args={[0.4, 0.4, 0.16, 8]} />
-            <meshStandardMaterial
-              color={SAFETY_ORANGE}
-              emissive={SAFETY_ORANGE}
-              emissiveIntensity={0.4}
-              flatShading
-            />
-          </mesh>
-        </group>
+        <IronRefineryMesh
+          hullColor={hullColor}
+          secondaryColor={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          nightGlow={nightGlow}
+        />
       )
 
     case 'greenhouse':
@@ -1844,6 +1899,278 @@ function IceMelterMesh({
       <mesh geometry={ICE_GEO.meltDrainPipe}>
         <meshStandardMaterial color={WATER_BLUE} flatShading />
       </mesh>
+    </group>
+  )
+}
+
+function IronRefineryMesh({
+  hullColor,
+  secondaryColor,
+  emissive,
+  emissiveIntensity,
+  nightGlow,
+}: {
+  hullColor: string
+  secondaryColor: string
+  emissive: string
+  emissiveIntensity: number
+  nightGlow: boolean
+}) {
+  const moltenIntensity = nightGlow ? 0.92 : 0.48
+  const furnaceX = 0.38
+  const furnaceZ = -0.22
+  const buttressAngles = [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2] as const
+  const stackPositions = [
+    { x: -0.42, z: -0.48, h: 0.86 },
+    { x: -0.14, z: -0.48, h: 0.96 },
+  ] as const
+
+  return (
+    <group position={[0, 0.12, 0]}>
+      {/* Smelter hall plinth & beveled processing nave (-X / center) */}
+      <mesh position={[-0.24, IRON_BASE_Y + 0.025, -0.02]}>
+        <boxGeometry args={[0.56, 0.05, 0.64]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <mesh
+        geometry={IRON_GEO.smelterHall}
+        position={[-0.24, IRON_BASE_Y + 0.06, -0.02]}
+      >
+        <meshStandardMaterial
+          color={secondaryColor}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          flatShading
+        />
+      </mesh>
+      {/* Hall top vent monitor & orange ridge accent */}
+      <mesh position={[-0.24, IRON_BASE_Y + 0.51, -0.02]}>
+        <boxGeometry args={[0.38, 0.055, 0.18]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      <mesh position={[-0.24, IRON_BASE_Y + 0.55, -0.02]}>
+        <boxGeometry args={[0.34, 0.028, 0.12]} />
+        <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+      </mesh>
+      {/* Front foundry shutter door & glowing smelter inspection slit (+Z) */}
+      <group position={[-0.24, IRON_BASE_Y, 0.278]}>
+        <mesh position={[0, 0.17, 0]}>
+          <boxGeometry args={[0.3, 0.24, 0.024]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 0.135, 0.014]}>
+          <boxGeometry args={[0.22, 0.16, 0.012]} />
+          <meshStandardMaterial color={hullColor} flatShading />
+        </mesh>
+        <mesh position={[0, 0.25, 0.016]}>
+          <boxGeometry args={[0.2, 0.036, 0.012]} />
+          <meshStandardMaterial
+            color={WARM_WINDOW_LIGHT}
+            emissive={SAFETY_ORANGE}
+            emissiveIntensity={moltenIntensity}
+            flatShading
+          />
+        </mesh>
+      </group>
+      {/* Rear hall exhaust louvers (-Z) */}
+      <group position={[-0.24, IRON_BASE_Y + 0.22, -0.318]}>
+        <mesh>
+          <boxGeometry args={[0.28, 0.16, 0.02]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {([-0.045, 0, 0.045] as const).map((ly, idx) => (
+          <mesh key={idx} position={[0, ly, -0.012]}>
+            <boxGeometry args={[0.22, 0.022, 0.01]} />
+            <meshStandardMaterial color={hullColor} flatShading />
+          </mesh>
+        ))}
+      </group>
+      {/* Inclined intake chute hood connecting hematite bin into -X hall wall */}
+      <mesh position={[-0.515, IRON_BASE_Y + 0.215, -0.02]} rotation={[0, 0, -0.45]}>
+        <boxGeometry args={[0.14, 0.09, 0.22]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      {/* Flue breech connecting smelter hall into blast furnace base */}
+      <mesh position={[0.08, IRON_BASE_Y + 0.24, -0.16]}>
+        <boxGeometry args={[0.24, 0.24, 0.22]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+
+      {/* Raw red hematite ore feed bin (-X edge) */}
+      <group position={[-0.62, IRON_BASE_Y, -0.02]}>
+        <mesh position={[0, 0.09, 0]}>
+          <boxGeometry args={[0.22, 0.18, 0.34]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 0.195, 0]}>
+          <boxGeometry args={[0.25, 0.032, 0.37]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+        <mesh position={[0, 0.22, -0.06]} rotation={[0.2, 0.6, 0.1]}>
+          <dodecahedronGeometry args={[0.082, 0]} />
+          <meshStandardMaterial color="#7a3419" flatShading />
+        </mesh>
+        <mesh position={[0.01, 0.215, 0.06]} rotation={[-0.3, 0.4, 0.2]}>
+          <dodecahedronGeometry args={[0.075, 0]} />
+          <meshStandardMaterial color={MARS_ROCK} flatShading />
+        </mesh>
+      </group>
+
+      {/* Twin braced exhaust / Cowper preheater stacks (-X / -Z quadrant) */}
+      {stackPositions.map((st, idx) => (
+        <group key={idx} position={[st.x, IRON_BASE_Y, st.z]}>
+          <mesh position={[0, 0.03, 0]} rotation={[0, HAB_PHI, 0]}>
+            <cylinderGeometry args={[0.115, 0.13, 0.06, 8]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0, st.h * 0.5 + 0.04, 0]} rotation={[0, HAB_PHI, 0]}>
+            <cylinderGeometry args={[0.078, 0.105, st.h, 8]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+          <mesh position={[0, st.h - 0.1, 0]} rotation={[0, HAB_PHI, 0]}>
+            <cylinderGeometry args={[0.088, 0.09, 0.06, 8]} />
+            <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+          </mesh>
+          <mesh position={[0, st.h + 0.055, 0]} rotation={[0, HAB_PHI, 0]}>
+            <cylinderGeometry args={[0.095, 0.078, 0.04, 8]} />
+            <meshStandardMaterial color={secondaryColor} flatShading />
+          </mesh>
+        </group>
+      ))}
+      {/* Structural tie girders & pipe flange linking the twin stacks */}
+      <mesh position={[-0.28, IRON_BASE_Y + 0.46, -0.48]}>
+        <boxGeometry args={[0.3, 0.04, 0.06]} />
+        <meshStandardMaterial color={secondaryColor} flatShading />
+      </mesh>
+      <mesh position={[-0.28, IRON_BASE_Y + 0.72, -0.48]}>
+        <boxGeometry args={[0.3, 0.04, 0.06]} />
+        <meshStandardMaterial color={secondaryColor} flatShading />
+      </mesh>
+      <mesh position={[-0.08, IRON_BASE_Y + 0.79, -0.47]} rotation={[0, -0.4, Math.PI / 2]}>
+        <cylinderGeometry args={[0.056, 0.056, 0.05, 6]} />
+        <meshStandardMaterial color={METAL_DARK} flatShading />
+      </mesh>
+      {/* Curved hot-blast downcomer pipe from blast furnace crown to stacks */}
+      <mesh geometry={IRON_GEO.hotBlastPipe}>
+        <meshStandardMaterial color={secondaryColor} flatShading />
+      </mesh>
+
+      {/* Main tapered blast furnace tower (+X / -Z) */}
+      <group position={[furnaceX, IRON_BASE_Y, furnaceZ]}>
+        <mesh geometry={IRON_GEO.blastFurnace}>
+          <meshStandardMaterial color={hullColor} flatShading />
+        </mesh>
+        {/* Phase-matched incandescent molten hearth ring */}
+        <mesh position={[0, 0.24, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.278, 0.292, 0.11, 8]} />
+          <meshStandardMaterial
+            color={SAFETY_ORANGE}
+            emissive={SAFETY_ORANGE}
+            emissiveIntensity={moltenIntensity}
+            flatShading
+          />
+        </mesh>
+        {/* Mid-shaft structural bust-ring collar receiving the 4 tapered buttresses */}
+        <mesh position={[0, 0.64, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.244, 0.252, 0.045, 8]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Upper furnace safety collar & crown beacon */}
+        <mesh position={[0, 0.88, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.18, 0.195, 0.045, 8]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 1.095, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.055, 0.075, 0.04, 8]} />
+          <meshStandardMaterial color={SAFETY_ORANGE} flatShading />
+        </mesh>
+        {/* 4 sloped steel buttress ribs hugging the furnace taper into the bust-ring collar */}
+        {buttressAngles.map((ang, idx) => (
+          <group key={idx} rotation={[0, ang + Math.PI / 4, 0]}>
+            <mesh position={[0, 0.325, 0.262]} rotation={[-0.088, 0, 0]}>
+              <boxGeometry args={[0.054, 0.66, 0.054]} />
+              <meshStandardMaterial color={METAL_DARK} flatShading />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
+      {/* Elevated tapping runner channel & downward molten stream pouring into the open ladle */}
+      <group position={[furnaceX, IRON_BASE_Y, 0.16]}>
+        {/* Runner support pier */}
+        <mesh position={[0, 0.148, -0.02]}>
+          <boxGeometry args={[0.14, 0.296, 0.22]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {/* Runner trough clearing the crucible rim cleanly (>= 0.012 above 0.28) */}
+        <mesh position={[0, 0.315, 0.045]}>
+          <boxGeometry args={[0.15, 0.044, 0.34]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        <mesh position={[0, 0.342, 0.045]}>
+          <boxGeometry args={[0.082, 0.022, 0.33]} />
+          <meshStandardMaterial
+            color={WARM_WINDOW_LIGHT}
+            emissive={SAFETY_ORANGE}
+            emissiveIntensity={moltenIntensity + 0.15}
+            flatShading
+          />
+        </mesh>
+        {/* Glowing vertical molten pour stream dropping into the crucible bath */}
+        <mesh position={[0, 0.29, 0.2]}>
+          <cylinderGeometry args={[0.026, 0.02, 0.1, 6]} />
+          <meshStandardMaterial
+            color={WARM_WINDOW_LIGHT}
+            emissive={SAFETY_ORANGE}
+            emissiveIntensity={moltenIntensity + 0.2}
+            flatShading
+          />
+        </mesh>
+      </group>
+
+      {/* Open foundry pouring ladle cradle filled with glowing liquid iron (+X / +Z) */}
+      <group position={[furnaceX, IRON_BASE_Y, 0.44]}>
+        <mesh position={[0, 0.02, 0]}>
+          <boxGeometry args={[0.38, 0.04, 0.34]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {([-0.17, 0.17] as const).map((tx, idx) => (
+          <mesh key={idx} position={[tx, 0.12, 0]}>
+            <boxGeometry args={[0.04, 0.19, 0.06]} />
+            <meshStandardMaterial color={METAL_DARK} flatShading />
+          </mesh>
+        ))}
+        <mesh geometry={IRON_GEO.crucibleCup} position={[0, 0.06, 0]}>
+          <meshStandardMaterial color={secondaryColor} flatShading />
+        </mesh>
+        <mesh position={[0, 0.245, 0]} rotation={[0, HAB_PHI, 0]}>
+          <cylinderGeometry args={[0.13, 0.13, 0.02, 8]} />
+          <meshStandardMaterial
+            color={WARM_WINDOW_LIGHT}
+            emissive={SAFETY_ORANGE}
+            emissiveIntensity={moltenIntensity + 0.18}
+            flatShading
+          />
+        </mesh>
+      </group>
+
+      {/* Finished cast-iron ingot stack on steel skid (-X / +Z front) */}
+      <group position={[-0.24, IRON_BASE_Y, 0.48]}>
+        <mesh position={[0, 0.02, 0]}>
+          <boxGeometry args={[0.42, 0.04, 0.28]} />
+          <meshStandardMaterial color={METAL_DARK} flatShading />
+        </mesh>
+        {([-0.12, 0, 0.12] as const).map((ix, idx) => (
+          <mesh key={`b-${idx}`} geometry={IRON_GEO.ingotBar} position={[ix, 0.042, 0]}>
+            <meshStandardMaterial color="#7d8a9c" flatShading />
+          </mesh>
+        ))}
+        {([-0.06, 0.06] as const).map((ix, idx) => (
+          <mesh key={`t-${idx}`} geometry={IRON_GEO.ingotBar} position={[ix, 0.09, 0]}>
+            <meshStandardMaterial color="#96a3b5" flatShading />
+          </mesh>
+        ))}
+      </group>
     </group>
   )
 }
