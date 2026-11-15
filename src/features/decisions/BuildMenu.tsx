@@ -8,6 +8,7 @@ import { Icon, type IconName } from '../../ui-kit/Icon'
 import { useT } from '../../ui-kit/i18n'
 import { Modal } from '../../ui-kit/Modal'
 import styles from './Panel.module.css'
+import { useTutorialUi } from './tutorial'
 import { UpgradePanel } from './UpgradePanel'
 
 const strings = {
@@ -32,6 +33,7 @@ export function BuildMenu() {
   const placing = useGameStore((s) => s.placing)
   const beginPlacement = useGameStore((s) => s.beginPlacement)
   const [isOpen, setIsOpen] = useState(false)
+  const pointedOut = useTutorialUi((s) => s.highlight === 'build')
   const t = useT()
 
   if (!game) return null
@@ -55,7 +57,7 @@ export function BuildMenu() {
       )}
       <button
         type="button"
-        className={styles.buildDock}
+        className={[styles.buildDock, pointedOut && styles.tutorialPulse].filter(Boolean).join(' ')}
         aria-expanded={isOpen}
         onClick={() => setIsOpen(true)}
       >
