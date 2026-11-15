@@ -1,14 +1,17 @@
 // Owner: Dev A. Climate events and the radiation storm (constitution II.11).
-// Pure and seeded: state.rng is the only source of randomness.
+// Pure and seeded: climate events draw from state.rng; the radiation storm draws from its own
+// stream of the same seed (see stormPlan). Never Math.random.
 // Writes: activeEvents, nextEventAt, radiationStorm, structure statuses
 // (damaged / clogged / short_circuit), log entries. Called by tick() after advanceTime.
-import { nextFloat, nextIndex, nextRange } from '../rng'
+import { pickSepEvent, sepEvents, sepGroup, type SepEvent } from '../../data/donki'
+import { nextFloat, nextIndex, nextRange, seedToRng } from '../rng'
 import type {
   ActiveEvent,
   EventRule,
   GameConfig,
   GameState,
   LogEntry,
+  SeasonId,
   StructureInstance,
   StructureStatus,
 } from '../types'
@@ -59,9 +62,16 @@ function startEvent(rule: EventRule, at: number, endsAt: number | null): ActiveE
  * and, when it has a duration, starts an active event until `endsAt`. A global storm
  * short-circuits one mine or refinery every `shortCircuitEverySeconds` from the start of the
  * season. Occurrences are applied in time order, so the result does not depend on the tick size.
+ *
+ * US3 — the radiation storm (updateRadiationStorm), modeled on a real NASA DONKI event of the
+ * committed snapshot, read only when a storm starts.
  */
-// TODO(Dev A, US3): the radiation storm.
 export function updateEvents(state: GameState, config: GameConfig, dt: number): GameState {
+  return updateRadiationStorm(updateClimate(state, config, dt), config, dt, sepEvents)
+}
+
+/** Climate events of the current cycle and season (US1 and US2). */
+function updateClimate(state: GameState, config: GameConfig, dt: number): GameState {
   const { cycle, season, elapsed, secondsIntoSeason } = state.time
   const seasonDef = config.seasons.seasons.find((s) => s.id === season)
   if (!seasonDef) return state
@@ -234,5 +244,167 @@ export function updateEvents(state: GameState, config: GameConfig, dt: number): 
     activeEvents,
     nextEventAt,
     log: hits.length > 0 ? [...state.log, ...hits] : state.log,
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// US3 — radiation storm (constitution II.11, "Radiation Storm"; spec 002 US3).
+
+/**
+ * Fixed constants that mix the seed and the cycle into the start of the storm's own stream
+ * (murmur3 finalizer). Not balance values: they only keep this stream away from state.rng.
+ */
+const STORM_STREAM = 0x9e3779b9
+const MIX_A = 0x85ebca6b
+const MIX_B = 0xc2b2ae35
+
+/** The start of the storm stream of one cycle: seed, cycle and a fixed constant, mixed. */
+function stormStream(seed: number, cycle: number): number {
+  let h = Math.imul(seed ^ STORM_STREAM, MIX_A) ^ Math.imul(cycle, MIX_B)
+  h = Math.imul(h ^ (h >>> 16), MIX_A)
+  h = Math.imul(h ^ (h >>> 13), MIX_B)
+  return seedToRng(h ^ (h >>> 16))
+}
+
+/** One planned radiation storm of a cycle. */
+export interface RadiationSlot {
+  cycle: number
+  /** Order of the storm inside its cycle (0 when perCycle is 1). */
+  n: number
+  /** Seconds from the start of the cycle to the start of the warning. */
+  offset: number
+  season: SeasonId
+  /** Generator state for the seeded choice of the cited DONKI event. */
+  pickRng: number
+}
+
+/**
+ * The radiation storms of one cycle: perCycle storms in every cycle from fromCycle, none before
+ * or after the mission. Each starts at a seeded time in an allowed season, never in its first
+ * warningSeconds (the commander's briefing pauses the game as a season starts, so the alarm does
+ * not sound right on top of it) and early enough that the warning and the hit are over before
+ * that season ends. Storm n starts in the n-th share of the allowed time, and every share but the
+ * last leaves room for a whole storm, so two storms never overlap.
+ *
+ * A pure function of the seed, the cycle and the config. GameState has no field for a storm that
+ * has not started (nextEventAt only holds climate rules), so the plan is drawn again from the
+ * seed with the rng.ts helpers, on a stream of its own. It never reads or writes state.rng, so
+ * storms and dust never shift each other's draws.
+ */
+export function radiationPlan(seed: number, cycle: number, config: GameConfig): RadiationSlot[] {
+  const { fromCycle, perCycle, seasons, warningSeconds, durationSeconds } =
+    config.mission.radiationStorm
+  if (cycle < fromCycle || cycle > config.seasons.cycles) return []
+  const length = warningSeconds + durationSeconds
+  const margin = warningSeconds
+
+  // Where a storm may start inside the cycle, season by season.
+  const windows: { season: SeasonId; from: number; span: number }[] = []
+  let at = 0
+  for (const s of config.seasons.seasons) {
+    if (seasons.includes(s.id) && s.durationSeconds >= margin + length) {
+      windows.push({ season: s.id, from: at + margin, span: s.durationSeconds - margin - length })
+    }
+    at += s.durationSeconds
+  }
+  if (windows.length === 0) return []
+  const total = windows.reduce((sum, w) => sum + w.span, 0)
+  /** The time of the u-th second of allowed start time, u in [0, total]. */
+  const locate = (u: number) => {
+    let acc = 0
+    for (const w of windows) {
+      if (u <= acc + w.span) return { season: w.season, offset: w.from + (u - acc) }
+      acc += w.span
+    }
+    const last = windows[windows.length - 1]
+    return { season: last.season, offset: last.from + last.span }
+  }
+
+  const plan: RadiationSlot[] = []
+  let rng = stormStream(seed, cycle)
+  for (let n = 0; n < perCycle; n++) {
+    const lo = (n * total) / perCycle
+    const hi = ((n + 1) * total) / perCycle - (n < perCycle - 1 ? length : 0)
+    const time = nextRange(rng, lo, hi)
+    const pickRng = time.rng
+    rng = nextFloat(pickRng).rng
+    if (hi < lo) continue // the config leaves no room for this storm
+    plan.push({ cycle, n, ...locate(time.value), pickRng })
+  }
+  return plan
+}
+
+/** The planned storm whose start falls inside this tick, (elapsed - dt, elapsed], with its time. */
+function stormStartingNow(state: GameState, config: GameConfig, dt: number) {
+  const { cycle, season, secondsIntoSeason, elapsed } = state.time
+  const seasons = config.seasons.seasons
+  const index = seasons.findIndex((s) => s.id === season)
+  if (index < 0) return null
+  const cycleLength = seasons.reduce((sum, s) => sum + s.durationSeconds, 0)
+  const before = seasons.slice(0, index).reduce((sum, s) => sum + s.durationSeconds, 0)
+  const cycleStart = elapsed - secondsIntoSeason - before
+  // The previous cycle too, for a tick that crossed into a new cycle.
+  for (const c of [cycle - 1, cycle]) {
+    for (const slot of radiationPlan(state.seed, c, config)) {
+      const at = cycleStart + (c - cycle) * cycleLength + slot.offset
+      if (at > elapsed - dt && at <= elapsed) return { slot, at }
+    }
+  }
+  return null
+}
+
+/**
+ * The radiation storm: none -> warning (warningSeconds) -> active (durationSeconds) -> none.
+ * Phase times count from the planned start, never from the tick, and the storm moves at most one
+ * phase per tick, so the warning is always seen and the hit always lands. While it lasts, jobs
+ * wait (jobs.ts) and, once it hits, the crew outside a radiation shelter dies (crew.ts).
+ *
+ * The storm cites a real DONKI event: the list is split into one group per storm of the mission
+ * (event i is in group i % groups), so one mission never cites an event twice; an empty group
+ * draws from the whole list, and an empty list cites nothing. `events` is called only when a
+ * storm starts, so updateEvents reads the snapshot only then.
+ *
+ * The log gets one radiation_storm entry per storm, written once, when the warning starts.
+ */
+export function updateRadiationStorm(
+  state: GameState,
+  config: GameConfig,
+  dt: number,
+  events: () => readonly SepEvent[],
+): GameState {
+  const rules = config.mission.radiationStorm
+  const storm = state.radiationStorm
+  if (storm) {
+    if (state.time.elapsed < storm.phaseEndsAt) return state
+    if (storm.phase === 'warning') {
+      const phaseEndsAt = storm.phaseEndsAt + rules.durationSeconds
+      return { ...state, radiationStorm: { ...storm, phase: 'active', phaseEndsAt } }
+    }
+  }
+  // The storm is over (or there was none): the next one may start in the same tick.
+  const ended: GameState = storm ? { ...state, radiationStorm: null } : state
+  const next = stormStartingNow(ended, config, dt)
+  if (!next) return ended
+
+  const { slot, at } = next
+  const groups = (config.seasons.cycles - rules.fromCycle + 1) * rules.perCycle
+  const group = sepGroup(events(), (slot.cycle - rules.fromCycle) * rules.perCycle + slot.n, groups)
+  const cited =
+    group.length > 0 ? pickSepEvent(group, nextIndex(slot.pickRng, group.length).value) : null
+  const basedOn = cited && { date: cited.date, url: cited.url }
+
+  const entry: LogEntry = {
+    at,
+    cycle: slot.cycle,
+    season: slot.season,
+    kind: 'radiation_storm',
+    // The archived DONKI event the storm is modeled on, so the debrief can name it.
+    ref: basedOn?.url ?? 'radiation_storm',
+    cause: 'radiation_storm',
+  }
+  return {
+    ...ended,
+    radiationStorm: { phase: 'warning', phaseEndsAt: at + rules.warningSeconds, basedOn },
+    log: [...ended.log, entry],
   }
 }

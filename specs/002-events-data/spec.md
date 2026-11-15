@@ -139,6 +139,10 @@ determinística e atribuição ao DONKI.
 6. **Dado** um snapshot DONKI malformado ou indisponível, **quando** a camada de dados tentar
    selecionar um evento, **então** informará explicitamente o problema em vez de fabricar uma
    fonte ou apresentar silenciosamente um evento não verificado.
+7. **Dado** um snapshot DONKI com eventos suficientes e uma missão que sofre uma tempestade de
+   radiação em cada ciclo de 2 a 4, **quando** as tempestades da mesma partida citarem seu evento
+   DONKI, **então** cada tempestade citará um evento diferente das outras, e a mesma seed citará
+   os mesmos eventos em toda partida.
 
 ---
 
@@ -194,6 +198,9 @@ fonte é identificada.
   já registradas no log.
 - Um snapshot DONKI pode não conter evento elegível; a camada de dados deve informar a ausência
   explicitamente e não inventar uma citação da NASA.
+- Um snapshot DONKI com menos eventos do que tempestades na partida: a tempestade cujo grupo ficar
+  vazio sorteia na lista inteira e pode repetir um evento já citado. É uma exceção aceita, só para
+  essa tempestade; com a lista vazia, a citação é nula.
 
 ## Requisitos *(obrigatório)*
 
@@ -232,7 +239,9 @@ fonte é identificada.
 - **FR-011**: A camada de dados DEVE analisar snapshots arquivados do NASA DONKI e fornecer um
   evento real selecionado com seus detalhes identificadores e link da fonte.
 - **FR-012**: A camada de dados DEVE expor seleção determinística de eventos para um gerador com
-  seed fornecido e informar explicitamente dados inválidos ou ausentes do snapshot.
+  seed fornecido e informar explicitamente dados inválidos ou ausentes do snapshot. As
+  tempestades de uma mesma partida DEVEM citar eventos diferentes sempre que o snapshot tiver
+  eventos suficientes, sem guardar estado novo no jogo.
 - **FR-013**: Todo evento e regra científica apresentada ao jogador DEVE ter uma explicação e uma
   fonte ou um rótulo claro de simplificação de gameplay.
 - **FR-014**: O debrief DEVE derivar suas causas de eventos e perdas de recursos ou tripulação do
