@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import { useLang } from '../../ui-kit/i18n'
@@ -22,7 +22,10 @@ describe('BriefingDialog', () => {
     act(() => useGameStore.getState().start(42))
     useLang.setState({ lang: 'en' })
   })
-  afterEach(cleanup)
+  afterEach(() => {
+    vi.useRealTimers()
+    cleanup()
+  })
 
   it('shows nothing when there is no briefing', () => {
     act(() => {
@@ -76,5 +79,31 @@ describe('BriefingDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Start the season' }))
     expect(useGameStore.getState().game!.briefing).toBeNull()
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('renders Commander Vega portrait matching the briefing mood and steps through intro frames', () => {
+    vi.useFakeTimers()
+    openBriefing(1, 'spring')
+    render(<BriefingDialog />)
+
+    const portrait = screen.getByRole('img', { name: /Commander Vega/i })
+    const initialSrc = portrait.getAttribute('src')
+    expect(initialSrc).toMatch(/\/narrator\/vega-/)
+
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(portrait.getAttribute('src')).toMatch(/vega-welcome\.(png|webp)$/)
+  })
+
+  it('uses the helmet alert portrait during global storm briefings', () => {
+    vi.useFakeTimers()
+    openBriefing(3, 'summer')
+    render(<BriefingDialog />)
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+    const portrait = screen.getByRole('img', { name: /Commander Vega/i })
+    expect(portrait.getAttribute('src')).toMatch(/vega-alert\.(png|webp)$/)
   })
 })

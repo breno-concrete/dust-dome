@@ -7,6 +7,7 @@ import { config } from '../../config/loadConfig'
 import type { LocalizedText } from '../../config/schema'
 import { Button } from '../../ui-kit/Button'
 import { useT } from '../../ui-kit/i18n'
+import { VegaPortrait } from '../decisions/VegaPortrait'
 import { buildDebrief, type DebriefLine, type DebriefSection } from './debrief'
 import styles from './EndScreen.module.css'
 
@@ -154,7 +155,10 @@ export function EndScreen() {
   return (
     <main className="screen">
       <h1>{t(game.status === 'won' ? strings.won : strings.lost)}</h1>
-      {result && <p>{t(result)}</p>}
+      <div className={styles.commanderBanner}>
+        <VegaPortrait mood={game.status === 'won' ? 'celebrating' : 'caring'} variant="debrief" />
+        {result && <p>{t(result)}</p>}
+      </div>
       <Button onClick={() => start()}>{t(strings.again)}</Button>
       <h2>{t(strings.debrief)}</h2>
       {sections.map((s) => (

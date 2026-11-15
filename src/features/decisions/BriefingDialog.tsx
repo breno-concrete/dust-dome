@@ -10,6 +10,8 @@ import { Modal } from '../../ui-kit/Modal'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
 import { TutorialDialog } from './TutorialDialog'
+import { moodForBriefing } from './vegaPortrait'
+import { VegaPortrait } from './VegaPortrait'
 
 const strings = {
   commander: { en: 'Commander Vega', pt: 'Comandante Vega' },
@@ -33,6 +35,7 @@ export function BriefingDialog() {
 
   const season = seasonDef(briefing.season)
   const text = config.narrator.briefings[String(briefing.cycle)]?.[briefing.season]
+  const mood = moodForBriefing(briefing.cycle, briefing.season, Boolean(text?.warning))
 
   return (
     <Modal
@@ -46,10 +49,8 @@ export function BriefingDialog() {
       }
     >
       <div className={styles.commander}>
-        <span className={styles.portrait}>
-          <Icon name="astronaut" size={34} />
-        </span>
-        <div>
+        <VegaPortrait mood={mood} variant="briefing" />
+        <div className={styles.commanderCopy}>
           <strong>{t(strings.commander)}</strong>
           <p>{text ? t(text.text) : season ? t(season.explain) : ''}</p>
         </div>

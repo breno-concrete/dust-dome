@@ -98,4 +98,11 @@ describe('RadiationAlarmModal', () => {
     rerender(<RadiationAlarmModal />)
     expect(screen.queryByRole('alertdialog')).toBeNull()
   })
+
+  it('shows Commander Vega in her helmet alert portrait', () => {
+    setStorm(makeStorm('warning', 110))
+    render(<RadiationAlarmModal />)
+    const portrait = screen.getByRole('img', { name: /Commander Vega/i })
+    expect(portrait.getAttribute('src')).toMatch(/vega-alert/)
+  })
 })
