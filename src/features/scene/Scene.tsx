@@ -58,8 +58,15 @@ function applyDevVisualOverrides(base: VisualState, dev: DevVisualOverrides): Vi
 }
 
 const strings = {
-  rotateLeft: { en: 'Rotate ↺ (Q)', pt: 'Girar ↺ (Q)' },
-  rotateRight: { en: 'Rotate ↻ (E)', pt: 'Girar ↻ (E)' },
+  rotateLeft: {
+    en: 'Rotate camera counter-clockwise (Q)',
+    pt: 'Girar câmera no sentido anti-horário (Q)',
+  },
+  rotateRight: {
+    en: 'Rotate camera clockwise (E)',
+    pt: 'Girar câmera no sentido horário (E)',
+  },
+  cameraGroup: { en: 'Camera rotation controls', pt: 'Controles de rotação da câmera' },
   soundOn: { en: '🔊 Sound on', pt: '🔊 Som ligado' },
   soundOff: { en: '🔇 Sound off', pt: '🔇 Som desligado' },
 }
@@ -274,22 +281,39 @@ export default function Scene() {
         </Suspense>
       )}
 
-      <div className={styles.cameraControls}>
+      <div className={styles.cameraControls} role="group" aria-label={t(strings.cameraGroup)}>
         <Button
           variant="secondary"
+          className={styles.cameraButton}
           onClick={() => setRotationStep((s) => rotateStep(s, -1))}
           aria-label={t(strings.rotateLeft)}
+          title={t(strings.rotateLeft)}
         >
-          {t(strings.rotateLeft)}
+          <span className={styles.cameraGlyph} aria-hidden="true">
+            ↺
+          </span>
+          <span>Q</span>
         </Button>
+        <span className={styles.cameraDivider} aria-hidden="true" />
         <Button
           variant="secondary"
+          className={styles.cameraButton}
           onClick={() => setRotationStep((s) => rotateStep(s, 1))}
           aria-label={t(strings.rotateRight)}
+          title={t(strings.rotateRight)}
         >
-          {t(strings.rotateRight)}
+          <span>E</span>
+          <span className={styles.cameraGlyph} aria-hidden="true">
+            ↻
+          </span>
         </Button>
-        <Button variant="secondary" onClick={toggleMuted} aria-pressed={muted}>
+        <span className={styles.cameraDivider} aria-hidden="true" />
+        <Button
+          variant="secondary"
+          className={styles.cameraButton}
+          onClick={toggleMuted}
+          aria-pressed={muted}
+        >
           {t(muted ? strings.soundOff : strings.soundOn)}
         </Button>
       </div>

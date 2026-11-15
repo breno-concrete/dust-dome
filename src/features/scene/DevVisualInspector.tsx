@@ -2,8 +2,10 @@
 // Loaded strictly via import.meta.env.DEV && !import.meta.env.VITEST in Scene.tsx;
 // excluded from production bundles and never mutates GameState or the store.
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { StructureStatus } from '../../engine/types'
 import { Button } from '../../ui-kit/Button'
+import { RepairQteDialog } from '../repair/RepairQte'
 import styles from './DevVisualInspector.module.css'
 import { sound, type LoopId, type SoundId } from './sound'
 
@@ -65,9 +67,23 @@ export default function DevVisualInspector({
     sound.loop(next)
     setDevLoop(next)
   }
+  const [testingQte, setTestingQte] = useState(false)
+  const [lastQteResult, setLastQteResult] = useState<'success' | 'fail' | null>(null)
 
   return (
     <div className={styles.devPanel}>
+      {testingQte &&
+        createPortal(
+          <RepairQteDialog
+            structureType="habitat"
+            onFinish={(success) => {
+              setTestingQte(false)
+              setLastQteResult(success ? 'success' : 'fail')
+            }}
+          />,
+          document.body,
+        )}
+
       {open && (
         <div className={styles.devCard}>
           <div className={styles.devSectionTitle}>Clima e Luz (US2 Dev)</div>
@@ -142,6 +158,18 @@ export default function DevVisualInspector({
                 {opt.label}
               </button>
             ))}
+          </div>
+
+          <div className={styles.devSectionTitle}>Minigame de Reparo (US3 Dev)</div>
+          <div className={styles.devRow}>
+            <button type="button" className={styles.devChip} onClick={() => setTestingQte(true)}>
+              🔧 Testar Minigame QTE
+            </button>
+            {lastQteResult && (
+              <span className={styles.devResultBadge}>
+                {lastQteResult === 'success' ? '✅ Reparo OK' : '❌ Falhou / Desistiu'}
+              </span>
+            )}
           </div>
         </div>
       )}
