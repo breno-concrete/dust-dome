@@ -136,7 +136,7 @@
 
 .logo {
   position: absolute;
-  top: clamp(12px, 3vh, 28px);
+  top: clamp(28px, 7vh, 64px);
   left: 50%;
   margin: 0;
   transform: translateX(-50%);
@@ -146,7 +146,7 @@
 
 /* Never taller than the sky above the planet, never wider than a phone. */
 .logo img {
-  width: min(440px, 72vw, 52vh);
+  width: min(400px, 70vw, 48vh);
   height: auto;
   /* The source art is muted: warm it up and add contrast, then a thin dark outline and a
      solid drop so it stands off the teal sky like a sticker. */
