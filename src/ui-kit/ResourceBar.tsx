@@ -13,6 +13,7 @@ export interface ResourceBarProps extends HTMLAttributes<HTMLDivElement> {
   isLow?: boolean
   isZero?: boolean
   icon?: ReactNode
+  variant?: 'default' | 'hud'
 }
 
 export function ResourceBar({
@@ -25,6 +26,7 @@ export function ResourceBar({
   isLow = false,
   isZero = false,
   icon,
+  variant = 'default',
   className,
   ...rest
 }: ResourceBarProps) {
@@ -35,6 +37,7 @@ export function ResourceBar({
   const containerClasses = [
     styles.container,
     styles[id],
+    variant === 'hud' && styles.hud,
     isLow && styles.low,
     isZero && styles.zero,
     className,
@@ -52,32 +55,35 @@ export function ResourceBar({
       aria-valuemax={target}
       {...rest}
     >
-      <div className={styles.header}>
-        <span className={styles.titleGroup}>
-          {icon && <span className={styles.icon}>{icon}</span>}
-          <span className={styles.label}>{label}</span>
-        </span>
-        <span className={styles.valueGroup}>
-          <strong className={styles.current}>{Math.floor(current)}</strong>
-          <span className={styles.target}>
-            {' '}
-            / {target} {unit}
+      {variant === 'hud' && icon && <span className={styles.hudIcon}>{icon}</span>}
+      <div className={variant === 'hud' ? styles.hudContent : undefined}>
+        <div className={styles.header}>
+          <span className={styles.titleGroup}>
+            {variant !== 'hud' && icon && <span className={styles.icon}>{icon}</span>}
+            <span className={styles.label}>{label}</span>
           </span>
-          {isLow && (
-            <span className={styles.alertBadge} title="Low reserve warning!">
-              <Icon name="alert" size={16} />
+          <span className={styles.valueGroup}>
+            <strong className={styles.current}>{Math.floor(current)}</strong>
+            <span className={styles.target}>
+              {' '}
+              / {target} {unit}
             </span>
-          )}
-        </span>
-      </div>
+            {isLow && (
+              <span className={styles.alertBadge} title="Low reserve warning!">
+                <Icon name="alert" size={16} />
+              </span>
+            )}
+          </span>
+        </div>
 
-      <div className={styles.track}>
-        <div className={styles.fill} style={{ width: `${fillPercent}%` }} />
-        <div
-          className={styles.targetMarker}
-          style={{ left: `${targetPercent}%` }}
-          title={`Win target: ${target} ${unit}`}
-        />
+        <div className={styles.track}>
+          <div className={styles.fill} style={{ width: `${fillPercent}%` }} />
+          <div
+            className={styles.targetMarker}
+            style={{ left: `${targetPercent}%` }}
+            title={`Win target: ${target} ${unit}`}
+          />
+        </div>
       </div>
     </div>
   )

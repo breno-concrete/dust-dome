@@ -18,12 +18,32 @@ describe('Hud', () => {
     expect(screen.getByTestId('vital-food').textContent).toContain(`/ ${targets.reserves.food}`)
   })
 
+  it('groups survival, time controls, materials, and crew like the supplied HUD model', () => {
+    render(<Hud />)
+
+    const lifePanel = screen.getByRole('region', { name: 'Life support reserves' })
+    expect(lifePanel.contains(screen.getByTestId('vital-oxygen'))).toBe(true)
+    expect(lifePanel.contains(screen.getByTestId('vital-water'))).toBe(true)
+    expect(lifePanel.contains(screen.getByTestId('vital-food'))).toBe(true)
+
+    const timePanel = screen.getByRole('region', { name: 'Game clock' })
+    expect(timePanel.contains(screen.getByRole('button', { name: 'Pause' }))).toBe(true)
+    expect(timePanel.contains(screen.getByRole('group', { name: 'Game speed controls' }))).toBe(
+      true,
+    )
+
+    expect(screen.getByRole('region', { name: 'Materials and energy' })).toBeDefined()
+    expect(screen.getByRole('region', { name: 'Crew' })).toBeDefined()
+  })
+
   it('the pause and speed buttons change the game speed', async () => {
     render(<Hud />)
     await userEvent.click(screen.getByRole('button', { name: '4x speed' }))
     expect(useGameStore.getState().speed).toBe(4)
     await userEvent.click(screen.getByRole('button', { name: 'Pause' }))
     expect(useGameStore.getState().speed).toBe(0)
+    await userEvent.click(screen.getByRole('button', { name: 'Resume' }))
+    expect(useGameStore.getState().speed).toBe(1)
   })
 
   // US1 (Dev B) — constitution II.2, II.8, principle VII (T010)
@@ -44,6 +64,13 @@ describe('Hud', () => {
     render(<Hud />)
     const oxygenBar = screen.getByTestId('vital-oxygen')
     expect(oxygenBar.className).toContain('low')
+  })
+
+  it('lists the vital bars in the order food, water, oxygen', () => {
+    render(<Hud />)
+    const ids = ['food', 'water', 'oxygen'].map((id) => screen.getByTestId(`vital-${id}`))
+    expect(ids[0]!.compareDocumentPosition(ids[1]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(ids[1]!.compareDocumentPosition(ids[2]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   // US1 (Dev B) — constitution II.7, principle VII (T011)
