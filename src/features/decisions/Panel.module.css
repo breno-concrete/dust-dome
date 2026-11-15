@@ -558,3 +558,56 @@
     bottom: 160px;
   }
 }
+
+/* ---- Commander warning and radiation alarm ---- */
+.briefingWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid #9a4f1f;
+  border-radius: 10px;
+  background: #f7e3cf;
+  color: #5e2f10;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.alarm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.alarm p {
+  margin: 0 0 var(--space-2);
+  line-height: 1.5;
+}
+
+.alarmIcon {
+  display: grid;
+  flex: 0 0 64px;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #f7d9cc;
+  color: #9a2f1f;
+}
+
+.countdown strong {
+  font-size: 40px;
+  font-variant-numeric: tabular-nums;
+  color: #9a2f1f;
+}
+
+.alarmSource {
+  font-size: 14px;
+  color: #5c6358;
+}
+
+.alarmSource a {
+  color: #8a4a33;
+  font-weight: 700;
+}

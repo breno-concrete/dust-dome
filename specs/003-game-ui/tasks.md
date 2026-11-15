@@ -101,15 +101,15 @@ description: "Lista de tarefas executáveis para implementação da interface 2D
 
 ### Testes da História de Usuário 3 (TDD - Test-First) ⚠️
 
-- [ ] T022 [US3] Criar testes para o painel de chaves de energia (Off / Min / Max por tipo de estrutura) em `src/features/decisions/PowerPanel.test.tsx`
-- [ ] T023 [US3] Criar testes para a caixa de diálogo de briefing da Comandante Vega (pausa da missão, textos por ciclo/estação e dica pré-ciclo 3) em `src/features/decisions/BriefingDialog.test.tsx`
-- [ ] T024 [P] [US3] Criar testes para o modal de alarme de radiação (contagem regressiva de 10s, link do evento DONKI e ação `shelterAll`) em `src/features/decisions/RadiationAlarmModal.test.tsx`
+- [x] T022 [US3] Criar testes para o painel de chaves de energia (Off / Min / Max por tipo de estrutura) em `src/features/decisions/PowerPanel.test.tsx`
+- [x] T023 [US3] Criar testes para a caixa de diálogo de briefing da Comandante Vega (pausa da missão, textos por ciclo/estação e dica pré-ciclo 3) em `src/features/decisions/BriefingDialog.test.tsx`
+- [x] T024 [P] [US3] Criar testes para o modal de alarme de radiação (contagem regressiva de 10s, link do evento DONKI e ação `shelterAll`) em `src/features/decisions/RadiationAlarmModal.test.tsx`
 
 ### Implementação da História de Usuário 3
 
-- [ ] T025 [US3] Aprimorar `PowerPanel.tsx` para apresentar as chaves de modo com botões ativos e reflexo imediato no balanço em `src/features/decisions/PowerPanel.tsx`
-- [ ] T026 [US3] Aprimorar `BriefingDialog.tsx` para incluir retrato da Comandante Vega, formatação narrativa dos ciclos/estações e aviso obrigatório sobre o frio do Ano 3 em `src/features/decisions/BriefingDialog.tsx` e `src/features/decisions/Panel.module.css`
-- [ ] T027 [US3] Implementar o componente `RadiationAlarmModal.tsx` conectado ao estado `radiationStorm`, com contagem de 10 segundos, referência DONKI e botão "Abrigar Tripulação" chamando `shelterAll()` em `src/features/decisions/RadiationAlarmModal.tsx` e `src/features/decisions/Panel.module.css`
+- [x] T025 [US3] Aprimorar `PowerPanel.tsx` para apresentar as chaves de modo com botões ativos e reflexo imediato no balanço em `src/features/decisions/PowerPanel.tsx`
+- [x] T026 [US3] Aprimorar `BriefingDialog.tsx` para incluir retrato da Comandante Vega, formatação narrativa dos ciclos/estações e aviso obrigatório sobre o frio do Ano 3 em `src/features/decisions/BriefingDialog.tsx` e `src/features/decisions/Panel.module.css`
+- [x] T027 [US3] Implementar o componente `RadiationAlarmModal.tsx` conectado ao estado `radiationStorm`, com contagem de 10 segundos, referência DONKI e botão "Abrigar Tripulação" chamando `shelterAll()` em `src/features/decisions/RadiationAlarmModal.tsx` e `src/features/decisions/Panel.module.css`
 
 **Ponto de Controle**: As Histórias 1, 2 e 3 estão integradas e funcionais com todos os testes passando.
 

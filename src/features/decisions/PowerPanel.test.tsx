@@ -59,4 +59,35 @@ describe('PowerPanel', () => {
     expect(screen.getByTestId('power-balance').textContent).toContain('-5')
     expect(screen.getByRole('alert')).toBeDefined()
   })
+
+  it('marks the active mode of each switch and moves it when the player picks another', async () => {
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+
+    const first = config.structures.find((s) => s.switchable)!
+    const group = screen.getByTestId(`power-switch-${first.id}`)
+    const current = useGameStore.getState().game!.powerModes[first.id]
+    const pressed = within(group)
+      .getAllByRole('button')
+      .filter((b) => b.getAttribute('aria-pressed') === 'true')
+    expect(pressed).toHaveLength(1)
+
+    const other = current === 'max' ? 'Min' : 'Max'
+    await userEvent.click(within(group).getByRole('button', { name: other }))
+    expect(within(group).getByRole('button', { name: other }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+    expect(useGameStore.getState().game!.powerModes[first.id]).toBe(other.toLowerCase())
+  })
+
+  it('shows a positive balance without the warning when there is surplus', async () => {
+    act(() => {
+      const g = useGameStore.getState().game!
+      useGameStore.setState({ game: { ...g, power: { ...g.power, balanceKw: 7 } } })
+    })
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+    expect(screen.getByTestId('power-balance').textContent).toContain('+7')
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
 })
