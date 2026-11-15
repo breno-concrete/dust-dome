@@ -4,10 +4,10 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../../app/store'
 import { Button } from '../../ui-kit/Button'
-import { Icon } from '../../ui-kit/Icon'
 import { Modal } from '../../ui-kit/Modal'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
+import { VegaPortrait } from './VegaPortrait'
 import { isStepDone, TUTORIAL_STEPS, useTutorialUi, type StepContext } from './tutorial'
 
 const strings = {
@@ -71,18 +71,14 @@ export function TutorialDialog({ onDone }: { onDone: () => void }) {
   }, [step, setHighlight])
 
   const counter = `${current + 1} / ${TUTORIAL_STEPS.length}`
-  const portrait = (
-    <span className={styles.portrait}>
-      <Icon name="astronaut" size={34} />
-    </span>
-  )
-
   if (step.kind === 'do') {
     return (
       <aside className={styles.tutorialCard} aria-label={t(strings.commander)}>
         <div className={styles.commander}>
-          {portrait}
-          <div>
+          <div className={styles.tutorialPortrait}>
+            <VegaPortrait mood={step.mood} variant="briefing" />
+          </div>
+          <div className={styles.commanderCopy}>
             <strong>{t(strings.commander)}</strong>
             <p aria-live="polite">{t(step.text)}</p>
             <p className={styles.tutorialWaiting}>
@@ -128,8 +124,8 @@ export function TutorialDialog({ onDone }: { onDone: () => void }) {
       }
     >
       <div className={styles.commander}>
-        {portrait}
-        <div>
+        <VegaPortrait mood={step.mood} variant="briefing" />
+        <div className={styles.commanderCopy}>
           <strong>{t(strings.commander)}</strong>
           <p>{t(step.text)}</p>
         </div>

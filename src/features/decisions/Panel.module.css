@@ -1048,3 +1048,30 @@
     padding: var(--space-2);
   }
 }
+
+/* Vega's portrait shrinks to fit the small "do it" card. */
+.tutorialPortrait {
+  flex: 0 0 auto;
+}
+
+.tutorialPortrait .vegaFrameBriefing {
+  width: 84px;
+  height: 92px;
+  border-radius: 14px;
+}
+
+.tutorialPortrait .vegaBadge {
+  display: none;
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .commander .vegaFrameBriefing {
+    width: 88px;
+    height: 96px;
+  }
+
+  .tutorialPortrait .vegaFrameBriefing {
+    width: 64px;
+    height: 70px;
+  }
+}
