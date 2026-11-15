@@ -1,54 +1,91 @@
 .devPanel {
   position: absolute;
-  left: var(--space-3);
-  bottom: var(--space-3);
-  z-index: 3;
+  top: 232px;
+  left: 28px;
+  z-index: 52;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  max-width: 340px;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 300px;
+}
+
+.devPanel > button {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: rgb(251 246 234 / 92%);
+  border: 1px solid rgb(148 119 91 / 28%);
+  color: #3f3a36;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgb(85 57 41 / 12%);
+  backdrop-filter: blur(10px);
+}
+
+.devPanel > button:hover:not(:disabled) {
+  background: #efe6d2;
 }
 
 .devCard {
-  background: rgba(16, 20, 28, 0.92);
-  border: 1px solid rgba(255, 122, 41, 0.55);
-  border-radius: 8px;
-  padding: var(--space-2) var(--space-3);
-  color: #f0f2f5;
-  font-size: 12px;
+  background: rgb(251 246 234 / 94%);
+  border: 1px solid rgb(148 119 91 / 28%);
+  border-radius: 16px;
+  padding: 10px 12px;
+  color: #3f3a36;
+  font-size: 11px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  gap: 6px;
+  max-height: calc(100dvh - 560px);
+  overflow-y: auto;
+  box-shadow: 0 10px 28px rgb(68 43 29 / 18%);
+  backdrop-filter: blur(10px);
 }
 
 .devSectionTitle {
-  font-weight: 700;
-  color: #ffb347;
+  font-weight: 800;
+  color: #8a4a30;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .devRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .devChip {
-  background: #222a38;
-  color: #d9e0e8;
-  border: 1px solid #3c485e;
-  border-radius: 6px;
-  padding: 4px 8px;
+  background: #efe6d2;
+  color: #3f3a36;
+  border: 1px solid rgb(148 119 91 / 28%);
+  border-radius: 8px;
+  padding: 3px 8px;
   font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
 }
 
+.devChip:hover {
+  background: #e5d9be;
+}
+
 .devChipActive {
-  background: #ff7a29;
-  color: #10141c;
-  border-color: #ffb347;
+  background: #a9674c;
+  color: #fffcf4;
+  border-color: #8a4a30;
+  font-weight: 800;
+}
+
+.devResultBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgb(148 119 91 / 14%);
+  color: #3f3a36;
+  font-size: 11px;
   font-weight: 700;
 }

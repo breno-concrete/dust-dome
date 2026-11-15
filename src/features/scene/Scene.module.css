@@ -30,10 +30,71 @@
 }
 
 .cameraControls {
+  --color-text: #3f3a36;
+  --color-muted: #55594f;
+
   position: absolute;
-  right: var(--space-3);
-  bottom: var(--space-3);
-  display: flex;
-  gap: var(--space-2);
-  z-index: 2;
+  top: 114px;
+  right: 28px;
+  z-index: 52;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  color: #3f3a36;
+  background: rgb(251 246 234 / 92%);
+  border: 1px solid rgb(148 119 91 / 24%);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgb(85 57 41 / 12%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.cameraButton {
+  min-width: 52px;
+  min-height: 36px;
+  gap: 5px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 11px;
+  background: rgb(162 164 135 / 18%);
+  color: #3f3a36;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.cameraButton:hover:not(:disabled) {
+  background: rgb(162 164 135 / 32%);
+}
+
+.cameraButton:focus-visible {
+  outline: 2px solid #a9674c;
+  outline-offset: 2px;
+}
+
+.cameraGlyph {
+  font-size: 15px;
+  line-height: 1;
+  color: #a9674c;
+}
+
+.cameraDivider {
+  width: 1px;
+  height: 22px;
+  background: rgb(148 119 91 / 24%);
+}
+
+@media (max-width: 1190px) {
+  .cameraControls {
+    top: 168px;
+    right: 22px;
+  }
+}
+
+@media (max-width: 760px) {
+  .cameraControls {
+    top: 150px;
+    right: 10px;
+  }
 }
