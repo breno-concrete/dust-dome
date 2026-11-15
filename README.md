@@ -1,4 +1,4 @@
-# Mars Outpost
+# Dust & Dome
 
 NASA Space Apps Challenge 2026 — _Build a Junior Astronaut Mission Trainer_.
 
