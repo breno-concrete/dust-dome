@@ -155,17 +155,17 @@ de apresentação podem ser testados independentemente com estados criados manua
 
 > **TDD**: Escreva estes testes primeiro e confirme que falham pelo comportamento ausente esperado.
 
-- [ ] T020 [P] [US4] Adicionar testes de comportamento em `src/features/end/EndScreen.test.tsx` para missões vencidas e perdidas, agrupamento por ciclo/estação, cada causa de perda registrada, debriefs sem perdas e reinício usando a store real. Incluir a entrada `radiation_storm` nos dois formatos de `ref`: com a `url` do evento DONKI citado e com a palavra `radiation_storm` (sem evento), que não pode virar uma citação inventada.
-- [ ] T021 [P] [US4] Adicionar testes de comportamento em `src/features/sources/SourcesScreen.test.tsx` para fontes deduplicadas, classificações científicas, rótulo DONKI arquivado e texto voltado ao jogador em inglês.
-- [ ] T022 [US4] Executar `npx vitest run src/features/end/EndScreen.test.tsx src/features/sources/SourcesScreen.test.tsx` e registrar que os novos testes da US4 falham antes da implementação.
+- [x] T020 [P] [US4] Adicionar testes de comportamento em `src/features/end/EndScreen.test.tsx` para missões vencidas e perdidas, agrupamento por ciclo/estação, cada causa de perda registrada, debriefs sem perdas e reinício usando a store real. Incluir a entrada `radiation_storm` nos dois formatos de `ref`: com a `url` do evento DONKI citado e com a palavra `radiation_storm` (sem evento), que não pode virar uma citação inventada.
+- [x] T021 [P] [US4] Adicionar testes de comportamento em `src/features/sources/SourcesScreen.test.tsx` para fontes deduplicadas, classificações científicas, rótulo DONKI arquivado e texto voltado ao jogador em inglês.
+- [x] T022 [US4] Executar `npx vitest run src/features/end/EndScreen.test.tsx src/features/sources/SourcesScreen.test.tsx` e registrar que os novos testes da US4 falham antes da implementação. Registro: `npx vitest run src/features/end src/features/sources` dá 62 testes, 56 falhando por asserção (esqueletos `debrief.ts` e `sources.ts` devolvem vazio; as telas ainda não têm o debrief nem o rótulo de arquivado). Os 6 que passam guardam comportamento que já existe e deve continuar: tela vazia sem partida, botão "Back", link único por URL, rótulo de classificação e os dois casos em que `donkiCitation` devolve `null`.
 
 ### Implementação da User Story 4
 
-- [ ] T023 [US4] Adicionar helpers puros de agrupamento do debrief e resolução de causas em `src/features/end/debrief.ts`, derivando todas as explicações de `GameState.log`, do texto da configuração e de rótulos explícitos de simplificação.
-- [ ] T024 [US4] Atualizar `src/features/end/EndScreen.tsx` para renderizar o debrief em linguagem simples, preservar o resultado e a ação de reinício existentes e não inventar perdas ausentes no log.
-- [ ] T025 [US4] Atualizar `src/features/sources/SourcesScreen.tsx` para exibir fontes deduplicadas, rótulos real/scaled/simplification/game-value e o status DONKI arquivado, preservando a navegação existente.
-- [ ] T026 [US4] Adicionar a atribuição de dados/NASA do DEV A à seção do DEV A em `CREDITS.md` para o snapshot DONKI versionado e o uso das fontes relacionadas.
-- [ ] T027 [US4] Executar `npx vitest run src/features/end/EndScreen.test.tsx src/features/sources/SourcesScreen.test.tsx` e confirmar que os testes da US4 passam sem alterar os testes de outras áreas.
+- [x] T023 [US4] Adicionar helpers puros de agrupamento do debrief e resolução de causas em `src/features/end/debrief.ts`, derivando todas as explicações de `GameState.log`, do texto da configuração e de rótulos explícitos de simplificação.
+- [x] T024 [US4] Atualizar `src/features/end/EndScreen.tsx` para renderizar o debrief em linguagem simples, preservar o resultado e a ação de reinício existentes e não inventar perdas ausentes no log.
+- [x] T025 [US4] Atualizar `src/features/sources/SourcesScreen.tsx` para exibir fontes deduplicadas, rótulos real/scaled/simplification/game-value e o status DONKI arquivado, preservando a navegação existente.
+- [x] T026 [US4] Adicionar a atribuição de dados/NASA do DEV A à seção do DEV A em `CREDITS.md` para o snapshot DONKI versionado e o uso das fontes relacionadas.
+- [x] T027 [US4] Executar `npx vitest run src/features/end/EndScreen.test.tsx src/features/sources/SourcesScreen.test.tsx` e confirmar que os testes da US4 passam sem alterar os testes de outras áreas.
 
 **Checkpoint**: A US4 é testável de forma independente e a missão explica tanto o sucesso quanto
 o fracasso com atribuição científica honesta.
@@ -179,7 +179,7 @@ limites de entrega.
 
 - [ ] T028 [P] Revisar `specs/002-events-data/quickstart.md`, `specs/002-events-data/data-model.md` e `specs/002-events-data/contracts/` em relação ao comportamento implementado e atualizar somente a documentação diretamente relacionada.
 - [ ] T029 Executar `npm run check` na raiz do repositório usando os scripts em `package.json` e corrigir somente falhas causadas pela implementação de Eventos e Dados da NASA.
-- [ ] T030 Executar a validação de ownership do CI para a branch `data/002-events-data` e confirmar que todo arquivo-fonte alterado está dentro dos caminhos do DEV A listados em `CONTRIBUTING.md`.
+- [ ] T030 Executar a validação de ownership do CI para a branch `data/us4-debrief-sources` e confirmar que todo arquivo-fonte alterado está dentro dos caminhos do DEV A listados em `CONTRIBUTING.md`.
 
 ---
 
