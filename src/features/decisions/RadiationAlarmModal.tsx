@@ -29,7 +29,7 @@ const strings = {
 export function RadiationAlarmModal() {
   const storm = useGameStore((s) => s.game?.radiationStorm)
   const elapsed = useGameStore((s) => s.game?.time.elapsed ?? 0)
-  const shelterAll = useGameStore((s) => s.shelterAll)
+  const bringAllInside = useGameStore((s) => s.bringAllInside)
   const t = useT()
   if (!storm) return null
 
@@ -43,7 +43,7 @@ export function RadiationAlarmModal() {
       role="alertdialog"
       title={t(strings.title)}
       footer={
-        <Button variant="danger" className={styles.briefingButton} onClick={shelterAll}>
+        <Button variant="danger" className={styles.briefingButton} onClick={bringAllInside}>
           {t(strings.shelter)}
         </Button>
       }

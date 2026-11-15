@@ -32,9 +32,7 @@ describe('Hud crew panel: bring inside', () => {
         name: /Bring .* inside/,
       }),
     ).toBeDefined()
-    expect(
-      within(screen.getByTestId(`crew-member-${second!.id}`)).queryByRole('button'),
-    ).toBeNull()
+    expect(within(screen.getByTestId(`crew-member-${second!.id}`)).queryByRole('button')).toBeNull()
   })
 
   it('bringing one astronaut inside changes only their location', async () => {
