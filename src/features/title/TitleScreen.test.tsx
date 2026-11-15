@@ -70,14 +70,24 @@ describe('TitleScreen', () => {
     expect(store().screen).toBe('sources')
   })
 
+  it('the language button shows the language the menu is in', async () => {
+    render(<TitleScreen />)
+    expect(screen.getByRole('button', { name: 'English' })).toBeDefined()
+    expect(screen.queryByRole('button', { name: 'Português' })).toBeNull()
+
+    await userEvent.click(screen.getByRole('button', { name: 'English' }))
+    expect(screen.getByRole('button', { name: 'Português' })).toBeDefined()
+    expect(screen.queryByRole('button', { name: 'English' })).toBeNull()
+  })
+
   it('switches every text to Portuguese and back without leaving the screen', async () => {
     render(<TitleScreen />)
-    await userEvent.click(screen.getByRole('button', { name: 'Português' }))
+    await userEvent.click(screen.getByRole('button', { name: 'English' }))
     expect(screen.getByRole('button', { name: 'Jogar' })).toBeDefined()
     expect(screen.getByRole('button', { name: 'De onde vem a ciência?' })).toBeDefined()
     expect(store().screen).toBe('title')
 
-    await userEvent.click(screen.getByRole('button', { name: 'English' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Português' }))
     expect(screen.getByRole('button', { name: 'Play game' })).toBeDefined()
   })
 
