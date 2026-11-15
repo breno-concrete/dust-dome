@@ -2,6 +2,7 @@
 // in TutorialDialog.test.tsx.
 import { describe, expect, it } from 'vitest'
 import { TUTORIAL_STEPS, isStepDone, type StepContext } from './tutorial'
+import { VEGA_MOODS } from './vegaPortrait'
 
 const ctx = (patch: Partial<StepContext> = {}): StepContext => ({
   placing: null,
@@ -18,6 +19,11 @@ describe('tutorial steps', () => {
     const ids = TUTORIAL_STEPS.map((s) => s.id)
     expect(new Set(ids).size).toBe(ids.length)
     expect(TUTORIAL_STEPS.length).toBeGreaterThanOrEqual(10)
+  })
+
+  it('every step has a Vega portrait mood that exists', () => {
+    for (const s of TUTORIAL_STEPS) expect(VEGA_MOODS, s.id).toContain(s.mood)
+    expect(TUTORIAL_STEPS[0]!.mood).toBe('welcome')
   })
 
   it('every step speaks English and Portuguese', () => {

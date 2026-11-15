@@ -192,4 +192,31 @@ describe('Tutorial', () => {
     const lastRead = READ_STEPS[READ_STEPS.length - 2]!
     expect(screen.getByText(lastRead.text.en)).toBeDefined()
   })
+
+  describe("Vega's portrait", () => {
+    it('waves on the first step', () => {
+      render(<BriefingDialog />)
+      expect(screen.getByRole('img', { name: /waving/ })).toBeDefined()
+    })
+
+    it('looks serious when she talks about the dangers', async () => {
+      render(<BriefingDialog />)
+      const hazards = TUTORIAL_STEPS.findIndex((s) => s.id === 'hazards')
+      for (let i = 0; i < hazards; i++) await next()
+      expect(screen.getByText(TUTORIAL_STEPS[hazards]!.text.en)).toBeDefined()
+      expect(screen.getByRole('img', { name: /serious warning/ })).toBeDefined()
+    })
+
+    it('is also there while she waits for the player to act', async () => {
+      render(<BriefingDialog />)
+      await readIntro()
+      expect(screen.getByRole('img', { name: /Commander Vega/ })).toBeDefined()
+    })
+
+    it('speaks Portuguese in the picture description too', () => {
+      useLang.setState({ lang: 'pt' })
+      render(<BriefingDialog />)
+      expect(screen.getByRole('img', { name: /acenando/ })).toBeDefined()
+    })
+  })
 })
