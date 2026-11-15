@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { BriefingDialog } from '../features/decisions/BriefingDialog'
 import { BuildMenu } from '../features/decisions/BuildMenu'
 import { PowerPanel } from '../features/decisions/PowerPanel'
+import { RadiationAlarmModal } from '../features/decisions/RadiationAlarmModal'
 import { EndScreen } from '../features/end/EndScreen'
 import { Hud } from '../features/hud/Hud'
 import { RepairQte } from '../features/repair/RepairQte'
@@ -41,6 +42,8 @@ export default function App() {
             <BuildMenu />
             <PowerPanel />
             <BriefingDialog />
+            {/* Mounted by the shell so it shows on top of any panel or briefing. */}
+            <RadiationAlarmModal />
             <RepairQte />
           </div>
         </div>
