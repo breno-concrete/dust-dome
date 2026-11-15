@@ -76,10 +76,13 @@ Tolerance used everywhere below: `EPS = 1e-9` (floating-point only, not a balanc
 
 - **Decision**: `computePower` starts from the previous step's `power.shed` set.
   1. If the batteries are **full** (capacity > 0 and charge ≥ capacity − EPS), clear the set.
-     Otherwise restore shed types in reverse brownout order while production alone covers the
-     demand with that type back on.
+     Otherwise restore shed types in reverse brownout order (most vital first) when production
+     alone covers the demand with that type back on. A type that does not fit is skipped, not a
+     stop: a less vital type that draws less can still come back (issue #45).
   2. If the batteries are **empty** (charge ≤ EPS) and production < demand, add types in brownout
-     order until production ≥ demand.
+     order until production ≥ demand, then run the restore of step 1 again: a later, bigger type
+     may have freed room for an earlier one (e.g. the mine and then the ice melter are shed, and
+     the mine fits again).
   3. If every switchable type is shed and production is still below the habitats' heating, set
      `unheated = true`.
   The log gets a `power_shed` entry only when the set changes.
