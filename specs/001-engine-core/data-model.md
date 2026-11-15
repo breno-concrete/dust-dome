@@ -123,7 +123,7 @@ state transitions. Fields marked **v2** arrive with the `shared/contract-v2` PR
 | `upgradeId` | For `upgrade` jobs. |
 | `astronautId` | Who is doing it; `null` unless `active`. |
 | `remainingSeconds` | Starts at the configured duration; kept across pauses and recalls. |
-| `status` | `queued` / `active` / `paused`. |
+| `status` | `queued` / `active` / `paused` (blocked by an event, resumes by itself) / `held` (paused by "Bring inside", waits for `resumeJobs`). |
 
 - **Rules**: at most one `active` job per living astronaut; at most one queued or active job of
   the same kind for the same structure (and the same upgrade).

@@ -1,5 +1,5 @@
 // Owner: Breno. Player actions. Each returns an ActionResult and never throws.
-// Validation order and refusals: research R9. bringInside / bringAllInside: US5 (R12).
+// Validation order and refusals: research R9. bringInside / bringAllInside / resumeJobs: R12.
 import { isHousing, occupantsOf, protects, roomIn } from './habitats'
 import { beingDemolished, dustStormActive, externalJobsBlocked, jobSeconds } from './jobs'
 import { placementError, sideGroups } from './placement'
@@ -170,9 +170,10 @@ function shelterWithRoom(state: GameState, config: GameConfig): StructureInstanc
 }
 
 /**
- * R12: the astronaut goes inside at once and their job goes back to the queue with its remaining
- * time. No radiation storm: into their habitat, resting until exposure is 0. Storm (warning or
- * active): into `home`, a sheltered habitat; jobs wait for the storm to end (jobs.ts).
+ * R12: the astronaut goes inside at once. No radiation storm: into their habitat, resting until
+ * exposure is 0, and their job is held with its remaining time until the player resumes it.
+ * Storm (warning or active): into `home`, a sheltered habitat; the job goes back to the queue and
+ * waits for the storm to end (jobs.ts).
  */
 function recall(state: GameState, astronautId: string, home: string | null): GameState {
   const a = state.crew.find((x) => x.id === astronautId)
@@ -192,15 +193,16 @@ function recall(state: GameState, astronautId: string, home: string | null): Gam
         : x,
     ),
     jobs: state.jobs.map((j): Job =>
-      j.id === a.jobId ? { ...j, status: 'queued', astronautId: null } : j,
+      j.id === a.jobId ? { ...j, status: storm ? 'queued' : 'held', astronautId: null } : j,
     ),
   }
 }
 
 /**
- * The player brings one astronaut inside: their job goes back to the queue with its remaining
- * time and they rest (no job) until their exposure is back to 0. During a radiation storm they
- * go into a habitat with a radiation shelter instead, and are refused if none has room.
+ * The player brings one astronaut inside: their job is held with its remaining time (nobody takes
+ * it until resumeJobs) and they rest (no job) until their exposure is back to 0. During a
+ * radiation storm they go into a habitat with a radiation shelter instead, and are refused if none
+ * has room; their job then resumes by itself after the storm.
  */
 export function bringInside(
   state: GameState,
@@ -273,6 +275,27 @@ export function demolish(state: GameState, config: GameConfig, structureId: stri
       }
     : state
   return ok(queueJob(stopped, config, 'demolish', target))
+}
+
+/**
+ * "Resume" on a structure: the jobs held by bringInside / bringAllInside go back to the queue
+ * with their remaining time, and the least exposed free astronaut takes them (jobs.ts). In winter
+ * darkness they wait in the queue until spring.
+ */
+export function resumeJobs(
+  state: GameState,
+  _config: GameConfig,
+  structureId: string,
+): ActionResult {
+  if (over(state) || !hasJob(state, structureId, (j) => j.status === 'held')) {
+    return refuse(state, 'not_allowed')
+  }
+  return ok({
+    ...state,
+    jobs: state.jobs.map((j): Job =>
+      j.structureId === structureId && j.status === 'held' ? { ...j, status: 'queued' } : j,
+    ),
+  })
 }
 
 export function dismissBriefing(state: GameState): ActionResult {
