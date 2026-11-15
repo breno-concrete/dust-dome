@@ -258,6 +258,39 @@ describe('computePower', () => {
     expect(short.power.shed).toEqual(['mine'])
   })
 
+  // Issue #45: a less vital type that fits comes back even when a more vital one does not.
+  describe('a less vital type that fits comes back (issue #45)', () => {
+    const [lessVital, moreVital] = ['mine', 'ice_melter']
+    const s = base(1, 'spring', [habitat.id, lessVital, moreVital])
+    const total = demandAtSwitches(s, config)
+    // Production misses exactly the more vital type's draw: the less vital one still fits.
+    const short = (state: GameState) => withProduction(state, total - baseDraw(moreVital))
+
+    it('the setup: less vital first in the brownout order and drawing less', () => {
+      expect(order.indexOf(lessVital)).toBeLessThan(order.indexOf(moreVital))
+      expect(baseDraw(lessVital)).toBeLessThan(baseDraw(moreVital))
+    })
+
+    it('restoring skips a type that does not fit and tries the next one', () => {
+      const bothShed = { ...s, power: { ...s.power, shed: [lessVital, moreVital] } }
+      const after = computePower(short(bothShed), config, 1)
+      expect(after.power.shed).toEqual([moreVital])
+      expect(after.power.productionKw).toBeGreaterThanOrEqual(after.power.demandKw)
+    })
+
+    it('shedding in brownout order brings back a type the later shed made room for', () => {
+      const after = computePower(short(s), config, 1)
+      expect(after.power.shed).toEqual([moreVital])
+      expect(after.power.demandKw).toBeCloseTo(total - baseDraw(moreVital))
+      expect(powerLogs(after).at(-1)).toMatchObject({ kind: 'power_shed' })
+
+      // Stable: the next step changes nothing and logs nothing.
+      const again = computePower(after, config, 1)
+      expect(again.power.shed).toEqual([moreVital])
+      expect(powerLogs(again)).toHaveLength(powerLogs(after).length)
+    })
+  })
+
   it('every shed type comes back when the batteries are full', () => {
     const s = base(1, 'spring', [habitat.id, ...order, bank.id])
     const full = { ...s, batteryEu: bankEu(), power: { ...s.power, shed: [...order] } }

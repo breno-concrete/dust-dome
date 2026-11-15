@@ -87,17 +87,20 @@ function nextShed(
   const full = capacity > 0 && state.batteryEu >= capacity - EPS
   const fits = (shed: StructureTypeId[]) => productionKw >= demandOf(state, config, shed) - EPS
 
-  // 1. Full batteries bring everything back; otherwise restore the most vital types first while
-  //    production alone covers them.
-  let shed = full ? [] : order.filter((t) => state.power.shed.includes(t))
-  for (const type of [...shed].reverse()) {
-    const without = shed.filter((t) => t !== type)
-    if (fits(without)) shed = without
-    else break
-  }
+  // Bring back, most vital first, every shed type that production alone covers. A type that does
+  // not fit is skipped, so a less vital one that draws less can still come back (issue #45).
+  const restore = (shed: StructureTypeId[]) =>
+    [...shed].reverse().reduce((kept, type) => {
+      const without = kept.filter((t) => t !== type)
+      return fits(without) ? without : kept
+    }, shed)
+
+  // 1. Full batteries bring everything back; otherwise restore what production covers.
+  let shed = full ? [] : restore(order.filter((t) => state.power.shed.includes(t)))
 
   // 2. Empty batteries: switch types off in brownout order until demand fits. Types that draw
-  //    nothing right now are skipped: switching them off would change nothing.
+  //    nothing right now are skipped: switching them off would change nothing. Then restore, as a
+  //    later type may have freed room for an earlier, smaller one.
   if (empty) {
     for (const type of order) {
       if (fits(shed)) break
@@ -105,6 +108,7 @@ function nextShed(
       const draws = state.structures.some((s) => s.type === type && drawOf(s, state, config) > 0)
       if (draws) shed = [...shed, type]
     }
+    shed = restore(shed)
   }
   return shed
 }
