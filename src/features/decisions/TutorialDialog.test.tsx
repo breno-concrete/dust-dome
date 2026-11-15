@@ -181,4 +181,15 @@ describe('Tutorial', () => {
     render(<BriefingDialog />)
     expect(screen.getByText(TUTORIAL_STEPS[0]!.text.en)).toBeDefined()
   })
+
+  it('Back from the last step returns to the last reading step, not to a finished action', async () => {
+    render(<BriefingDialog />)
+    await readIntro()
+    for (const _ of TUTORIAL_STEPS.filter((s) => s.kind === 'do')) {
+      await userEvent.click(screen.getByRole('button', { name: 'Skip this step' }))
+    }
+    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+    const lastRead = READ_STEPS[READ_STEPS.length - 2]!
+    expect(screen.getByText(lastRead.text.en)).toBeDefined()
+  })
 })

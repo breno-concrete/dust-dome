@@ -761,3 +761,88 @@
     max-height: calc(100dvh - 148px);
   }
 }
+
+/* ---- Commander Vega's tutorial ---- */
+.tutorialCard {
+  --color-surface: rgb(251 246 234 / 96%);
+  --color-text: #3f3a36;
+  --color-muted: #5c6358;
+
+  position: absolute;
+  bottom: 132px;
+  left: 50%;
+  z-index: 58;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(460px, calc(100vw - 2 * var(--space-3)));
+  transform: translateX(-50%);
+  padding: var(--space-3);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid rgb(148 119 91 / 30%);
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgb(85 57 41 / 22%);
+  color-scheme: light;
+}
+
+.tutorialWaiting {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tutorialActions,
+.tutorialFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.tutorialFooter {
+  width: 100%;
+}
+
+.tutorialCounter {
+  margin-right: auto;
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* The dock button Vega is pointing at. */
+.tutorialPulse {
+  animation: tutorialPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes tutorialPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(169 103 76 / 60%);
+  }
+
+  50% {
+    box-shadow: 0 0 0 10px rgb(169 103 76 / 0%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorialPulse {
+    animation: none;
+    outline: 4px solid #a9674c;
+  }
+}
+
+/* Phones held sideways: the card goes under the HUD so it does not cover the docks. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .tutorialCard {
+    top: 84px;
+    bottom: auto;
+    width: min(420px, 50vw);
+    padding: var(--space-2);
+  }
+}
