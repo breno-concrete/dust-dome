@@ -336,9 +336,13 @@ function generateRockPlacements(halfW: number, halfH: number, count = 160): Rock
 
     // Keep rock boulders strictly outside the central outpost apron, craters, and mesas
     if (Math.abs(x) < halfW + 1.1 && Math.abs(z) < halfH + 1.1) continue
-    if (CRATERS.some((c) => Math.hypot(x - c.position[0], z - c.position[2]) < c.outerRadius * 0.82))
+    if (
+      CRATERS.some((c) => Math.hypot(x - c.position[0], z - c.position[2]) < c.outerRadius * 0.82)
+    )
       continue
-    if (MESAS.some((m) => Math.hypot(x - m.position[0], z - m.position[1]) < m.tiers[0].botR * 0.96))
+    if (
+      MESAS.some((m) => Math.hypot(x - m.position[0], z - m.position[1]) < m.tiers[0].botR * 0.96)
+    )
       continue
 
     const baseScale = 0.18 + Math.pow(hash2d(attempt, 71), 1.6) * 0.52
@@ -391,7 +395,12 @@ export function Terrain({ gridWidth = 12, gridHeight = 12 }: TerrainProps) {
   const mesaEntries = useMemo(
     () =>
       MESAS.map((mesa) => {
-        const groundY = sampleDuneBaseHeight(mesa.position[0], mesa.position[1], apronHalfW, apronHalfH)
+        const groundY = sampleDuneBaseHeight(
+          mesa.position[0],
+          mesa.position[1],
+          apronHalfW,
+          apronHalfH,
+        )
         let yCursor = groundY - 0.35
         const tiers = mesa.tiers.map((tier) => {
           const centerY = yCursor + tier.height / 2
