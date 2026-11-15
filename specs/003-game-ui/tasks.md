@@ -123,12 +123,14 @@ description: "Lista de tarefas executáveis para implementação da interface 2D
 
 ### Testes da História de Usuário 4 (TDD - Test-First) ⚠️
 
-- [ ] T028 [US4] Criar testes unitários para a tela inicial (navegação para missão, fontes científicas e alternância de idioma) em `src/features/title/TitleScreen.test.tsx`
+- [x] T028 [US4] Criar testes unitários para a tela inicial (navegação para missão, fontes científicas e alternância de idioma) em `src/features/title/TitleScreen.test.tsx`
+- [x] T028a [US4] Criar testes da linha do tempo da transição de pouso (funções puras) em `src/features/title/transition.test.ts` e da detecção de WebGL / movimento reduzido em `src/features/title/motion.test.ts`
 - [ ] T029 [P] [US4] Criar testes de acessibilidade e internacionalização transversal (`useT`) em `src/ui-kit/a11y.test.tsx`
 
 ### Implementação da História de Usuário 4
 
-- [ ] T030 [US4] Refinar `TitleScreen.tsx` com arte visual tática, botões grandes e alternância fluida entre EN e PT em `src/features/title/TitleScreen.tsx`
+- [x] T030 [US4] Refinar `TitleScreen.tsx` com arte visual tática, botões grandes e alternância fluida entre EN e PT em `src/features/title/TitleScreen.tsx`
+- [x] T030a [US4] Implementar o menu 3D low-poly (céu verde-azulado, logo Dust & Dome, Marte cor de areia com uma mini-base girando, conforme o modelo do Figma) e a transição "Começar missão" (aproximação, foguete passando pela câmera, pouso, fade para o jogo) em `src/features/title/MenuScene.tsx` e `src/features/title/transition.ts`, com início imediato sem WebGL, com movimento reduzido ou se a cena falhar, e botão "Pular"; o planeta já aparece com textura na hora (`planet.webp`, gerado da própria cena) e as construções e o satélite surgem uma a uma (`src/features/title/reveal.ts`) enquanto o three.js carrega
 - [ ] T031 [US4] Adicionar regras de mídia responsiva (breakpoints para tablets e smartphones com gavetas de menu inferiores e cabeçalho flexível) em `src/features/hud/Hud.module.css` e `src/features/decisions/Panel.module.css`
 - [ ] T032 [US4] Revisar atributos ARIA (`aria-label`, `aria-live` para alertas vitais e foco de teclado) em todos os componentes em `src/features/hud/Hud.tsx` e `src/features/decisions/`
 

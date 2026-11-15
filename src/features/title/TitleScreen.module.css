@@ -1,0 +1,296 @@
+/* Owner: Dev B. Title screen, after the team's menu mock-up: teal night sky, the logo on
+   top, a big sandy Mars at the bottom with the buttons over it. One small palette:
+   teal sky, sand planet, terracotta and cream for everything the player can press. */
+.root {
+  --sky: #3a514e;
+  --sky-deep: #2b3f3d;
+  --ink: #22302f;
+  --cream: #fff7ea;
+  --cream-soft: #faeede;
+  --terracotta: #a95d41;
+  --terracotta-light: #b86a4c;
+  --terracotta-dark: #7d4330;
+  --brown-text: #5b4534;
+
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  /* Lets the flat planet size itself from this screen (cqw / cqh), like the 3D camera. */
+  container-type: size;
+  background: radial-gradient(ellipse at 50% 30%, #44605c 0%, var(--sky) 45%, var(--sky-deep) 100%);
+  font-family: ui-rounded, 'Nunito', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ---- Stars ---- */
+.stars {
+  position: absolute;
+  inset: 0;
+}
+
+.dot,
+.sparkle {
+  position: absolute;
+  aspect-ratio: 1;
+  background: var(--cream);
+}
+
+.dot {
+  border-radius: 50%;
+  opacity: 0.55;
+}
+
+.sparkle {
+  clip-path: polygon(50% 0, 59% 41%, 100% 50%, 59% 59%, 50% 100%, 41% 59%, 0 50%, 41% 41%);
+  opacity: 0.8;
+  animation: twinkle 6s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+/* ---- 3D layer (MenuScene) ---- */
+.scene {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+/* Set by MenuScene on its first drawn frame. */
+.sceneReady {
+  opacity: 1;
+}
+
+/* Dust that hides the cut from space to the surface. MenuScene drives the opacity. */
+.wash,
+.fade {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wash {
+  background: radial-gradient(circle at 50% 60%, #ecc08a 0%, #d79a5d 55%, #b3713e 100%);
+}
+
+/* Last frames: same color as the page behind the game, so the game appears from it. */
+.fade {
+  background: var(--color-bg);
+}
+
+/* ---- Planet picture ----
+   The textured planet, taken from the 3D scene itself (planet.webp, no buildings). It shows
+   at once while three.js loads, and for good where there is no WebGL. It sits exactly where
+   MenuScene's camera draws the 3D planet (measured on screen): center at about 80% of the
+   height, radius 43.7% of the height, or 59.9% of the width on tall phones. */
+.planet {
+  --planet-radius: min(43.7cqh, 59.9cqw);
+
+  position: absolute;
+  top: calc(80% - var(--planet-radius));
+  left: 50%;
+  width: calc(2 * var(--planet-radius));
+  height: auto;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  transition: opacity 0.5s ease;
+  user-select: none;
+}
+
+/* The 3D planet is drawn: fade out, a little later than it fades in. */
+.handedOver {
+  opacity: 0;
+  transition-delay: 0.25s;
+}
+
+/* ---- Logo, buttons ---- */
+.content {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.content button {
+  pointer-events: auto;
+}
+
+/* Visible on the sky, on the planet and on the cream buttons alike. */
+.content button:focus-visible {
+  outline: 3px solid var(--cream);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px var(--ink);
+}
+
+.logo {
+  position: absolute;
+  top: clamp(12px, 3vh, 28px);
+  left: 50%;
+  margin: 0;
+  transform: translateX(-50%);
+  line-height: 0;
+  transition: opacity 0.6s ease;
+}
+
+/* Never taller than the sky above the planet, never wider than a phone. */
+.logo img {
+  width: min(440px, 72vw, 52vh);
+  height: auto;
+  /* The source art is muted: warm it up and add contrast, then a thin dark outline and a
+     solid drop so it stands off the teal sky like a sticker. */
+  filter: saturate(1.45) contrast(1.14) brightness(1.06)
+    drop-shadow(0 0 1.5px rgba(26, 36, 35, 0.9)) drop-shadow(0 7px 0 rgba(26, 36, 35, 0.45))
+    drop-shadow(0 14px 22px rgba(26, 36, 35, 0.35));
+}
+
+.leaving {
+  opacity: 0;
+}
+
+.menu {
+  position: absolute;
+  left: 50%;
+  bottom: max(19vh, 84px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: min(360px, 86vw);
+  transform: translateX(-50%);
+}
+
+/* Chunky "pressable" buttons: a solid edge under them that squashes on press. */
+.content .play,
+.content .sources {
+  width: 100%;
+  border-radius: 20px;
+  line-height: 1.2;
+  transition:
+    background-color 0.15s ease,
+    transform 0.08s ease,
+    box-shadow 0.08s ease;
+}
+
+.content .play {
+  min-height: 68px;
+  border: 2px solid rgba(255, 247, 234, 0.3);
+  background: var(--terracotta);
+  color: var(--cream);
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow:
+    0 5px 0 var(--terracotta-dark),
+    0 14px 24px rgba(34, 48, 47, 0.3);
+}
+
+.content .play:hover:not(:disabled) {
+  background: var(--terracotta-light);
+}
+
+.content .sources {
+  min-height: 60px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: var(--cream-soft);
+  color: var(--brown-text);
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow:
+    0 5px 0 #c7a684,
+    0 14px 24px rgba(34, 48, 47, 0.25);
+}
+
+.content .sources:hover:not(:disabled) {
+  background: #ffffff;
+}
+
+.content .play:active:not(:disabled),
+.content .sources:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--terracotta-dark);
+}
+
+.content .language,
+.content .skip {
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 14px;
+  background: rgba(250, 238, 222, 0.9);
+  color: var(--brown-text);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.content .language:hover:not(:disabled),
+.content .skip:hover:not(:disabled) {
+  background: #ffffff;
+}
+
+.content .language {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+}
+
+.landing {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transform: translateX(-50%);
+}
+
+.landingText {
+  margin: 0;
+  border-radius: 999px;
+  padding: 6px 18px;
+  background: rgba(34, 48, 47, 0.82);
+  color: var(--cream);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .menu {
+    gap: 16px;
+  }
+
+  .content .play {
+    min-height: 60px;
+    font-size: 20px;
+  }
+
+  .content .sources {
+    min-height: 56px;
+    font-size: 16px;
+  }
+
+  .content .language {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkle {
+    animation: none;
+  }
+
+  .logo,
+  .content .play,
+  .content .sources {
+    transition: none;
+  }
+}
