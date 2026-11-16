@@ -175,7 +175,7 @@
     "level": 1,
     "buildSeconds": 30,
     "cost": {
-      "hematite": 30
+      "hematite": 20
     },
     "size": 1,
     "power": {
@@ -212,7 +212,7 @@
     "level": 1,
     "buildSeconds": 30,
     "cost": {
-      "hematite": 20
+      "hematite": 15
     },
     "size": 1,
     "power": {
@@ -275,7 +275,7 @@
     "level": 2,
     "buildSeconds": 40,
     "cost": {
-      "hematite": 50,
+      "hematite": 35,
       "regolith": 20
     },
     "size": 2,
@@ -317,7 +317,7 @@
     "buildSeconds": 40,
     "cost": {
       "regolith": 15,
-      "iron": 20
+      "iron": 5
     },
     "size": 2,
     "power": {
@@ -449,7 +449,7 @@
     "buildSeconds": 60,
     "cost": {
       "regolith": 30,
-      "iron": 45
+      "iron": 30
     },
     "size": 2,
     "power": {
@@ -489,7 +489,7 @@
     "buildSeconds": 60,
     "cost": {
       "regolith": 40,
-      "steel": 30
+      "steel": 10
     },
     "size": 2,
     "power": {

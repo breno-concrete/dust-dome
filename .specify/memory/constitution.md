@@ -1,6 +1,12 @@
 <!--
 Sync Impact Report
-Version: 3.3.0 → 3.4.0 (MINOR: second playtest of 2026-11-15)
+Version: 3.4.0 → 3.5.0 (MINOR: cheaper structures, asked by the product owners)
+Modified sections: II.6 (costs: oxygen generator 20 hematite, ice melter 15 hematite, iron
+  refinery 35 hematite + 20 regolith, pressurized greenhouse 15 regolith + 5 iron, steel &
+  alloy factory 30 regolith + 30 iron, compact nuclear reactor 40 regolith + 10 steel)
+Follow-up TODOs: none (structures.json changes in the same PR)
+Source: price list sent by the product owners on 2026-11-15, after the second playtest
+Previous: 3.3.0 → 3.4.0 (MINOR: second playtest of 2026-11-15)
 Modified sections: VI (the radiation alarm drops a fast game to 1×), II.6 (the repair workshop
   costs 15 iron, not 25; a demolition is confirmed before it is queued), II.11 (the alarm drops
   the speed to 1× and leaves the clock and the crew panel usable)
@@ -300,23 +306,23 @@ level 1 structure, **40 s** for level 2 and **60 s** for level 3.
 | Solar panel | 15 hematite | 1×1 | produces (II.7) | — | Output varies by season and events. |
 | Battery bank | 20 hematite | 1×1 | — | — | Stores 1,500 EU. |
 | Mine | 25 hematite | 2×2 | 3 / 6 kW | 25 hematite + 20 regolith / 45 hematite + 35 regolith | Clogs with dust in spring and summer (II.11). |
-| Oxygen generator | 30 hematite | 1×1 | 6 / 10 kW | 4 O₂ / 7 O₂ | Splits atmospheric CO₂ into oxygen (MOXIE). At base it supports the 4-person crew; max adds 3 U of surplus. |
-| Ice melter | 20 hematite | 1×1 | 4 / 8 kW | 30 water / 55 water | Extracts and melts buried ice. Extra heating demand in cold seasons (II.7). |
+| Oxygen generator | 20 hematite | 1×1 | 6 / 10 kW | 4 O₂ / 7 O₂ | Splits atmospheric CO₂ into oxygen (MOXIE). At base it supports the 4-person crew; max adds 3 U of surplus. |
+| Ice melter | 15 hematite | 1×1 | 4 / 8 kW | 30 water / 55 water | Extracts and melts buried ice. Extra heating demand in cold seasons (II.7). |
 
 ### Level 2
 
 | Structure | Cost | Tiles | Power base / max | Per season (base / max) | Notes |
 |---|---|---|---|---|---|
-| Iron refinery | 50 hematite + 20 regolith | 2×2 | 6 / 12 kW | uses 30 / 60 hematite → 18 / 36 iron | Costs no iron because it produces iron. |
-| Pressurized greenhouse | 15 regolith + 20 iron | 2×2 | 5 / 9 kW | uses 15 / 30 water → 4 / 8 food | Extra heating demand in cold seasons (II.7); takes thermal insulation. |
+| Iron refinery | 35 hematite + 20 regolith | 2×2 | 6 / 12 kW | uses 30 / 60 hematite → 18 / 36 iron | Costs no iron because it produces iron. |
+| Pressurized greenhouse | 15 regolith + 5 iron | 2×2 | 5 / 9 kW | uses 15 / 30 water → 4 / 8 food | Extra heating demand in cold seasons (II.7); takes thermal insulation. |
 | Repair workshop | 15 iron | 1×1 | 2 / 5 kW | uses 4 / 8 iron → 10 / 20 repair parts | |
 
 ### Level 3
 
 | Structure | Cost | Tiles | Power base / max | Per season (base / max) | Notes |
 |---|---|---|---|---|---|
-| Steel & alloy factory | 30 regolith + 45 iron | 2×2 | 10 / 18 kW | uses 15 / 30 iron → 9 / 18 steel | Paid with iron because it is the only source of steel. |
-| Compact nuclear reactor | 40 regolith + 30 steel | 2×2 | **produces 40 kW constant** | — | Unaffected by seasons, darkness, storms or any event. Consumes nothing. |
+| Steel & alloy factory | 30 regolith + 30 iron | 2×2 | 10 / 18 kW | uses 15 / 30 iron → 9 / 18 steel | Paid with iron because it is the only source of steel. |
+| Compact nuclear reactor | 40 regolith + 10 steel | 2×2 | **produces 40 kW constant** | — | Unaffected by seasons, darkness, storms or any event. Consumes nothing. |
 
 ### Upgrades
 
@@ -650,4 +656,4 @@ Amendments go through a `shared/` pull request approved by a second team member;
 Part II also need one product owner's approval. Every pull request must respect the ownership
 table and the principles above.
 
-**Version**: 3.4.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-15
+**Version**: 3.5.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-15
