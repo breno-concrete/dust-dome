@@ -3,8 +3,10 @@ import { describe, expect, it, vi } from 'vitest'
 import type { GameState } from '../../engine/types'
 import {
   createSoundPlayer,
+  seasonMusic,
   soundscape,
   SOUND_FILES,
+  SOUND_VOLUMES,
   webAudioFactory,
   type AudioLike,
 } from './sound'
@@ -195,5 +197,126 @@ describe('web audio backend (starts without delay)', () => {
     alarm.loop = true
     alarm.play()
     expect(() => alarm.pause()).not.toThrow()
+  })
+})
+
+describe('season music', () => {
+  it('maps each Mars season to its /audio/season-*.ogg file', () => {
+    expect(seasonMusic('spring')).toBe('season-spring')
+    expect(seasonMusic('summer')).toBe('season-summer')
+    expect(seasonMusic('autumn')).toBe('season-autumn')
+    expect(seasonMusic('winter')).toBe('season-winter')
+    expect(SOUND_FILES['season-spring']).toBe('/audio/season-spring.ogg')
+    expect(SOUND_FILES['season-summer']).toBe('/audio/season-summer.ogg')
+    expect(SOUND_FILES['season-autumn']).toBe('/audio/season-autumn.ogg')
+    expect(SOUND_FILES['season-winter']).toBe('/audio/season-winter.ogg')
+  })
+
+  it('switches tracks on season change and does not restart the same track', () => {
+    const audio = fakeAudio()
+    const player = createSoundPlayer(audio.make)
+    player.music('season-spring')
+    player.music('season-spring')
+    expect(audio.made).toHaveLength(1)
+    expect(audio.made[0]!.loop).toBe(true)
+    expect(audio.made[0]!.play).toHaveBeenCalledTimes(1)
+
+    player.music('season-summer')
+    expect(audio.made[0]!.pause).toHaveBeenCalledTimes(1)
+    expect(audio.made).toHaveLength(2)
+    expect(audio.made[1]!.src).toBe('/audio/season-summer.ogg')
+    expect(audio.made[1]!.loop).toBe(true)
+
+    player.music(null)
+    expect(audio.made[1]!.pause).toHaveBeenCalledTimes(1)
+  })
+
+  it('coexists with weather/alarm loops and stops both when muted', () => {
+    const audio = fakeAudio()
+    const player = createSoundPlayer(audio.make)
+    player.music('season-autumn')
+    player.loop('radiation-alarm')
+    expect(audio.made).toHaveLength(2)
+    expect(audio.made[0]!.pause).not.toHaveBeenCalled()
+    expect(audio.made[1]!.pause).not.toHaveBeenCalled()
+
+    player.setMuted(true)
+    expect(audio.made[0]!.pause).toHaveBeenCalledTimes(1)
+    expect(audio.made[1]!.pause).toHaveBeenCalledTimes(1)
+
+    player.music('season-winter')
+    expect(audio.made).toHaveLength(2)
+  })
+})
+
+describe('sound volumes', () => {
+  it('defines boosted volumes for build, alarm, dust storm, moderate boost for radiation storm, and balanced music', () => {
+    expect(SOUND_VOLUMES['place-structure']).toBe(1.7)
+    expect(SOUND_VOLUMES['radiation-alarm']).toBe(1.5)
+    expect(SOUND_VOLUMES['dust-storm-loop']).toBe(1.35)
+    expect(SOUND_VOLUMES['radiation-storm-loop']).toBe(0.75)
+    expect(SOUND_VOLUMES['season-spring']).toBe(0.35)
+    expect(SOUND_VOLUMES['season-summer']).toBe(0.35)
+    expect(SOUND_VOLUMES['season-autumn']).toBe(0.35)
+    expect(SOUND_VOLUMES['season-winter']).toBe(0.35)
+    expect(SOUND_VOLUMES['select-structure']).toBe(1)
+  })
+
+  it('applies full gain in Web Audio and never throws on HTMLAudioElement when gain > 1', async () => {
+    const gains: number[] = []
+    const { ctx } = fakeContext()
+    const origCreateGain = ctx.createGain.bind(ctx)
+    ctx.createGain = () => {
+      const g = origCreateGain()
+      return new Proxy(g, {
+        set(target, prop, value) {
+          if (prop === 'value') gains.push(value)
+          return Reflect.set(target, prop, value)
+        },
+        get(target, prop) {
+          if (prop === 'gain') {
+            return new Proxy(target.gain, {
+              set(t, p, v) {
+                if (p === 'value') gains.push(v)
+                return Reflect.set(t, p, v)
+              },
+            })
+          }
+          return Reflect.get(target, prop)
+        },
+      })
+    }
+
+    const webPlayer = createSoundPlayer(
+      webAudioFactory(ctx, () => Promise.resolve(new ArrayBuffer(8)), vi.fn()),
+    )
+    await settle()
+    webPlayer.play('place-structure')
+    webPlayer.loop('radiation-alarm')
+    webPlayer.music('season-spring')
+    expect(gains).toEqual([1.7, 1.5, 0.35])
+
+    // HTMLAudioElement throws IndexSizeError if volume > 1; verify clamping
+    const strictMake = (src: string): AudioLike => {
+      let vol = 1
+      return {
+        src,
+        loop: false,
+        playbackRate: 1,
+        currentTime: 0,
+        get volume() {
+          return vol
+        },
+        set volume(v: number) {
+          if (v < 0 || v > 1) throw new DOMException('volume out of range', 'IndexSizeError')
+          vol = v
+        },
+        play: vi.fn(),
+        pause: vi.fn(),
+      } as AudioLike & { src: string }
+    }
+    const htmlPlayer = createSoundPlayer(strictMake)
+    expect(() => htmlPlayer.play('place-structure')).not.toThrow()
+    expect(() => htmlPlayer.loop('dust-storm-loop')).not.toThrow()
   })
 })

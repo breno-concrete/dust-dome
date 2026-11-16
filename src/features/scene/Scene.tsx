@@ -52,7 +52,7 @@ import {
   WinterColdEffect,
   type DustDevilStrike,
 } from './SceneEffects'
-import { sound, soundscape } from './sound'
+import { seasonMusic, sound, soundscape } from './sound'
 import { StructureModel } from './StructureModel'
 import { Terrain } from './Terrain'
 import { visualState, type VisualState } from './visualState'
@@ -197,6 +197,12 @@ export default function Scene() {
     sound.loop(muted ? null : loopId)
   }, [loopId, muted])
   useEffect(() => () => sound.loop(null), [])
+
+  const musicId = game && game.status === 'running' ? seasonMusic(game.time.season) : null
+  useEffect(() => {
+    sound.music(muted ? null : musicId)
+  }, [musicId, muted])
+  useEffect(() => () => sound.music(null), [])
   const [devOverrides, setDevOverrides] = useState<DevVisualOverrides>(INITIAL_DEV_OVERRIDES)
   const controlsRef = useRef<ComponentRef<typeof MapControls>>(null)
   const t = useT()
