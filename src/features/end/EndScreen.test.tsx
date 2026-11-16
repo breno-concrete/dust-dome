@@ -286,14 +286,14 @@ describe('EndScreen', () => {
     it('a lost mission shows her tips for the next try, with at least one item', () => {
       endWith({ lostReason: 'crew_lost', log: [seasonStart(1, FIRST.id), death('cold')] })
       render(<EndScreen />)
-      const advice = screen.getByRole('region', { name: 'Commander Vega' })
+      const advice = screen.getByRole('complementary', { name: 'Commander Vega' })
       expect(within(advice).getAllByRole('listitem').length).toBeGreaterThanOrEqual(1)
     })
 
     it('comes right after the commander banner, before the restart button and the debrief', () => {
       endWith({ lostReason: 'crew_lost', log: [seasonStart(1, FIRST.id), death('cold')] })
       render(<EndScreen />)
-      const advice = screen.getByRole('region', { name: 'Commander Vega' })
+      const advice = screen.getByRole('complementary', { name: 'Commander Vega' })
       const restart = screen.getByRole('button', { name: 'Try another strategy' })
       expect(
         advice.compareDocumentPosition(restart) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -303,14 +303,14 @@ describe('EndScreen', () => {
     it('a won mission has no advice', () => {
       endWith({ status: 'won', lostReason: null, log: [seasonStart(1, FIRST.id)] })
       render(<EndScreen />)
-      expect(screen.queryByRole('region', { name: 'Commander Vega' })).toBeNull()
+      expect(screen.queryByRole('complementary', { name: 'Commander Vega' })).toBeNull()
     })
 
     it('speaks Portuguese when the language is switched', () => {
       useLang.setState({ lang: 'pt' })
       endWith({ lostReason: 'crew_lost', log: [seasonStart(1, FIRST.id), death('cold')] })
       render(<EndScreen />)
-      expect(screen.getByRole('region', { name: 'Comandante Vega' })).toBeDefined()
+      expect(screen.getByRole('complementary', { name: 'Comandante Vega' })).toBeDefined()
     })
   })
 
