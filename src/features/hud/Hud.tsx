@@ -1,4 +1,5 @@
 // Owner: Dev B. Prototype-inspired HUD for reserves, time, materials, energy and crew.
+import { useEffect, useState } from 'react'
 import {
   batteryCapacityEu,
   batteryRestoreShare,
@@ -59,6 +60,40 @@ const strings = {
     pt: '{name} está recebendo muita radiação',
   },
   materialsAndEnergy: { en: 'Materials and energy', pt: 'Materiais e energia' },
+  fullscreen: { en: 'Fullscreen', pt: 'Tela cheia' },
+  exitFullscreen: { en: 'Exit fullscreen', pt: 'Sair da tela cheia' },
+}
+
+function FullscreenIcon({ active }: { active: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {active ? (
+        <>
+          <polyline points="4 14 10 14 10 20" />
+          <polyline points="20 10 14 10 14 4" />
+          <line x1="14" y1="10" x2="21" y2="3" />
+          <line x1="3" y1="21" x2="10" y2="14" />
+        </>
+      ) : (
+        <>
+          <polyline points="15 3 21 3 21 9" />
+          <polyline points="9 21 3 21 3 15" />
+          <line x1="21" y1="3" x2="14" y2="10" />
+          <line x1="3" y1="21" x2="10" y2="14" />
+        </>
+      )}
+    </svg>
+  )
 }
 
 // A reserve is low when it holds less than one season of crew needs (constitution II.8).
@@ -155,6 +190,53 @@ export function Hud() {
   const bringAllInside = useGameStore((s) => s.bringAllInside)
   const left = useGameStore((s) => secondsLeftInSeason(s))
   const t = useT()
+  const [isFullscreen, setIsFullscreen] = useState(() => {
+    if (typeof document === 'undefined') return false
+    const doc = document as Document & { webkitFullscreenElement?: Element | null }
+    return Boolean(doc.fullscreenElement || doc.webkitFullscreenElement)
+  })
+
+  useEffect(() => {
+    const syncFullscreen = () => {
+      const doc = document as Document & { webkitFullscreenElement?: Element | null }
+      setIsFullscreen(Boolean(doc.fullscreenElement || doc.webkitFullscreenElement))
+    }
+    document.addEventListener('fullscreenchange', syncFullscreen)
+    document.addEventListener('webkitfullscreenchange', syncFullscreen)
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreen)
+      document.removeEventListener('webkitfullscreenchange', syncFullscreen)
+    }
+  }, [])
+
+  const toggleFullscreen = async () => {
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element | null
+      webkitExitFullscreen?: () => Promise<void> | void
+    }
+    const root = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void
+    }
+    try {
+      if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+        if (doc.exitFullscreen) await doc.exitFullscreen()
+        else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen()
+      } else {
+        if (root.requestFullscreen) await root.requestFullscreen()
+        else if (root.webkitRequestFullscreen) await root.webkitRequestFullscreen()
+        try {
+          const orientation = screen.orientation as ScreenOrientation & {
+            lock?: (orientation: string) => Promise<void>
+          }
+          await orientation?.lock?.('landscape')
+        } catch {
+          // Ignored silently on browsers that do not support orientation lock.
+        }
+      }
+    } catch {
+      // Ignored silently when fullscreen is blocked or unsupported.
+    }
+  }
 
   if (!game) return null
   const season = seasonDef(game.time.season)
@@ -260,7 +342,9 @@ export function Hud() {
             aria-pressed={isPaused}
             icon={<Icon name={isPaused ? 'play' : 'pause'} size={18} />}
           >
-            {t(isPaused ? strings.resume : strings.pause)}
+            <span className={styles.pauseLabel}>
+              {t(isPaused ? strings.resume : strings.pause)}
+            </span>
           </Button>
           {SPEEDS.map((x) => (
             <Button
@@ -277,6 +361,15 @@ export function Hud() {
             </Button>
           ))}
         </div>
+        <Button
+          className={styles.fullscreenButton}
+          variant="secondary"
+          onClick={toggleFullscreen}
+          aria-label={t(isFullscreen ? strings.exitFullscreen : strings.fullscreen)}
+          aria-pressed={isFullscreen}
+          title={t(isFullscreen ? strings.exitFullscreen : strings.fullscreen)}
+          icon={<FullscreenIcon active={isFullscreen} />}
+        />
       </section>
 
       <section

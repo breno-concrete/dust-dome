@@ -225,38 +225,35 @@
 /* Phones held sideways: three bars share a narrow row, so each one shrinks. */
 @media (orientation: landscape) and (max-height: 520px) {
   .hud {
-    gap: 6px;
+    gap: 4px;
   }
 
   .hudIcon {
-    flex-basis: 24px;
-    width: 24px;
-    height: 24px;
-    border-radius: 8px;
-  }
-
-  .hudIcon svg {
-    width: 14px;
-    height: 14px;
+    display: none;
   }
 
   .hud .header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0;
-    font-size: 11px;
-    line-height: 1.15;
+    gap: 1px;
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  .hud .valueGroup {
+    gap: 1px;
+    white-space: nowrap;
   }
 
   .hud .current {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .hud .target {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .hud .track {
-    height: 6px;
+    height: 5px;
   }
 }

@@ -361,3 +361,72 @@
 .giveUpBtn:hover:not(:disabled) {
   background: #e5d9be;
 }
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .overlay {
+    padding: max(8px, var(--safe-top)) max(12px, var(--safe-right)) max(8px, var(--safe-bottom))
+      max(12px, var(--safe-left));
+  }
+
+  .box {
+    display: grid;
+    grid-template-columns: minmax(195px, 0.85fr) 1.35fr;
+    grid-template-rows: auto auto auto 1fr;
+    align-items: start;
+    gap: 8px 14px;
+    width: min(680px, calc(100vw - max(24px, var(--safe-left) + var(--safe-right))));
+    max-height: calc(100dvh - max(16px, var(--safe-top) + var(--safe-bottom)));
+    padding: 12px 14px;
+    border-radius: 20px;
+  }
+
+  .header {
+    grid-column: 1;
+    grid-row: 1;
+    gap: 8px;
+  }
+
+  .headerIcon {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .title {
+    font-size: 17px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .statusRow {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .progressTrack {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .footer {
+    grid-column: 1;
+    grid-row: 4;
+    align-self: end;
+    justify-content: flex-start;
+  }
+
+  .giveUpBtn {
+    min-height: 44px;
+  }
+
+  .targetArea {
+    grid-column: 2;
+    grid-row: 1 / 5;
+    align-self: stretch;
+    height: clamp(200px, calc(100dvh - 44px), 296px);
+  }
+}

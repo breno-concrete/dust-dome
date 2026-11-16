@@ -4,7 +4,11 @@
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .sceneLayer,
@@ -20,4 +24,77 @@
 
 .uiLayer > * {
   pointer-events: auto;
+}
+
+.portraitOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: max(24px, var(--safe-top)) max(24px, var(--safe-right)) max(24px, var(--safe-bottom))
+    max(24px, var(--safe-left));
+  background: radial-gradient(circle at 50% 35%, #2b3f3d 0%, #161d33 60%, #0b1020 100%);
+  color: #fff7ea;
+  text-align: center;
+}
+
+.portraitCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 340px;
+  padding: 28px 24px;
+  border: 1px solid rgba(255, 179, 71, 0.35);
+  border-radius: 24px;
+  background: rgba(22, 29, 51, 0.92);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55);
+}
+
+.portraitIcon {
+  color: #ffb347;
+  animation: rotateHint 2.2s ease-in-out infinite;
+}
+
+.portraitTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffb347;
+}
+
+.portraitMessage {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #f4f6fb;
+}
+
+@keyframes rotateHint {
+  0%,
+  20% {
+    transform: rotate(0deg);
+  }
+  55%,
+  80% {
+    transform: rotate(-90deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@media (orientation: portrait) and (max-width: 760px) {
+  .portraitOverlay {
+    display: flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portraitIcon {
+    animation: none;
+  }
 }
