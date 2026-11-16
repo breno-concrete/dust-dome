@@ -7,6 +7,7 @@ import { targets } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import type { GameState } from '../../engine/types'
+import { useLang } from '../../ui-kit/i18n'
 import { Hud } from './Hud'
 
 describe('Hud', () => {
@@ -153,6 +154,52 @@ describe('Hud', () => {
       `crew-member-${useGameStore.getState().game!.crew[0].id}`,
     )
     expect(exposedAstronaut.className).toContain('warning')
+  })
+
+  // Playtest 2026-11-15: a bare "42%" beside an astronaut did not say what it measured.
+  describe('radiation label on each astronaut', () => {
+    afterEach(() => useLang.setState({ lang: 'en' }))
+
+    function exposeFirst(exposure: number) {
+      act(() => {
+        const g = useGameStore.getState().game!
+        const crew = g.crew.map((a, i) => (i === 0 ? { ...a, exposure } : a))
+        useGameStore.setState({ game: { ...g, crew } })
+      })
+      return useGameStore.getState().game!.crew[0]!
+    }
+
+    it('names the percentage as radiation, for every living astronaut', () => {
+      const first = exposeFirst(0.42)
+      render(<Hud />)
+      const row = within(screen.getByTestId(`crew-member-${first.id}`))
+      expect(row.getByText('Radiation')).toBeDefined()
+      expect(row.getByText('42%')).toBeDefined()
+      expect(within(screen.getByTestId('crew-panel')).getAllByText('Radiation')).toHaveLength(
+        useGameStore.getState().game!.crew.length,
+      )
+    })
+
+    it('is in Portuguese when the language is switched', () => {
+      useLang.setState({ lang: 'pt' })
+      const first = exposeFirst(0.42)
+      render(<Hud />)
+      const row = within(screen.getByTestId(`crew-member-${first.id}`))
+      expect(row.getByText('Radiação')).toBeDefined()
+    })
+
+    it('a lost astronaut shows no radiation reading', () => {
+      act(() => {
+        const g = useGameStore.getState().game!
+        const crew = g.crew.map((a, i) => (i === 0 ? { ...a, alive: false } : a))
+        useGameStore.setState({ game: { ...g, crew } })
+      })
+      const first = useGameStore.getState().game!.crew[0]!
+      render(<Hud />)
+      expect(
+        within(screen.getByTestId(`crew-member-${first.id}`)).queryByText('Radiation'),
+      ).toBeNull()
+    })
   })
 
   // Playtest 2026-11-15: the player could not tell whether the battery was storing energy.

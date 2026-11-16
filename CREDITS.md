@@ -45,5 +45,6 @@ GitHub Spec Kit (MIT) for spec-driven development.
 - Review and fixes of the sprint 2 construction/upgrade UI and HUD: Claude Code (Anthropic).
 - Sound playback code for the scene and repair QTE (`sound.ts` and its tests): Claude Code (Anthropic).
 - Title screen 3D menu and landing transition (`src/features/title/`, models built in code): Claude Code (Anthropic).
+- Radiation label on each astronaut in the crew panel: Claude Code (Anthropic).
 
 <!-- Add where and how AI tools were used. AI images/videos need a visible watermark. -->
