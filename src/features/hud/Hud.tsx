@@ -350,13 +350,18 @@ export function Hud() {
               <span className={styles.astronautName}>{astronaut.name.split(' ')[0]}</span>
               {astronaut.alive ? (
                 <span className={styles.exposureValue}>
-                  {isRecovering && (
-                    <small className={styles.recovering}>{t(strings.recovering)}</small>
-                  )}
-                  {exposurePercent}%
-                  {isWarning && (
-                    <Icon name="radiation" size={14} className={styles.radiationIcon} />
-                  )}
+                  <span className={styles.exposureCaption}>
+                    {isRecovering && (
+                      <small className={styles.recovering}>{t(strings.recovering)}</small>
+                    )}
+                    <small className={styles.exposureLabel}>{t(strings.radiation)}</small>
+                  </span>
+                  <span className={styles.exposureNumber}>
+                    {exposurePercent}%
+                    {isWarning && (
+                      <Icon name="radiation" size={14} className={styles.radiationIcon} />
+                    )}
+                  </span>
                 </span>
               ) : (
                 <span className={styles.deceasedLabel}>{t(strings.deceased)}</span>

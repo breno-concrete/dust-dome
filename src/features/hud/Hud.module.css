@@ -298,12 +298,34 @@
 
 .exposureValue {
   display: inline-flex;
-  align-items: center;
-  gap: 3px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
   margin-left: auto;
   color: #4f5545;
   font-size: 14px;
   font-weight: 800;
+}
+
+/* "Radiation" sits above the percentage so the row keeps room for its button
+   (playtest 2026-11-15: a bare "42%" did not say what it measured). */
+.exposureCaption {
+  display: inline-flex;
+  gap: 4px;
+  line-height: 1.1;
+}
+
+.exposureNumber {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.1;
+}
+
+.exposureLabel {
+  color: #6b6f62;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .warning {
@@ -316,6 +338,7 @@
 }
 
 .warning .exposureValue,
+.warning .exposureLabel,
 .radiationIcon {
   color: #bc775c;
 }

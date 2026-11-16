@@ -65,6 +65,27 @@ describe('BuildMenu', () => {
     }
   })
 
+  // Playtest 2026-11-15: every card showed the same box, so the player could not tell
+  // which building they were about to buy.
+  it('shows a photo of each structure on its card', async () => {
+    render(<BuildMenu />)
+    await userEvent.click(screen.getByRole('button', { name: 'Build base' }))
+
+    for (const structure of config.structures) {
+      const card = screen.getByTestId(`build-card-${structure.id}`)
+      const photo = card.querySelector('img')
+      expect(photo, structure.id).not.toBeNull()
+      expect(photo!.getAttribute('src')).toBe(`/structures/${structure.id}.webp`)
+    }
+  })
+
+  it('the photo does not change the name the build button is announced with', async () => {
+    render(<BuildMenu />)
+    await userEvent.click(screen.getByRole('button', { name: 'Build base' }))
+
+    expect(screen.getByRole('button', { name: 'Solar panel' })).toBeDefined()
+  })
+
   it('disables unaffordable structures and explains each missing resource', async () => {
     act(() => setMaterials({}))
     render(<BuildMenu />)
