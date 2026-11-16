@@ -120,4 +120,81 @@ describe('visualState', () => {
       nonColorCue: 'sparks',
     })
   })
+
+  it('activates dustDevils only for active dust_devil events or recent panel hits, not continuously', () => {
+    const calmSummer = visualState(
+      { ...game, time: { ...game.time, season: 'summer' }, activeEvents: [], log: [] },
+      config,
+    )
+    expect(calmSummer.dustDevils).toBe(0)
+
+    const calmSpring = visualState(
+      { ...game, time: { ...game.time, season: 'spring' }, activeEvents: [], log: [] },
+      config,
+    )
+    expect(calmSpring.dustDevils).toBe(0)
+
+    const activeDevilEvent: ActiveEvent = {
+      id: 'dd1',
+      ruleId: 'c1_dust_devils',
+      kind: 'dust_devil',
+      endsAt: 50,
+      solarFactor: 1,
+      blocksExternalJobs: false,
+    }
+    const explicitDevil = visualState(
+      { ...game, time: { ...game.time, season: 'summer' }, activeEvents: [activeDevilEvent] },
+      config,
+    )
+    expect(explicitDevil.dustDevils).toBeGreaterThanOrEqual(1)
+
+    const recentHit = visualState(
+      {
+        ...game,
+        time: { ...game.time, season: 'spring', elapsed: 45 },
+        log: [
+          {
+            at: 40,
+            cycle: 1,
+            season: 'spring',
+            kind: 'damaged',
+            ref: 'solar-1',
+            cause: 'c1_dust_devils',
+          },
+        ],
+      },
+      config,
+    )
+    expect(recentHit.dustDevils).toBeGreaterThanOrEqual(1)
+
+    const expiredHit = visualState(
+      {
+        ...game,
+        time: { ...game.time, season: 'spring', elapsed: 65 },
+        log: [
+          {
+            at: 40,
+            cycle: 1,
+            season: 'spring',
+            kind: 'damaged',
+            ref: 'solar-1',
+            cause: 'c1_dust_devils',
+          },
+        ],
+      },
+      config,
+    )
+    expect(expiredHit.dustDevils).toBe(0)
+  })
+
+  it('reports ambient cold intensity across summer, autumn, and winter', () => {
+    const summer = visualState({ ...game, time: { ...game.time, season: 'summer' } }, config)
+    const autumn = visualState({ ...game, time: { ...game.time, season: 'autumn' } }, config)
+    const winter = visualState({ ...game, time: { ...game.time, season: 'winter' } }, config)
+
+    expect(summer.cold).toBe(0)
+    expect(autumn.cold).toBeGreaterThan(0)
+    expect(autumn.cold).toBeLessThan(winter.cold)
+    expect(winter.cold).toBe(1)
+  })
 })

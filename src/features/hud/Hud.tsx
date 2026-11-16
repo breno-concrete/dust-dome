@@ -3,6 +3,7 @@ import { secondsLeftInSeason, seasonDef, targets } from '../../app/selectors'
 import { useGameStore, type Speed } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import type { ResourceId } from '../../engine/types'
+import { astronautAccentColor } from '../scene/astronautMarkers'
 import { Button } from '../../ui-kit/Button'
 import { Icon, type IconName } from '../../ui-kit/Icon'
 import { ResourceBar } from '../../ui-kit/ResourceBar'
@@ -48,6 +49,79 @@ const SPEEDS: Speed[] = [1, 2, 4]
 function formatTime(seconds: number) {
   const s = Math.ceil(seconds)
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+function AstronautPortrait({ accent, alive }: { accent: string; alive: boolean }) {
+  return (
+    <svg viewBox="0 0 36 36" width={34} height={34} aria-hidden="true">
+      <defs>
+        <linearGradient id={`visor-${accent.slice(1)}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#35465c" />
+          <stop offset="55%" stopColor="#1c2635" />
+          <stop offset="100%" stopColor="#111824" />
+        </linearGradient>
+      </defs>
+      {/* Space / Mars-sky backdrop */}
+      <circle cx="18" cy="18" r="17" fill={alive ? '#2b2422' : '#3a3533'} />
+      <circle cx="18" cy="18" r="15.5" fill={accent} fillOpacity={alive ? 0.16 : 0.06} />
+      {/* Suit shoulders */}
+      <path
+        d="M6.5 32.5c1.6-4.9 6-7.5 11.5-7.5s9.9 2.6 11.5 7.5"
+        fill="#f0f2f5"
+        stroke="#2e3846"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      {/* Suit shoulder & collar accent */}
+      <path d="M11.5 25.8c2 .9 4.2 1.4 6.5 1.4s4.5-.5 6.5-1.4l-1.3 2.5H12.8z" fill={accent} />
+      <path d="M8.3 29.2l2.7-2.6 1.5 1.4-2.3 3.2z" fill={accent} opacity="0.9" />
+      <path d="M27.7 29.2l-2.7-2.6-1.5 1.4 2.3 3.2z" fill={accent} opacity="0.9" />
+      {/* Helmet shell */}
+      <circle cx="18" cy="16" r="8.8" fill="#f0f2f5" stroke="#2e3846" strokeWidth="1.2" />
+      {/* Side comm pods */}
+      <rect
+        x="8.2"
+        y="14"
+        width="2"
+        height="4.2"
+        rx="0.9"
+        fill={accent}
+        stroke="#2e3846"
+        strokeWidth="0.7"
+      />
+      <rect
+        x="25.8"
+        y="14"
+        width="2"
+        height="4.2"
+        rx="0.9"
+        fill={accent}
+        stroke="#2e3846"
+        strokeWidth="0.7"
+      />
+      {/* Helmet visor */}
+      <rect
+        x="11.2"
+        y="11.8"
+        width="13.6"
+        height="8.4"
+        rx="4.2"
+        fill={`url(#visor-${accent.slice(1)})`}
+        stroke="#2e3846"
+        strokeWidth="0.9"
+      />
+      {/* Visor reflection */}
+      <path
+        d="M13.3 13.7c1.6-.9 3.8-1 5.6-.4"
+        fill="none"
+        stroke="#ffd6a0"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        opacity="0.78"
+      />
+      <circle cx="21.5" cy="14.2" r="0.8" fill="#ffffff" opacity="0.55" />
+    </svg>
+  )
 }
 
 export function Hud() {
@@ -214,9 +288,10 @@ export function Hud() {
             {t(strings.allInside)}
           </button>
         </div>
-        {game.crew.map((astronaut) => {
+        {game.crew.map((astronaut, idx) => {
           const isWarning = astronaut.exposure >= 0.75
           const exposurePercent = Math.round(astronaut.exposure * 100)
+          const accent = astronautAccentColor(astronaut.id, idx)
           const memberClasses = [
             styles.crewMember,
             isWarning && styles.warning,
@@ -232,8 +307,11 @@ export function Hud() {
               data-testid={`crew-member-${astronaut.id}`}
               title={`${astronaut.name}: ${astronaut.alive ? (astronaut.location === 'inside' ? t(strings.inside) : t(strings.outside)) : t(strings.deceased)} (${t(strings.radiation)}: ${exposurePercent}%)`}
             >
-              <span className={styles.astronautIcon}>
-                <Icon name="astronaut" size={20} />
+              <span
+                className={styles.astronautIcon}
+                style={{ borderColor: isWarning ? '#d96b4e' : accent }}
+              >
+                <AstronautPortrait accent={accent} alive={astronaut.alive} />
               </span>
               <span className={styles.astronautName}>{astronaut.name.split(' ')[0]}</span>
               {astronaut.alive ? (

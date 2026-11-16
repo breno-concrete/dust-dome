@@ -1,4 +1,4 @@
-.hud {
+header.hud {
   --hud-surface: rgb(251 246 234 / 82%);
   --hud-border: rgb(148 119 91 / 24%);
   --hud-text: #3f3a36;
@@ -23,7 +23,7 @@
   pointer-events: none;
 }
 
-.hud > * {
+header.hud > * {
   pointer-events: auto;
 }
 
@@ -282,13 +282,16 @@
 
 .astronautIcon {
   display: grid;
-  flex: 0 0 34px;
+  flex: 0 0 36px;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border: 2px solid transparent;
   border-radius: 50%;
-  background: #e9e5d7;
+  background: #2b2422;
   color: #4f5545;
+  box-shadow: 0 1px 3px rgb(46 56 70 / 22%);
 }
 
 .astronautName {
@@ -332,7 +335,7 @@
 }
 
 @media (max-width: 1190px) {
-  .hud {
+  header.hud {
     --hud-inset: 22px;
     --hud-crew-width: 225px;
 
@@ -365,7 +368,7 @@
 }
 
 @media (max-width: 760px) {
-  .hud {
+  header.hud {
     --hud-inset: 10px;
     --hud-crew-width: 170px;
 
@@ -476,7 +479,7 @@
 }
 
 @media (max-width: 440px) {
-  .hud {
+  header.hud {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -523,7 +526,7 @@
 
 /* ---- Phones held sideways: very little height, so everything goes in rows ---- */
 @media (orientation: landscape) and (max-height: 520px) {
-  .hud {
+  header.hud {
     --hud-inset: 8px;
 
     grid-template-columns: minmax(0, 1.6fr) auto minmax(0, 1.1fr);
