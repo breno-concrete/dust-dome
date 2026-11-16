@@ -23,7 +23,7 @@ import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import { Button } from '../../ui-kit/Button'
 import { useT } from '../../ui-kit/i18n'
-import { AstronautMarkers } from './AstronautMarkers'
+import { AstronautMarkers } from './AstronautMarkersLayer'
 import {
   ASTRONAUT_ACCENT_PALETTE,
   astronautWaypoints,
