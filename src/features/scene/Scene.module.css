@@ -142,3 +142,36 @@
     right: 10px;
   }
 }
+
+@media (hover: none) and (pointer: coarse) {
+  .cameraShortcut {
+    display: none;
+  }
+}
+
+@media (orientation: landscape) and (min-height: 521px) and (max-width: 1190px) {
+  .cameraControls {
+    top: 204px;
+    right: max(22px, var(--safe-right));
+  }
+
+  .cameraButton {
+    min-height: 44px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .cameraControls {
+    top: calc(max(6px, var(--safe-top)) + 64px);
+    left: max(8px, var(--safe-left));
+    right: auto;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .cameraButton {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 8px;
+  }
+}

@@ -121,6 +121,16 @@ export function TitleScreen() {
   const show3d = has3d && !sceneFailed
 
   const onStart = () => {
+    if (window.matchMedia?.('(hover: none) and (pointer: coarse)').matches) {
+      try {
+        const orientation = screen.orientation as ScreenOrientation & {
+          lock?: (orientation: string) => Promise<void>
+        }
+        void orientation?.lock?.('landscape')?.catch?.(() => {})
+      } catch {
+        // Ignored silently on browsers that do not support orientation lock (e.g., iOS Safari).
+      }
+    }
     if (show3d && !still) setLaunching(true)
     else beginMission()
   }

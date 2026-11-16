@@ -147,19 +147,34 @@
 @media (orientation: landscape) and (max-height: 520px) {
   .backdrop,
   .backdropWide {
-    padding: 8px;
+    padding: max(8px, var(--safe-top)) max(12px, var(--safe-right)) max(8px, var(--safe-bottom))
+      max(12px, var(--safe-left));
   }
 
   .dialog,
   .wide {
-    max-height: calc(100dvh - 16px);
+    max-height: calc(100dvh - max(16px, var(--safe-top) + var(--safe-bottom)));
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
+  }
+
+  .header {
+    padding-bottom: 4px;
+  }
+
+  .light .title {
+    font-size: 20px;
+  }
+
+  .footer {
+    padding-top: var(--space-2);
   }
 
   .content {
     min-height: 0;
     overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

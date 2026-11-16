@@ -14,6 +14,7 @@ import {
   useRef,
   useState,
   type ComponentRef,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
 import { AdditiveBlending, CanvasTexture, type Group, type MeshStandardMaterial } from 'three'
@@ -52,7 +53,7 @@ import {
   WinterColdEffect,
   type DustDevilStrike,
 } from './SceneEffects'
-import { sound, soundscape } from './sound'
+import { seasonMusic, sound, soundscape } from './sound'
 import { StructureModel } from './StructureModel'
 import { Terrain } from './Terrain'
 import { visualState, type VisualState } from './visualState'
@@ -197,8 +198,21 @@ export default function Scene() {
     sound.loop(muted ? null : loopId)
   }, [loopId, muted])
   useEffect(() => () => sound.loop(null), [])
+
+  const musicId = game && game.status === 'running' ? seasonMusic(game.time.season) : null
+  useEffect(() => {
+    sound.music(muted ? null : musicId)
+  }, [musicId, muted])
+  useEffect(() => () => sound.music(null), [])
   const [devOverrides, setDevOverrides] = useState<DevVisualOverrides>(INITIAL_DEV_OVERRIDES)
   const controlsRef = useRef<ComponentRef<typeof MapControls>>(null)
+  const pointerStartRef = useRef<{ x: number; y: number; type: string; moved: boolean } | null>(
+    null,
+  )
+  const lastPointerRef = useRef<{ type: string; dragged: boolean }>({
+    type: 'mouse',
+    dragged: false,
+  })
   const t = useT()
 
   useEffect(() => {
@@ -309,17 +323,49 @@ export default function Scene() {
   const ambientIntensity = look.dark ? 0.52 : 0.28 + 0.62 * look.light
   const sunIntensity = look.dark ? 0.56 : 1.4 * look.light
 
-  const onGroundMove = (e: ThreeEvent<PointerEvent>) =>
+  const onWrapperPointerDownCapture = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!(e.target instanceof HTMLCanvasElement)) return
+    pointerStartRef.current = { x: e.clientX, y: e.clientY, type: e.pointerType, moved: false }
+    lastPointerRef.current = { type: e.pointerType, dragged: false }
+  }
+  const onWrapperPointerMoveCapture = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const start = pointerStartRef.current
+    if (!start || start.moved) return
+    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) {
+      start.moved = true
+    }
+  }
+  const onWrapperPointerUpCapture = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const start = pointerStartRef.current
+    if (!start) return
+    const dragged = start.moved || Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8
+    lastPointerRef.current = { type: start.type || e.pointerType, dragged }
+    pointerStartRef.current = null
+  }
+
+  const onGroundMove = (e: ThreeEvent<PointerEvent>) => {
+    if (e.pointerType === 'touch') return
     hoverAt(worldToTile(e.point.x, e.point.z, grid))
+  }
   const onGroundLeave = () => hoverAt(null)
   const onGroundClick = (e: ThreeEvent<MouseEvent>) => {
+    const pointerType = (e.nativeEvent as PointerEvent).pointerType || lastPointerRef.current.type
+    if (pointerType === 'touch' && lastPointerRef.current.dragged) return
     const tile = worldToTile(e.point.x, e.point.z, grid)
     if (placing && tile) {
+      if (
+        pointerType === 'touch' &&
+        (!hoverTile || hoverTile[0] !== tile[0] || hoverTile[1] !== tile[1])
+      ) {
+        hoverAt(tile)
+        return
+      }
       if (placementPreview({ game, placing, hoverTile: tile })?.valid) sound.play('place-structure')
       placeAt(tile)
     } else selectStructure(null)
   }
   const onStructureSelect = (id: string) => {
+    if (lastPointerRef.current.type === 'touch' && lastPointerRef.current.dragged) return
     sound.play('select-structure')
     selectStructure(id)
   }
@@ -338,7 +384,12 @@ export default function Scene() {
   )
 
   return (
-    <div className={styles.wrapper}>
+    <div
+      className={styles.wrapper}
+      onPointerDownCapture={onWrapperPointerDownCapture}
+      onPointerMoveCapture={onWrapperPointerMoveCapture}
+      onPointerUpCapture={onWrapperPointerUpCapture}
+    >
       {look.radiationTint && (
         <div className={styles.radiationTint} data-testid="radiation-warning-tint" />
       )}
@@ -504,7 +555,7 @@ export default function Scene() {
           <span className={styles.cameraGlyph} aria-hidden="true">
             ↺
           </span>
-          <span>Q</span>
+          <span className={styles.cameraShortcut}>Q</span>
         </Button>
         <span className={styles.cameraDivider} aria-hidden="true" />
         <Button
@@ -514,7 +565,7 @@ export default function Scene() {
           aria-label={t(strings.rotateRight)}
           title={t(strings.rotateRight)}
         >
-          <span>E</span>
+          <span className={styles.cameraShortcut}>E</span>
           <span className={styles.cameraGlyph} aria-hidden="true">
             ↻
           </span>

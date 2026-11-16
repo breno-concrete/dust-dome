@@ -3,7 +3,7 @@
 // autoplay or a file is missing, the game goes on in silence. Loop lengths are not set
 // here: a loop plays for as long as the game state says (alarm, storm), so the timings
 // in src/config/*.json stay the only source.
-import type { GameState } from '../../engine/types'
+import type { GameState, SeasonId } from '../../engine/types'
 
 export type SoundId =
   | 'place-structure'
@@ -14,10 +14,19 @@ export type SoundId =
   | 'bolt-click'
   | 'repair-success'
   | 'repair-fail'
+  | 'season-spring'
+  | 'season-summer'
+  | 'season-autumn'
+  | 'season-winter'
 
 export type LoopId = Extract<
   SoundId,
   'radiation-alarm' | 'dust-storm-loop' | 'radiation-storm-loop'
+>
+
+export type SeasonTrackId = Extract<
+  SoundId,
+  'season-spring' | 'season-summer' | 'season-autumn' | 'season-winter'
 >
 
 const EXT = '.ogg'
@@ -30,12 +39,41 @@ const ids: SoundId[] = [
   'bolt-click',
   'repair-success',
   'repair-fail',
+  'season-spring',
+  'season-summer',
+  'season-autumn',
+  'season-winter',
 ]
 export const SOUND_FILES = Object.fromEntries(
   ids.map((id) => [id, `/audio/${id}${EXT}`]),
 ) as Record<SoundId, string>
 
-const LOOP_VOLUME = 0.5
+export const SOUND_VOLUMES: Record<SoundId, number> = {
+  'place-structure': 1.7,
+  'select-structure': 1,
+  'radiation-alarm': 1.5,
+  'dust-storm-loop': 1.35,
+  'radiation-storm-loop': 0.75,
+  'bolt-click': 1,
+  'repair-success': 1,
+  'repair-fail': 1,
+  'season-spring': 0.35,
+  'season-summer': 0.35,
+  'season-autumn': 0.35,
+  'season-winter': 0.35,
+}
+
+const SEASON_TRACKS: Record<SeasonId, SeasonTrackId> = {
+  spring: 'season-spring',
+  summer: 'season-summer',
+  autumn: 'season-autumn',
+  winter: 'season-winter',
+}
+
+/** Maps a Mars season to its background music track id. */
+export function seasonMusic(season: SeasonId): SeasonTrackId {
+  return SEASON_TRACKS[season]
+}
 
 /** The part of HTMLAudioElement we use, so tests can pass a fake. */
 export interface AudioLike {
@@ -65,6 +103,8 @@ export interface SoundPlayer {
   play: (id: SoundId, options?: { rate?: number }) => void
   /** Keeps one loop playing; null stops it. Asking again for the same loop changes nothing. */
   loop: (id: LoopId | null) => void
+  /** Keeps one season music track playing in its own channel; null stops it. */
+  music: (id: SeasonTrackId | null) => void
   setMuted: (muted: boolean) => void
   isMuted: () => boolean
 }
@@ -104,12 +144,26 @@ function safeStop(audio: AudioLike | null) {
   }
 }
 
+function safeSetVolume(audio: AudioLike, volume: number) {
+  try {
+    audio.volume = volume
+  } catch {
+    // HTMLAudioElement throws IndexSizeError when volume > 1; clamp for the fallback.
+    try {
+      audio.volume = Math.min(1, Math.max(0, volume))
+    } catch {
+      // Ignore if volume is read-only.
+    }
+  }
+}
+
 export function createSoundPlayer(
   makeAudio: (src: string) => AudioLike,
   startMuted = false,
 ): SoundPlayer {
   let muted = startMuted
   let current: { id: LoopId; audio: AudioLike | null } | null = null
+  let currentMusic: { id: SeasonTrackId; audio: AudioLike | null } | null = null
 
   const make = (id: SoundId): AudioLike | null => {
     try {
@@ -124,11 +178,17 @@ export function createSoundPlayer(
     current = null
   }
 
+  const stopMusic = () => {
+    safeStop(currentMusic?.audio ?? null)
+    currentMusic = null
+  }
+
   return {
     play(id, options) {
       if (muted) return
       const audio = make(id)
       if (!audio) return
+      safeSetVolume(audio, SOUND_VOLUMES[id])
       if (options?.rate) {
         audio.preservesPitch = false
         audio.playbackRate = options.rate
@@ -143,13 +203,27 @@ export function createSoundPlayer(
       current = { id, audio }
       if (!audio) return
       audio.loop = true
-      audio.volume = LOOP_VOLUME
+      safeSetVolume(audio, SOUND_VOLUMES[id])
+      safePlay(audio)
+    },
+    music(id) {
+      if (currentMusic?.id === id) return
+      stopMusic()
+      if (!id || muted) return
+      const audio = make(id)
+      currentMusic = { id, audio }
+      if (!audio) return
+      audio.loop = true
+      safeSetVolume(audio, SOUND_VOLUMES[id])
       safePlay(audio)
     },
     setMuted(next) {
       muted = next
       saveMuted(next)
-      if (next) stopLoop()
+      if (next) {
+        stopLoop()
+        stopMusic()
+      }
     },
     isMuted: () => muted,
   }

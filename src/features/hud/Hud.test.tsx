@@ -2,7 +2,7 @@
 // UI tests for US1 (Dev B): real store, assertions on HUD elements, TDD test-first.
 import { act, cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { targets } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
@@ -335,6 +335,104 @@ describe('Hud', () => {
       const [first, second] = useGameStore.getState().game!.crew
       expect(screen.getByTestId(`crew-member-${first.id}`).className).toContain('warning')
       expect(screen.getByTestId(`crew-member-${second.id}`).className).not.toContain('warning')
+    })
+  })
+
+  describe('mobile fullscreen toggle', () => {
+    const origRequestFullscreen = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'requestFullscreen',
+    )
+    const origExitFullscreen = Object.getOwnPropertyDescriptor(document, 'exitFullscreen')
+    const origFullscreenElement = Object.getOwnPropertyDescriptor(document, 'fullscreenElement')
+    const origOrientation = Object.getOwnPropertyDescriptor(window.screen, 'orientation')
+
+    afterEach(() => {
+      useLang.setState({ lang: 'en' })
+      if (origRequestFullscreen) {
+        Object.defineProperty(HTMLElement.prototype, 'requestFullscreen', origRequestFullscreen)
+      } else {
+        delete (HTMLElement.prototype as { requestFullscreen?: unknown }).requestFullscreen
+      }
+      if (origExitFullscreen) {
+        Object.defineProperty(document, 'exitFullscreen', origExitFullscreen)
+      } else {
+        delete (document as { exitFullscreen?: unknown }).exitFullscreen
+      }
+      if (origFullscreenElement) {
+        Object.defineProperty(document, 'fullscreenElement', origFullscreenElement)
+      } else {
+        delete (document as { fullscreenElement?: unknown }).fullscreenElement
+      }
+      if (origOrientation) {
+        Object.defineProperty(window.screen, 'orientation', origOrientation)
+      } else {
+        delete (window.screen as { orientation?: unknown }).orientation
+      }
+    })
+
+    it('toggles fullscreen and attempts landscape lock from the time panel', async () => {
+      let fsElement: Element | null = null
+      Object.defineProperty(document, 'fullscreenElement', {
+        configurable: true,
+        get: () => fsElement,
+      })
+      const requestFullscreen = vi.fn(async () => {
+        fsElement = document.documentElement
+        document.dispatchEvent(new Event('fullscreenchange'))
+      })
+      const exitFullscreen = vi.fn(async () => {
+        fsElement = null
+        document.dispatchEvent(new Event('fullscreenchange'))
+      })
+      const orientationLock = vi.fn(async () => {})
+
+      Object.defineProperty(document.documentElement, 'requestFullscreen', {
+        configurable: true,
+        value: requestFullscreen,
+      })
+      Object.defineProperty(document, 'exitFullscreen', {
+        configurable: true,
+        value: exitFullscreen,
+      })
+      Object.defineProperty(window.screen, 'orientation', {
+        configurable: true,
+        value: { lock: orientationLock },
+      })
+
+      render(<Hud />)
+      const timePanel = screen.getByRole('region', { name: 'Game clock' })
+      const button = within(timePanel).getByRole('button', { name: 'Fullscreen' })
+      expect(button.getAttribute('aria-pressed')).toBe('false')
+
+      await userEvent.click(button)
+      expect(requestFullscreen).toHaveBeenCalledTimes(1)
+      await vi.waitFor(() => expect(orientationLock).toHaveBeenCalledWith('landscape'))
+
+      const exitButton = within(timePanel).getByRole('button', { name: 'Exit fullscreen' })
+      expect(exitButton.getAttribute('aria-pressed')).toBe('true')
+
+      act(() => useLang.setState({ lang: 'pt' }))
+      expect(within(timePanel).getByRole('button', { name: 'Sair da tela cheia' })).toBeDefined()
+
+      await userEvent.click(within(timePanel).getByRole('button', { name: 'Sair da tela cheia' }))
+      expect(exitFullscreen).toHaveBeenCalledTimes(1)
+      expect(within(timePanel).getByRole('button', { name: 'Tela cheia' })).toBeDefined()
+    })
+
+    it('handles blocked or failing fullscreen APIs gracefully without throwing', async () => {
+      const requestFullscreen = vi.fn(async () => {
+        throw new Error('Fullscreen blocked')
+      })
+      Object.defineProperty(document.documentElement, 'requestFullscreen', {
+        configurable: true,
+        value: requestFullscreen,
+      })
+
+      render(<Hud />)
+      const button = screen.getByRole('button', { name: 'Fullscreen' })
+      await expect(userEvent.click(button)).resolves.not.toThrow()
+      expect(requestFullscreen).toHaveBeenCalledTimes(1)
     })
   })
 })
