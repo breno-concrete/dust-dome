@@ -1,106 +1,85 @@
-/* The end screen is for kids 7-12: flat colors, thick brown outlines, hard offset shadows like
-   stickers, a speech bubble for the commander and numbered tips. The tokens are re-pointed inside
-   .page, so the Button, the portrait and the commander's advice follow. No blur, no glow. */
+/* The end screen: one calm sheet of paper on a flat dark background, in the game's warm palette.
+   Type and thin rules do the work (no cards, glass, glow, gradients or colored side bars). The
+   tokens are re-pointed inside .page, so the Button, the portrait and the commander's advice
+   follow. */
 .page {
-  --outline: #3b2418;
-  --color-surface: #fff4d9;
-  --color-surface-hover: #ffe8b8;
-  --color-surface-border: var(--outline);
-  --color-text: #3b2418;
-  --color-muted: #6d4a36;
-  --color-accent: #e2674a;
-  --color-warning: #c9731c;
-  --color-danger: #c93c2a;
-  --color-ok: #2f7d32;
-  --color-focus: #1f8f89;
-  --radius: 18px;
-  --advice-bg: #d6f0ec;
+  --color-surface: #fbf6ea;
+  --color-surface-hover: #efe6d2;
+  --color-surface-border: rgb(148 119 91 / 40%);
+  --color-text: #3f3a36;
+  --color-muted: #5c6358;
+  --color-accent: #a9674c;
+  --color-warning: #9a4f1f;
+  --color-danger: #a8402f;
+  --color-ok: #4f6b2f;
+  --color-focus: #a9674c;
+  --radius: 12px;
 
   min-height: 100dvh;
-  padding: 28px 28px 48px;
-  background:
-    radial-gradient(rgb(255 255 255 / 14%) 2.5px, transparent 3px) 0 0 / 30px 30px,
-    #c8553a;
+  padding: 40px 24px 56px;
+  background: #3a1d15;
   color-scheme: light;
-  font-family: ui-rounded, 'Nunito', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
 }
 
 .sheet {
-  max-width: 960px;
+  max-width: 820px;
   margin: 0 auto;
+  padding: 40px 44px 44px;
+  background: var(--color-surface);
+  border-radius: 16px;
+  color: var(--color-text);
 }
 
-/* The result, as a tilted sticker. */
 .title {
-  display: inline-block;
   margin: 0 0 var(--space-4);
-  padding: 8px 22px;
-  border: 3px solid var(--outline);
-  border-radius: 16px;
-  background: #ffc93c;
-  box-shadow: 5px 5px 0 var(--outline);
-  color: var(--outline);
-  font-size: 30px;
-  font-weight: 900;
-  line-height: 1.2;
-  transform: rotate(-1.2deg);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.15;
 }
 
 .subtitle {
-  margin: var(--space-4) 0 var(--space-3);
-  color: #fff4d9;
-  font-size: 24px;
-  font-weight: 900;
-  text-shadow: 2px 2px 0 var(--outline);
+  margin: 40px 0 var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-surface-border);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.commanderBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.commanderBanner p {
+  flex: 1;
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.55;
 }
 
 .section {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-4);
-  color: var(--color-text);
-  background: var(--color-surface);
-  border: 3px solid var(--outline);
-  border-radius: 18px;
-  box-shadow: 5px 5px 0 var(--outline);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-surface-border);
 }
 
-/* Each season gets its own color, like a sticker tab. */
 .section h3 {
-  align-self: flex-start;
   margin: 0;
-  padding: 3px 16px;
-  border: 3px solid var(--outline);
-  border-radius: 999px;
-  background: #e8dcc0;
-  color: var(--outline);
-  font-size: 18px;
-  font-weight: 900;
-}
-
-.section[data-season='spring'] h3 {
-  background: #a6d96f;
-}
-
-.section[data-season='summer'] h3 {
-  background: #ffc93c;
-}
-
-.section[data-season='autumn'] h3 {
-  background: #f2a259;
-}
-
-.section[data-season='winter'] h3 {
-  background: #a5d8f0;
+  font-size: 17px;
+  font-weight: 800;
 }
 
 .section h4 {
   margin: var(--space-2) 0 0;
   color: var(--color-muted);
-  font-size: 14px;
-  font-weight: 900;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .lines,
@@ -116,144 +95,66 @@
 .loss,
 .hit,
 .event {
-  padding: var(--space-2) var(--space-3);
-  border: 3px solid var(--outline);
-  border-radius: 14px;
-  background: #fff;
+  padding: 0;
 }
 
-.loss {
-  background: #ffd9cf;
-}
-
-.hit {
-  background: #ffefc2;
-}
-
-.event {
-  background: #d6f0ec;
+.lines p,
+.weather p {
+  margin: 0;
 }
 
 .what {
-  font-weight: 900;
+  font-weight: 700;
+}
+
+.loss .what {
+  color: var(--color-danger);
+}
+
+.hit .what {
+  color: var(--color-warning);
 }
 
 .ok {
   margin: 0;
   color: var(--color-ok);
-  font-weight: 800;
-}
-
-.weather p,
-.lines p {
-  margin: 0;
 }
 
 .section a {
-  color: #1f6f6a;
-  font-weight: 800;
+  color: #8a4a30;
+  text-decoration: underline;
 }
 
-/* Vega talks: her picture, and a speech bubble with a little tail. */
-.commanderBanner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin: 0 0 var(--space-4);
-}
-
-.commanderBanner p {
-  position: relative;
-  flex: 1;
-  margin: 0;
-  padding: var(--space-3) var(--space-4);
-  border: 3px solid var(--outline);
-  border-radius: 22px;
-  background: #fff;
-  box-shadow: 5px 5px 0 var(--outline);
-  color: var(--color-text);
-  font-size: 19px;
-  font-weight: 700;
-  line-height: 1.5;
-}
-
-.commanderBanner p::before,
-.commanderBanner p::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  border-style: solid;
-  border-color: transparent;
-  transform: translateY(-50%);
-}
-
-.commanderBanner p::before {
-  left: -22px;
-  border-width: 14px 22px 14px 0;
-  border-right-color: var(--outline);
-}
-
-.commanderBanner p::after {
-  left: -16px;
-  border-width: 11px 18px 11px 0;
-  border-right-color: #fff;
-}
-
-/* A chunky button that presses down when clicked. */
 .page .again {
-  min-height: 58px;
   margin: 0 0 var(--space-2);
   padding: 0 var(--space-4);
-  border: 3px solid var(--outline);
-  border-radius: 16px;
-  background: #ffc93c;
-  box-shadow: 0 6px 0 var(--outline);
-  color: var(--outline);
-  font-size: 19px;
-  font-weight: 900;
+  min-height: 52px;
+  border-radius: 12px;
+  background: #a9674c;
+  color: #fffcf4;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .page .again:hover:not(:disabled) {
-  background: #ffd45e;
-}
-
-.page .again:active:not(:disabled) {
-  box-shadow: 0 1px 0 var(--outline);
-  transform: translateY(5px);
+  background: #9b5a41;
 }
 
 @media (max-width: 560px) {
   .page {
-    padding: 16px 12px 36px;
+    padding: 12px 8px 32px;
+  }
+
+  .sheet {
+    padding: 24px 18px 28px;
   }
 
   .title {
-    font-size: 24px;
-  }
-
-  .section {
-    padding: var(--space-3);
+    font-size: 26px;
   }
 
   .commanderBanner {
     flex-direction: column;
     text-align: center;
-  }
-
-  /* The bubble's tail points up to Vega. */
-  .commanderBanner p::before {
-    top: -22px;
-    left: 50%;
-    border-width: 0 14px 22px;
-    border-color: transparent transparent var(--outline);
-    transform: translateX(-50%);
-  }
-
-  .commanderBanner p::after {
-    top: -16px;
-    left: 50%;
-    border-width: 0 11px 18px;
-    border-color: transparent transparent #fff;
-    transform: translateX(-50%);
   }
 }
