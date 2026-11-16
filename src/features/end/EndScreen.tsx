@@ -7,6 +7,7 @@ import { config } from '../../config/loadConfig'
 import type { LocalizedText } from '../../config/schema'
 import { Button } from '../../ui-kit/Button'
 import { useT } from '../../ui-kit/i18n'
+import { GameOverFeedback } from '../decisions/GameOverFeedback'
 import { VegaPortrait } from '../decisions/VegaPortrait'
 import { buildDebrief, type DebriefLine, type DebriefSection } from './debrief'
 import styles from './EndScreen.module.css'
@@ -159,6 +160,8 @@ export function EndScreen() {
         <VegaPortrait mood={game.status === 'won' ? 'celebrating' : 'caring'} variant="debrief" />
         {result && <p>{t(result)}</p>}
       </div>
+      {/* Only after a loss: it hides itself when the mission was won. */}
+      <GameOverFeedback />
       <Button onClick={() => start()}>{t(strings.again)}</Button>
       <h2>{t(strings.debrief)}</h2>
       {sections.map((s) => (
