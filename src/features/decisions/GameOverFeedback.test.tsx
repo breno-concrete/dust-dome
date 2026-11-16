@@ -28,13 +28,13 @@ describe('GameOverFeedback', () => {
 
   it('shows nothing while the game is running', () => {
     render(<GameOverFeedback />)
-    expect(screen.queryByRole('region')).toBeNull()
+    expect(screen.queryByRole('complementary')).toBeNull()
   })
 
   it('Vega gives advice after a loss: a title and a short list of things to try', () => {
     lose('cold')
     render(<GameOverFeedback />)
-    const region = screen.getByRole('region', { name: /Commander Vega/ })
+    const region = screen.getByRole('complementary', { name: /Commander Vega/ })
     const items = within(region).getAllByRole('listitem')
     expect(items.length).toBeGreaterThanOrEqual(1)
     expect(items.length).toBeLessThanOrEqual(3)
@@ -51,7 +51,7 @@ describe('GameOverFeedback', () => {
     useLang.setState({ lang: 'pt' })
     lose('cold')
     render(<GameOverFeedback />)
-    expect(screen.getByRole('region', { name: /Comandante Vega/ })).toBeDefined()
+    expect(screen.getByRole('complementary', { name: /Comandante Vega/ })).toBeDefined()
     expect(screen.getByText(/Isolamento térmico/)).toBeDefined()
   })
 })

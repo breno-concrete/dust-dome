@@ -23,7 +23,8 @@ export function GameOverFeedback() {
   if (!feedback) return null
 
   return (
-    <section className={styles.vegaAdvice} aria-label={t(strings.commander)}>
+    // An aside, not a region: the end screen lists one region per debrief season.
+    <aside className={styles.vegaAdvice} aria-label={t(strings.commander)}>
       <h2>
         <Icon name="astronaut" size={22} /> {t(strings.title)}
       </h2>
@@ -35,6 +36,6 @@ export function GameOverFeedback() {
           </li>
         ))}
       </ul>
-    </section>
+    </aside>
   )
 }
