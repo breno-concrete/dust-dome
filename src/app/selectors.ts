@@ -6,8 +6,9 @@
 import { config } from '../config/loadConfig'
 import { winTargets } from '../engine/game'
 import { capacityOf, protects } from '../engine/habitats'
+import { externalJobsBlocked } from '../engine/jobs'
 import { footprint, placementError } from '../engine/placement'
-import { batteryCapacity } from '../engine/power'
+import { batteryCapacity, structurePower } from '../engine/power'
 import type { StructureDef, Tile } from '../engine/types'
 import type { GameStore } from './store'
 
@@ -61,4 +62,19 @@ export function radiationShelterPlaces(store: Pick<GameStore, 'game'>): number {
   return game.structures
     .filter((s) => protects(config, s, 'radiation_shelter'))
     .reduce((sum, s) => sum + capacityOf(config, s), 0)
+}
+
+/** An event keeps the astronauts inside (dark winter): nothing can be built or fixed outside. */
+export function outdoorJobsBlocked(store: Pick<GameStore, 'game'>): boolean {
+  return store.game ? externalJobsBlocked(store.game) : false
+}
+
+/** What a structure makes and uses right now, in kW; null when there is no such structure. */
+export function structurePowerKw(
+  store: Pick<GameStore, 'game'>,
+  structureId: string,
+): { makesKw: number; usesKw: number } | null {
+  const game = store.game
+  const structure = game?.structures.find((s) => s.id === structureId)
+  return game && structure ? structurePower(game, config, structure) : null
 }

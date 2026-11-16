@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { config } from '../config/loadConfig'
-import { batteryCapacity, computePower, demandAtSwitches } from './power'
+import { batteryCapacity, computePower, demandAtSwitches, structurePower } from './power'
 import { gameAt, onlyStructures, withEvents, withStructures, type StructureSpec } from './testState'
 import type { GameState, PowerMode, SeasonId, StructureDef } from './types'
 
@@ -379,5 +379,28 @@ describe('computePower', () => {
     const restored = computePower(enough, config, 1)
     expect(restored.power.shed).toEqual([])
     expect(powerLogs(restored)).toHaveLength(before + 2)
+  })
+})
+
+// Playtest 2026-11-15: the panel of a machine showed the season's table value, not what it really
+// makes or draws right now (a solar panel "made 4 kW" in the dark winter).
+describe('structurePower', () => {
+  it('a solar panel makes nothing in the dark winter and its season value otherwise', () => {
+    const dark = base(config.seasons.winterDarknessFromCycle, 'winter', [panel.id])
+    expect(structurePower(dark, config, dark.structures[0])).toEqual({ makesKw: 0, usesKw: 0 })
+    const spring = base(1, 'spring', [panel.id])
+    expect(structurePower(spring, config, spring.structures[0]).makesKw).toBeCloseTo(
+      solarKw('spring'),
+    )
+  })
+
+  it('a consumer uses what its switch asks for, and nothing while the brownout has it off', () => {
+    const consumer = config.structures.find((d) => d.switchable && !d.heatingKw)!
+    if (consumer.power.kind !== 'consumer') throw new Error('not a consumer')
+    const s = base(1, 'spring', [consumer.id])
+    const [machine] = s.structures
+    expect(structurePower(s, config, machine)).toEqual({ makesKw: 0, usesKw: consumer.power.minKw })
+    const off = { ...s, power: { ...s.power, shed: [consumer.id] } }
+    expect(structurePower(off, config, machine).usesKw).toBe(0)
   })
 })

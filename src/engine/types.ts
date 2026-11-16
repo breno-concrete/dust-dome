@@ -118,6 +118,7 @@ export type LogKind =
   | 'cleaned'
   | 'demolished'
   | 'death'
+  | 'exposure_return' // an astronaut reached exposure.warnAt and came back inside (ref: astronaut)
   | 'radiation_storm'
   | 'power_shed'
 
@@ -178,6 +179,7 @@ export type ActionError =
   | 'last_habitat' // the last habitat module cannot be demolished
   | 'no_room_for_crew' // demolishing this habitat leaves its occupants without room
   | 'external_jobs_blocked'
+  | 'repair_failed' // the repair game was lost: the parts are gone (set by the store)
   | 'not_allowed'
   | 'not_implemented'
 

@@ -1,6 +1,13 @@
 <!--
 Sync Impact Report
-Version: 3.2.0 → 3.3.0 (MINOR: playtest fixes of 2026-11-15 asked by the product owners)
+Version: 3.3.0 → 3.4.0 (MINOR: second playtest of 2026-11-15)
+Modified sections: VI (the radiation alarm drops a fast game to 1×), II.6 (the repair workshop
+  costs 15 iron, not 25; a demolition is confirmed before it is queued), II.11 (the alarm drops
+  the speed to 1× and leaves the clock and the crew panel usable)
+Follow-up TODOs: none (config, store, engine and UI change in the same PR)
+Source: second playtest of 2026-11-15 (at 4× the 10 s alarm lasted 2.5 real seconds; the workshop
+  was too expensive to reach before the panels broke; one click demolished a machine)
+Previous: 3.2.0 → 3.3.0 (MINOR: playtest fixes of 2026-11-15 asked by the product owners)
 Modified sections: II.6 (the base starts with 8 repair parts), II.7 (machines switched off for
   lack of power come back when the batteries reach a restore share of their capacity, 25% in
   v1, instead of waiting for full batteries; the power switch of a switched-off type shows Off),
@@ -155,6 +162,8 @@ and solar storms, so that 32 colonists can arrive.
 - The game runs in real time. The engine advances with `tick(state, config, dtSeconds)`, driven by
   a timer in the store; the engine itself has no clock.
 - **Pause** and speed controls **1× / 2× / 4×** are mandatory and always visible.
+- When the radiation alarm starts (II.11), a game running at 2× or 4× drops to **1×** by itself,
+  so the player has the whole warning. The player may speed up again.
 - Commander briefings and the end-of-mission debrief pause the game.
 - The same seed always produces the same mission (same event times and targets).
 
@@ -300,7 +309,7 @@ level 1 structure, **40 s** for level 2 and **60 s** for level 3.
 |---|---|---|---|---|---|
 | Iron refinery | 50 hematite + 20 regolith | 2×2 | 6 / 12 kW | uses 30 / 60 hematite → 18 / 36 iron | Costs no iron because it produces iron. |
 | Pressurized greenhouse | 15 regolith + 20 iron | 2×2 | 5 / 9 kW | uses 15 / 30 water → 4 / 8 food | Extra heating demand in cold seasons (II.7); takes thermal insulation. |
-| Repair workshop | 25 iron | 1×1 | 2 / 5 kW | uses 4 / 8 iron → 10 / 20 repair parts | |
+| Repair workshop | 15 iron | 1×1 | 2 / 5 kW | uses 4 / 8 iron → 10 / 20 repair parts | |
 
 ### Level 3
 
@@ -323,7 +332,7 @@ Each upgrade is installed on one structure, takes 15 s and one astronaut outside
 
 - The player may demolish any finished structure, or cancel one still under construction.
 - Demolishing is an external job: one astronaut outside for 15 s (II.9), blocked like every
-  external job.
+  external job. The game asks the player to confirm before it queues the job.
 - When the job ends, everything that was paid comes back to the wallet (100%): the structure's
   cost and its installed upgrades, whatever its state (damaged, clogged or short-circuited).
 - Not allowed: the last habitat module; a habitat whose occupants do not fit in the other
@@ -513,8 +522,10 @@ event, and its text explains both the cold and the missing sunlight. Level 3 inf
 ### Radiation Storm (cycles 2–4)
 
 - One per cycle, at a seeded random time in spring, summer or autumn.
-- A **10-second alarm** sounds. The player taps **Take shelter** (all astronauts) or sends
-  astronauts one by one into a habitat with a radiation shelter. Jobs pause and resume afterwards.
+- A **10-second alarm** sounds and a fast game drops to 1× (principle VI). The player taps
+  **Take shelter** (all astronauts) or sends astronauts one by one into a habitat with a
+  radiation shelter: the alarm leaves the clock and the crew panel usable. Jobs pause and resume
+  afterwards.
   The alarm says that only a habitat with a radiation shelter is safe and, when the shelters have
   no room for the whole crew, that the others are in danger even inside.
 - When the storm hits (lasting 20 s), astronauts outside or in a habitat without a shelter die.
@@ -639,4 +650,4 @@ Amendments go through a `shared/` pull request approved by a second team member;
 Part II also need one product owner's approval. Every pull request must respect the ownership
 table and the principles above.
 
-**Version**: 3.3.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-15
+**Version**: 3.4.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-15

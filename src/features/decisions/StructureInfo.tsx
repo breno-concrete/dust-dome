@@ -1,5 +1,6 @@
 // Owner: Dev B. What the player sees about the selected machine: its state and what it makes
 // and uses. Numbers are per season, like the config (constitution II.4).
+import { structurePowerKw } from '../../app/selectors'
 import { config } from '../../config/loadConfig'
 import type { GameState, PowerMode, StructureInstance } from '../../engine/types'
 import { Icon, type IconName } from '../../ui-kit/Icon'
@@ -17,6 +18,7 @@ const strings = {
   makes: { en: 'Makes', pt: 'Produz' },
   uses: { en: 'Uses', pt: 'Usa' },
   power: { en: 'Power', pt: 'Energia' },
+  usesPower: { en: 'Uses power', pt: 'Gasta energia' },
   perSeason: { en: 'per season', pt: 'por estação' },
 }
 
@@ -75,23 +77,19 @@ export function StructureInfo({ game, structure }: Props) {
     })
   }
 
-  if (def.power.kind === 'solar') {
-    const table = def.power.kwBySeason
+  // What the engine really makes and draws now: darkness, storms, the switch and the brownout
+  // are all counted, so the panel never promises power that is not there.
+  const powerNow = structurePowerKw({ game }, structure.id) ?? { makesKw: 0, usesKw: 0 }
+  if (def.power.kind === 'solar' || def.power.kind === 'constant') {
     bars.push({
       id: 'power',
       label: t(strings.power),
       icon: 'power',
-      now: (table[game.time.season] ?? 0) * conditionFactor(structure.status),
-      max: Math.max(...Object.values(table)),
-      unit: 'kW',
-    })
-  } else if (def.power.kind === 'constant') {
-    bars.push({
-      id: 'power',
-      label: t(strings.power),
-      icon: 'power',
-      now: def.power.kw * conditionFactor(structure.status),
-      max: def.power.kw,
+      now: powerNow.makesKw,
+      max:
+        def.power.kind === 'solar'
+          ? Math.max(...Object.values(def.power.kwBySeason))
+          : def.power.kw,
       unit: 'kW',
     })
   }
@@ -136,6 +134,11 @@ export function StructureInfo({ game, structure }: Props) {
             </div>
           ))}
         </div>
+      )}
+      {def.power.kind === 'consumer' && (
+        <p className={styles.infoUses} data-testid="structure-power-use">
+          <strong>{t(strings.usesPower)}:</strong> {Math.round(powerNow.usesKw * 10) / 10} kW
+        </p>
       )}
       {inputs.length > 0 && (
         <p className={styles.infoUses} data-testid="structure-inputs">

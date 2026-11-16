@@ -28,6 +28,7 @@ const strings = {
     pt: 'Os abrigos antirradiação têm lugar para {n} de {total} astronautas. Os outros correm perigo, até dentro!',
   },
   secondsLeft: { en: 'seconds left', pt: 'segundos restantes' },
+  passing: { en: 'The storm passes in {n} seconds.', pt: 'A tempestade passa em {n} segundos.' },
   basedOn: {
     en: 'Based on a real NASA DONKI event of',
     pt: 'Baseado num evento real do NASA DONKI de',
@@ -53,11 +54,22 @@ export function RadiationAlarmModal() {
       isOpen
       tone="light"
       role="alertdialog"
+      // The clock and the crew panel stay usable: slow down, pause, or bring astronauts in one
+      // by one (constitution II.11).
+      blocking={false}
       title={t(strings.title)}
       footer={
-        <Button variant="danger" className={styles.briefingButton} onClick={bringAllInside}>
-          {t(strings.shelter)}
-        </Button>
+        // Once the storm hits it is too late to move anyone: nothing left to press.
+        isWarning ? (
+          <Button
+            variant="danger"
+            className={styles.briefingButton}
+            onClick={bringAllInside}
+            data-autofocus
+          >
+            {t(strings.shelter)}
+          </Button>
+        ) : undefined
       }
     >
       <div className={styles.alarm}>
@@ -78,9 +90,15 @@ export function RadiationAlarmModal() {
               <strong>{seconds}</strong> {t(strings.secondsLeft)}
             </p>
           )}
+          {!isWarning && (
+            <p className={styles.countdown} data-testid="storm-passing">
+              {t(strings.passing).replace('{n}', String(seconds))}
+            </p>
+          )}
           {storm.basedOn && (
             <p className={styles.alarmSource}>
-              {t(strings.basedOn)} {storm.basedOn.date}:{' '}
+              {/* The day is enough for a child: no clock time, no time zone letter. */}
+              {t(strings.basedOn)} {storm.basedOn.date.split('T')[0]}:{' '}
               <a href={storm.basedOn.url} target="_blank" rel="noreferrer">
                 {t(strings.donki)}
               </a>

@@ -36,13 +36,18 @@ const MODES: PowerMode[] = ['off', 'min', 'max']
 export function PowerPanel() {
   const game = useGameStore((s) => s.game)
   const setPowerMode = useGameStore((s) => s.setPowerMode)
+  const machineSelected = useGameStore((s) => s.selectedStructureId !== null)
   const [isOpen, setIsOpen] = useState(false)
   const pointedOut = useTutorialUi((s) => s.highlight === 'power')
   const t = useT()
+  // The machine panel uses the same corner: when a machine is selected this panel gives way.
+  // (State adjusted while rendering.)
+  if (isOpen && machineSelected) setIsOpen(false)
   if (!game) return null
 
   const { powerModes: modes, power } = game
-  const isDeficit = power.balanceKw < 0
+  // A type switched off by the brownout is a shortage too, whatever the balance says.
+  const isDeficit = power.balanceKw < 0 || power.shed.length > 0
   const capacity = batteryCapacityEu({ game })
 
   return (
@@ -88,7 +93,7 @@ export function PowerPanel() {
             <div>
               <span>{t(strings.available)}</span>
               <strong data-testid="power-balance">
-                {isDeficit ? '' : '+'}
+                {power.balanceKw < 0 ? '' : '+'}
                 {power.balanceKw}
                 <small> kW</small>
               </strong>

@@ -134,4 +134,46 @@ describe('BuildMenu', () => {
     expect(text).toContain('Missing 6 ')
     expect(text).not.toMatch(/\d\.\d/)
   })
+
+  // Playtest 2026-11-15: in the dark winter the build was refused without a word, and a click on
+  // a taken tile gave no answer either.
+  describe('refusals in plain words', () => {
+    function darkWinter() {
+      act(() => {
+        const g = useGameStore.getState().game!
+        const dark = { id: 'e1', ruleId: 'test', kind: 'darkness' as const, endsAt: null }
+        useGameStore.setState({
+          game: { ...g, activeEvents: [{ ...dark, solarFactor: 1, blocksExternalJobs: true }] },
+        })
+      })
+    }
+
+    it('nothing can be picked while outdoor jobs are blocked, and the menu says why', async () => {
+      act(() => setMaterials({ hematite: 999, regolith: 999, iron: 999, steel: 999 }))
+      darkWinter()
+      render(<BuildMenu />)
+      await userEvent.click(screen.getByRole('button', { name: 'Build base' }))
+      expect(screen.getByTestId('build-blocked').textContent).toMatch(/spring/i)
+      for (const s of config.structures) {
+        expect((screen.getByTestId(`build-${s.id}`) as HTMLButtonElement).disabled).toBe(true)
+      }
+    })
+
+    it('has no such notice in a normal season', async () => {
+      render(<BuildMenu />)
+      await userEvent.click(screen.getByRole('button', { name: 'Build base' }))
+      expect(screen.queryByTestId('build-blocked')).toBeNull()
+    })
+
+    it('a refused placement says why next to "Where shall we build?"', () => {
+      const habitat = useGameStore.getState().game!.structures.find((s) => s.type === 'habitat')!
+      act(() => {
+        useGameStore.getState().beginPlacement('solar_panel')
+        useGameStore.getState().placeAt(habitat.tile)
+      })
+      render(<BuildMenu />)
+      expect(useGameStore.getState().placing).toBe('solar_panel')
+      expect(screen.getByRole('alert').textContent).toMatch(/blocked/i)
+    })
+  })
 })

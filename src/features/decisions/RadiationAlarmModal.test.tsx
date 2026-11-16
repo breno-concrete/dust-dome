@@ -109,6 +109,43 @@ describe('RadiationAlarmModal', () => {
 
   // Playtest 2026-11-15: the alarm said "keep everyone inside", but a habitat without a radiation
   // shelter protects nobody (constitution II.2).
+  // Playtest 2026-11-15: the alarm covered the clock and the crew panel, Enter opened the NASA
+  // link instead of sheltering, and "Take shelter" stayed on screen after the storm had hit.
+  describe('acting during the alarm', () => {
+    it('puts the keyboard focus on Take shelter, not on the NASA link', () => {
+      setStorm(makeStorm('warning', 110))
+      render(<RadiationAlarmModal />)
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Take shelter' }))
+    })
+
+    it('does not lock the rest of the screen: the clock and the crew panel stay usable', () => {
+      setStorm(makeStorm('warning', 110))
+      render(<RadiationAlarmModal />)
+      expect(screen.getByRole('alertdialog').getAttribute('aria-modal')).toBe('false')
+    })
+
+    it('once the storm hits, offers no Take shelter and counts the seconds until it passes', () => {
+      setStorm(makeStorm('active', 120), 105)
+      render(<RadiationAlarmModal />)
+      expect(screen.queryByRole('button', { name: 'Take shelter' })).toBeNull()
+      expect(screen.getByTestId('storm-passing').textContent).toContain('15')
+    })
+
+    it('shows the day of the real event without the clock time', () => {
+      act(() =>
+        setStorm({
+          phase: 'warning',
+          phaseEndsAt: 110,
+          basedOn: { date: '2024-05-10T13:02Z', url: DONKI_URL },
+        }),
+      )
+      render(<RadiationAlarmModal />)
+      const dialog = screen.getByRole('alertdialog')
+      expect(dialog.textContent).toContain('2024-05-10')
+      expect(dialog.textContent).not.toContain('T13:02Z')
+    })
+  })
+
   describe('who is safe', () => {
     const shelter = config.upgrades.find((u) => u.effect === 'radiation_shelter')!
     function withShelter() {
