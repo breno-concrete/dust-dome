@@ -149,4 +149,93 @@ describe('RadiationAlarmModal', () => {
       expect(screen.queryByTestId('shelter-danger')).toBeNull()
     })
   })
+
+  // User feedback: after "Take shelter" the alarm stayed on the screen for the whole storm, hiding
+  // the base, so it looked like nothing had happened.
+  describe('after "Take shelter"', () => {
+    function sendCrewOutside(count = 4) {
+      act(() => {
+        const g = useGameStore.getState().game!
+        useGameStore.setState({
+          game: {
+            ...g,
+            crew: g.crew.map((a, i) => (i < count ? { ...a, location: 'outside' as const } : a)),
+          },
+        })
+      })
+    }
+    const outside = () =>
+      useGameStore.getState().game!.crew.filter((a) => a.location === 'outside').length
+
+    it('brings the astronauts in and gets the alarm out of the way', async () => {
+      sendCrewOutside()
+      setStorm(makeStorm('warning', 110), 100)
+      render(<RadiationAlarmModal />)
+      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
+      expect(outside()).toBe(0)
+      expect(screen.queryByRole('alertdialog')).toBeNull()
+      expect(screen.queryByRole('dialog')).toBeNull()
+    })
+
+    it('keeps a small message that does not block the game: everyone is inside, and how long', async () => {
+      sendCrewOutside()
+      setStorm(makeStorm('warning', 110), 100)
+      render(<RadiationAlarmModal />)
+      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
+      const status = screen.getByRole('status')
+      expect(status.textContent).toMatch(/inside/i)
+      expect(status.textContent).toContain('10')
+    })
+
+    it('the message counts down and follows the storm until it ends', async () => {
+      sendCrewOutside()
+      setStorm(makeStorm('warning', 110), 100)
+      render(<RadiationAlarmModal />)
+      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
+      setStorm(makeStorm('active', 130), 112)
+      expect(screen.getByRole('status').textContent).toContain('18')
+      setStorm(null)
+      expect(screen.queryByRole('status')).toBeNull()
+    })
+
+    it('still warns when there is no radiation shelter, even for the ones inside', async () => {
+      sendCrewOutside()
+      setStorm(makeStorm('warning', 110))
+      render(<RadiationAlarmModal />)
+      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
+      expect(screen.getByTestId('shelter-danger')).toBeDefined()
+    })
+
+    it('keeps the alarm and says who is still outside when someone could not come in', async () => {
+      sendCrewOutside(2)
+      act(() => useGameStore.setState({ bringAllInside: vi.fn() }))
+      setStorm(makeStorm('warning', 110))
+      render(<RadiationAlarmModal />)
+      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
+      expect(screen.getByRole('alertdialog')).toBeDefined()
+      expect(screen.getByTestId('still-outside').textContent).toContain('2')
+    })
+
+    it('the next storm raises the alarm again', async () => {
+      sendCrewOutside()
+      setStorm(makeStorm('warning', 110))
+      const { rerender } = render(<RadiationAlarmModal />)
+      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
+      setStorm(null)
+      rerender(<RadiationAlarmModal />)
+      sendCrewOutside()
+      setStorm(makeStorm('warning', 210), 200)
+      rerender(<RadiationAlarmModal />)
+      expect(screen.getByRole('alertdialog')).toBeDefined()
+    })
+
+    it('speaks Portuguese', async () => {
+      useLang.setState({ lang: 'pt' })
+      sendCrewOutside()
+      setStorm(makeStorm('warning', 110))
+      render(<RadiationAlarmModal />)
+      await userEvent.click(screen.getByRole('button', { name: 'Abrigar tripulação' }))
+      expect(screen.getByRole('status').textContent).toMatch(/dentro/i)
+    })
+  })
 })
