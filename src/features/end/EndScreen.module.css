@@ -1,12 +1,79 @@
+/* The end screen wears the same warm look as the game HUD: cream panels with a soft blur, brown
+   text, terracotta buttons, on a Martian-dusk sky. The tokens are re-pointed inside .page (like the
+   HUD does), so the Button, the portrait and the commander's advice follow without extra work. */
+.page {
+  --color-surface: rgb(251 246 234 / 92%);
+  --color-surface-hover: #efe6d2;
+  --color-surface-border: rgb(148 119 91 / 24%);
+  --color-text: #3f3a36;
+  --color-muted: #5c6358;
+  --color-accent: #a9674c;
+  --color-warning: #9a4f1f;
+  --color-danger: #b0402f;
+  --color-ok: #5f7a3a;
+  --color-focus: #a9674c;
+
+  min-height: 100dvh;
+  padding: 28px 28px 40px;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgb(225 132 84 / 55%) 0%, transparent 60%),
+    linear-gradient(180deg, #7d2a19 0%, #5e2013 55%, #3c150c 100%);
+  color-scheme: light;
+}
+
+.sheet {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.title {
+  margin: 0 0 var(--space-3);
+  color: #fffcf4;
+  font-size: 32px;
+  line-height: 1.2;
+  text-shadow: 0 2px 12px rgb(60 21 12 / 55%);
+}
+
+.subtitle {
+  margin: var(--space-4) 0 var(--space-3);
+  color: #fffcf4;
+  font-size: 22px;
+  text-shadow: 0 2px 10px rgb(60 21 12 / 55%);
+}
+
+.panel,
+.section,
+.commanderBanner {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgb(40 14 8 / 28%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
 .section {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  background: var(--color-surface);
-  border: 1px solid var(--color-surface-border);
-  border-radius: var(--radius);
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-3);
+}
+
+.section h3,
+.section h4 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.section h4 {
+  margin-top: var(--space-2);
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .lines,
@@ -22,8 +89,10 @@
 .loss,
 .hit,
 .event {
-  border-left: 4px solid var(--color-muted);
-  padding-left: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-left: 5px solid var(--color-muted);
+  border-radius: 12px;
+  background: rgb(255 252 244 / 70%);
 }
 
 .loss {
@@ -39,16 +108,23 @@
 }
 
 .what {
-  font-weight: bold;
+  font-weight: 800;
 }
 
 .ok {
+  margin: 0;
   color: var(--color-ok);
+  font-weight: 700;
 }
 
 .weather p,
 .lines p {
   margin: 0;
+}
+
+.section a {
+  color: #8a4a30;
+  font-weight: 700;
 }
 
 .commanderBanner {
@@ -57,9 +133,6 @@
   gap: var(--space-3);
   margin: var(--space-2) 0 var(--space-3);
   padding: var(--space-3);
-  border-radius: var(--radius);
-  border: 1px solid var(--color-surface-border);
-  background: var(--color-surface);
 }
 
 .commanderBanner p {
@@ -67,7 +140,31 @@
   line-height: 1.5;
 }
 
+/* Same terracotta button as "Build base" and "Start the season" in the game. */
+.page .again {
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  border-radius: 16px;
+  background: #a9674c;
+  color: #fffcf4;
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow: 0 8px 24px rgb(40 14 8 / 28%);
+}
+
+.page .again:hover:not(:disabled) {
+  background: #9b5a41;
+}
+
 @media (max-width: 560px) {
+  .page {
+    padding: 16px 12px 32px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
   .commanderBanner {
     flex-direction: column;
     text-align: center;

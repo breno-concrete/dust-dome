@@ -154,19 +154,26 @@ export function EndScreen() {
   const result = summary(game.status, game.lostReason)
 
   return (
-    <main className="screen">
-      <h1>{t(game.status === 'won' ? strings.won : strings.lost)}</h1>
-      <div className={styles.commanderBanner}>
-        <VegaPortrait mood={game.status === 'won' ? 'celebrating' : 'caring'} variant="debrief" />
-        {result && <p>{t(result)}</p>}
+    <main className={styles.page}>
+      <div className={styles.sheet}>
+        <h1 className={styles.title}>{t(game.status === 'won' ? strings.won : strings.lost)}</h1>
+        <div className={styles.commanderBanner}>
+          <VegaPortrait
+            mood={game.status === 'won' ? 'celebrating' : 'caring'}
+            variant="briefing"
+          />
+          {result && <p>{t(result)}</p>}
+        </div>
+        {/* Only after a loss: it hides itself when the mission was won. */}
+        <GameOverFeedback />
+        <Button className={styles.again} onClick={() => start()}>
+          {t(strings.again)}
+        </Button>
+        <h2 className={styles.subtitle}>{t(strings.debrief)}</h2>
+        {sections.map((s) => (
+          <Section key={`${s.cycle}-${s.season}`} section={s} />
+        ))}
       </div>
-      {/* Only after a loss: it hides itself when the mission was won. */}
-      <GameOverFeedback />
-      <Button onClick={() => start()}>{t(strings.again)}</Button>
-      <h2>{t(strings.debrief)}</h2>
-      {sections.map((s) => (
-        <Section key={`${s.cycle}-${s.season}`} section={s} />
-      ))}
     </main>
   )
 }
