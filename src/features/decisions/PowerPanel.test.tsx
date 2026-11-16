@@ -61,6 +61,13 @@ describe('PowerPanel', () => {
   })
 
   it('marks the active mode of each switch and moves it when the player picks another', async () => {
+    // Plenty of power, so the new setting runs instead of being switched off by the brownout.
+    act(() => {
+      const g = useGameStore.getState().game!
+      const panel = g.structures.find((s) => s.type === 'solar_panel')!
+      const extra = [0, 1, 2].map((i) => ({ ...panel, id: `extra-panel-${i}` }))
+      useGameStore.setState({ game: { ...g, structures: [...g.structures, ...extra] } })
+    })
     render(<PowerPanel />)
     await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
 
@@ -89,5 +96,93 @@ describe('PowerPanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
     expect(screen.getByTestId('power-balance').textContent).toContain('+7')
     expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  // Playtest 2026-11-15: a type the brownout switched off must look off in its switch.
+  it('a type switched off for lack of power shows Off lit and says it comes back by itself', async () => {
+    const first = config.structures.find((s) => s.switchable)!
+    act(() => {
+      const g = useGameStore.getState().game!
+      useGameStore.setState({
+        game: {
+          ...g,
+          powerModes: { ...g.powerModes, [first.id]: 'max' },
+          power: { ...g.power, shed: [first.id] },
+        },
+      })
+    })
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+
+    const group = screen.getByTestId(`power-switch-${first.id}`)
+    expect(within(group).getByRole('button', { name: 'Off' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+    expect(within(group).getByRole('button', { name: 'Max' }).getAttribute('aria-pressed')).toBe(
+      'false',
+    )
+    const note = screen.getByTestId(`power-shed-${first.id}`)
+    expect(note.textContent).toContain('No power')
+    expect(note.textContent).toContain('Max')
+  })
+
+  it('types that have power show no no-power note', async () => {
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+    for (const s of config.structures.filter((d) => d.switchable)) {
+      expect(screen.queryByTestId(`power-shed-${s.id}`)).toBeNull()
+    }
+  })
+
+  // Playtest 2026-11-15: the player could not tell whether the battery was storing energy.
+  it('shows how much energy the batteries hold', async () => {
+    const bank = config.structures.find((s) => s.power.kind === 'storage')!
+    if (bank.power.kind !== 'storage') throw new Error('not storage')
+    const capacity = bank.power.capacityEu
+    act(() => {
+      const g = useGameStore.getState().game!
+      const site = { id: 'b1', type: bank.id, tile: [10, 10] as [number, number] }
+      useGameStore.setState({
+        game: {
+          ...g,
+          batteryEu: capacity / 2,
+          structures: [...g.structures, { ...site, status: 'active', upgrades: [] }],
+        },
+      })
+    })
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+    const battery = screen.getByTestId('power-battery')
+    expect(battery.textContent).toContain(`${capacity / 2} / ${capacity} EU`)
+    expect(battery.textContent).toContain('50%')
+  })
+
+  // Playtest 2026-11-15: "+0 kW, there is power for the whole base!" right above "Mine: No power!".
+  it('does not say there is power for the whole base while a type is switched off for lack of power', async () => {
+    act(() => {
+      const g = useGameStore.getState().game!
+      useGameStore.setState({ game: { ...g, power: { ...g.power, balanceKw: 0, shed: ['mine'] } } })
+    })
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+    expect(screen.queryByText('There is power for the whole base!')).toBeNull()
+    expect(screen.getByRole('alert').textContent).toContain('Not enough power')
+  })
+
+  // Playtest 2026-11-15: the machine panel and the power panel sat on top of each other.
+  it('closes when a machine is selected, so the two side panels never overlap', async () => {
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+    expect(screen.getByRole('complementary')).toBeDefined()
+    act(() =>
+      useGameStore.getState().selectStructure(useGameStore.getState().game!.structures[0]!.id),
+    )
+    expect(screen.queryByRole('complementary')).toBeNull()
+  })
+
+  it('says the base has no battery yet when there is no battery bank', async () => {
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+    expect(screen.getByTestId('power-battery').textContent).toContain('No battery')
   })
 })

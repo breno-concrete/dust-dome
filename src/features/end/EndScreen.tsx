@@ -7,6 +7,8 @@ import { config } from '../../config/loadConfig'
 import type { LocalizedText } from '../../config/schema'
 import { Button } from '../../ui-kit/Button'
 import { useT } from '../../ui-kit/i18n'
+import { GameOverFeedback } from '../decisions/GameOverFeedback'
+import { VegaPortrait } from '../decisions/VegaPortrait'
 import { buildDebrief, type DebriefLine, type DebriefSection } from './debrief'
 import styles from './EndScreen.module.css'
 
@@ -152,14 +154,26 @@ export function EndScreen() {
   const result = summary(game.status, game.lostReason)
 
   return (
-    <main className="screen">
-      <h1>{t(game.status === 'won' ? strings.won : strings.lost)}</h1>
-      {result && <p>{t(result)}</p>}
-      <Button onClick={() => start()}>{t(strings.again)}</Button>
-      <h2>{t(strings.debrief)}</h2>
-      {sections.map((s) => (
-        <Section key={`${s.cycle}-${s.season}`} section={s} />
-      ))}
+    <main className={styles.page}>
+      <div className={styles.sheet}>
+        <h1 className={styles.title}>{t(game.status === 'won' ? strings.won : strings.lost)}</h1>
+        <div className={styles.commanderBanner}>
+          <VegaPortrait
+            mood={game.status === 'won' ? 'celebrating' : 'caring'}
+            variant="briefing"
+          />
+          {result && <p>{t(result)}</p>}
+        </div>
+        {/* Only after a loss: it hides itself when the mission was won. */}
+        <GameOverFeedback />
+        <Button className={styles.again} onClick={() => start()}>
+          {t(strings.again)}
+        </Button>
+        <h2 className={styles.subtitle}>{t(strings.debrief)}</h2>
+        {sections.map((s) => (
+          <Section key={`${s.cycle}-${s.season}`} section={s} />
+        ))}
+      </div>
     </main>
   )
 }

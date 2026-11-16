@@ -102,13 +102,21 @@ export const useGameStore = create<GameStore>((set, get) => {
       const { game, speed, screen } = get()
       if (!game || speed === 0 || screen !== 'game') return
       const next = tick(game, config, realSeconds * speed)
-      if (next !== game) set({ game: next, screen: next.status === 'running' ? 'game' : 'end' })
+      if (next === game) return
+      // The radiation alarm gives 10 game seconds: when it starts, a fast game drops to 1× so the
+      // player has all of them (constitution VI). The player may speed up again.
+      const alarmStarted = !game.radiationStorm && next.radiationStorm !== null
+      set({
+        game: next,
+        screen: next.status === 'running' ? 'game' : 'end',
+        speed: alarmStarted && speed > 1 ? 1 : speed,
+      })
     },
 
     setSpeed: (speed) => set({ speed }),
     goTo: (screen) => set({ screen }),
 
-    beginPlacement: (type) => set({ placing: type, selectedStructureId: null }),
+    beginPlacement: (type) => set({ placing: type, selectedStructureId: null, lastError: null }),
     hoverAt: (tile) => set({ hoverTile: tile }),
     placeAt: (tile) => {
       const type = get().placing
@@ -116,7 +124,11 @@ export const useGameStore = create<GameStore>((set, get) => {
       withGame((g) => actions.build(g, config, type, tile))
       if (!get().lastError) set({ placing: null })
     },
-    selectStructure: (id) => set({ selectedStructureId: id, placing: null }),
+    selectStructure: (id) => {
+      // A click on a structure while placing is a click on a taken tile: the placement goes on.
+      if (id && get().placing) set({ lastError: 'tile_blocked' })
+      else set({ selectedStructureId: id, placing: null, lastError: null })
+    },
 
     setPowerMode: (type, mode) => withGame((g) => actions.setPowerMode(g, config, type, mode)),
     installUpgrade: (structureId, upgradeId) =>
@@ -125,7 +137,10 @@ export const useGameStore = create<GameStore>((set, get) => {
     finishQte: (success) => {
       const id = get().qteFor
       set({ qteFor: null })
-      if (id) withGame((g) => actions.startRepair(g, config, id, success))
+      if (!id) return
+      withGame((g) => actions.startRepair(g, config, id, success))
+      // A lost repair game costs the parts (II.10): say so instead of failing in silence.
+      if (!success && !get().lastError) set({ lastError: 'repair_failed' })
     },
     clean: (structureId) => withGame((g) => actions.clean(g, config, structureId)),
     demolish: (structureId) => withGame((g) => actions.demolish(g, config, structureId)),

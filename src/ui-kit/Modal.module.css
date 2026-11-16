@@ -137,6 +137,8 @@
 }
 
 .light .content {
+  min-height: 0;
+  overflow: auto;
   color-scheme: light;
   scrollbar-color: rgb(148 119 91 / 45%) transparent;
 }
@@ -159,4 +161,14 @@
     min-height: 0;
     overflow: auto;
   }
+}
+
+/* Non-blocking dialog: only the dialog itself takes clicks, the screen behind stays usable. */
+.backdrop.passThrough {
+  pointer-events: none;
+  background: rgb(74 81 70 / 18%);
+}
+
+.backdrop.passThrough .dialog {
+  pointer-events: auto;
 }

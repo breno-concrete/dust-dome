@@ -5,6 +5,7 @@ import { BriefingDialog } from '../features/decisions/BriefingDialog'
 import { BuildMenu } from '../features/decisions/BuildMenu'
 import { PowerPanel } from '../features/decisions/PowerPanel'
 import { RadiationAlarmModal } from '../features/decisions/RadiationAlarmModal'
+import { VegaNotice } from '../features/decisions/VegaNotice'
 import { EndScreen } from '../features/end/EndScreen'
 import { Hud } from '../features/hud/Hud'
 import { RepairQte } from '../features/repair/RepairQte'
@@ -42,6 +43,8 @@ export default function App() {
             <BuildMenu />
             <PowerPanel />
             <BriefingDialog />
+            {/* The commander announces losses and explains the exposure limit (II.9, II.12). */}
+            <VegaNotice />
             {/* Mounted by the shell so it shows on top of any panel or briefing. */}
             <RadiationAlarmModal />
             <RepairQte />

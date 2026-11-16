@@ -17,9 +17,10 @@ All data sources used by the game are also listed in-game on the sources screen.
 
 ## 3D models, textures and sound (Dev C)
 
-| Asset                                                                                                                                         | Author                            | License          | Link            |
-| --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ---------------- | --------------- |
-| Sound effects in `public/audio/` (placement, selection, radiation alarm, dust and radiation storm loops, bolt click, repair success and fail) | Breno (team), original recordings | Made by the team | `public/audio/` |
+| Asset                                                                                                                                         | Author                              | License          | Link               |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ---------------- | ------------------ |
+| Sound effects in `public/audio/` (placement, selection, radiation alarm, dust and radiation storm loops, bolt click, repair success and fail) | Breno (team), original recordings   | Made by the team | `public/audio/`    |
+| Commander Vega 2.5D portrait sprites in `public/narrator/`                                                                                    | Pedro Melo (team), crafted in Figma | Made by the team | `public/narrator/` |
 
 ## Fonts, icons and UI art (Dev B)
 
@@ -44,5 +45,6 @@ GitHub Spec Kit (MIT) for spec-driven development.
 - Review and fixes of the sprint 2 construction/upgrade UI and HUD: Claude Code (Anthropic).
 - Sound playback code for the scene and repair QTE (`sound.ts` and its tests): Claude Code (Anthropic).
 - Title screen 3D menu and landing transition (`src/features/title/`, models built in code): Claude Code (Anthropic).
+- Radiation label on each astronaut in the crew panel: Claude Code (Anthropic).
 
 <!-- Add where and how AI tools were used. AI images/videos need a visible watermark. -->

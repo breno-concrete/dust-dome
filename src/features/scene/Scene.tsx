@@ -5,7 +5,17 @@
 // hoverAt, placeAt, selectStructure.
 import { MapControls } from '@react-three/drei'
 import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber'
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react'
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+  type ReactNode,
+} from 'react'
 import { AdditiveBlending, CanvasTexture, type Group, type MeshStandardMaterial } from 'three'
 import type { StructureInstance } from '../../engine/types'
 import { placementPreview, structureDef } from '../../app/selectors'
@@ -13,6 +23,19 @@ import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import { Button } from '../../ui-kit/Button'
 import { useT } from '../../ui-kit/i18n'
+import { AstronautMarkers } from './AstronautMarkersLayer'
+import {
+  ASTRONAUT_ACCENT_PALETTE,
+  astronautWaypoints,
+  findAstronautPath,
+  type AstronautWaypoint,
+} from './astronautMarkers'
+import {
+  computeConduitRuns,
+  computeHabitatCorridors,
+  type JunctionNodeSpec,
+  type TrailStripSpec,
+} from './baseConnections'
 import type { DevVisualOverrides } from './DevVisualInspector'
 import {
   cameraPositionForStep,
@@ -23,6 +46,12 @@ import {
   type RotationStep,
 } from './iso'
 import styles from './Scene.module.css'
+import {
+  DustDevils,
+  HabitatCorridors,
+  WinterColdEffect,
+  type DustDevilStrike,
+} from './SceneEffects'
 import { sound, soundscape } from './sound'
 import { StructureModel } from './StructureModel'
 import { Terrain } from './Terrain'
@@ -30,6 +59,9 @@ import { visualState, type VisualState } from './visualState'
 
 const grid = config.mission.grid
 const GROUND = '#b5532f'
+const DUST_DEVIL_RULE_IDS = new Set(
+  config.events.filter((r) => r.kind === 'dust_devil').map((r) => r.id),
+)
 
 // Strict dev/prod barrier: Vite replaces import.meta.env.DEV with false in production builds,
 // so DevVisualInspector is neither rendered nor bundled into the production Scene chunk.
@@ -40,6 +72,9 @@ const INITIAL_DEV_OVERRIDES: DevVisualOverrides = {
   weather: 'auto',
   frost: false,
   radiationTint: false,
+  dustDevils: false,
+  cold: false,
+  astronautsPreview: false,
   structureStatus: 'auto',
 }
 
@@ -54,7 +89,73 @@ function applyDevVisualOverrides(base: VisualState, dev: DevVisualOverrides): Vi
   }
   if (dev.frost) next.frost = true
   if (dev.radiationTint) next.radiationTint = true
+  if (dev.dustDevils) next.dustDevils = Math.max(2, next.dustDevils)
+  if (dev.cold) next.cold = 1
   return next
+}
+
+function buildDevPreviewWaypoints(
+  structures: ReadonlyArray<StructureInstance>,
+): AstronautWaypoint[] {
+  const hab = structures.find((s) => s.type === 'habitat') ?? structures[0]
+  const origin: readonly [number, number, number] = hab
+    ? tileCenter(hab.tile, structureDef(hab.type)?.size ?? 1, grid)
+    : [-2, 0, -2]
+  const targets = structures.filter((s) => s.id !== hab?.id).slice(0, 4)
+  const fallbackTargets: ReadonlyArray<readonly [number, number, number]> = [
+    [origin[0] + 2.8, 0, origin[2] + 0.6],
+    [origin[0] + 1.4, 0, origin[2] + 2.6],
+    [origin[0] - 2.2, 0, origin[2] + 1.8],
+    [origin[0] + 0.5, 0, origin[2] - 2.5],
+  ]
+
+  return Array.from({ length: 4 }, (_, idx) => {
+    const struct = targets[idx]
+    const dest = struct
+      ? tileCenter(struct.tile, structureDef(struct.type)?.size ?? 1, grid)
+      : fallbackTargets[idx]!
+    const from: readonly [number, number, number] = [
+      origin[0] + (idx - 1.5) * 0.22,
+      0,
+      origin[2] + 0.85,
+    ]
+    const to: readonly [number, number, number] = [dest[0], 0, dest[2] + 0.48]
+    return {
+      id: `dev-eva-${idx + 1}`,
+      name: `EVA ${idx + 1}`,
+      color: ASTRONAUT_ACCENT_PALETTE[idx % ASTRONAUT_ACCENT_PALETTE.length]!,
+      from,
+      to,
+      path: findAstronautPath(from, to, structures, config, grid),
+      jobKind: 'repair',
+      phaseOffset: idx * 1.4,
+    }
+  })
+}
+
+function supportsWebGL(): boolean {
+  if (typeof document === 'undefined') return true
+  try {
+    const canvas = document.createElement('canvas')
+    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
+
+class SceneErrorBoundary extends Component<
+  { fallback: ReactNode; children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children
+  }
 }
 
 const strings = {
@@ -69,6 +170,11 @@ const strings = {
   cameraGroup: { en: 'Camera rotation controls', pt: 'Controles de rotação da câmera' },
   soundOn: { en: '🔊 Sound on', pt: '🔊 Som ligado' },
   soundOff: { en: '🔇 Sound off', pt: '🔇 Som desligado' },
+  webglTitle: { en: '3D view unavailable', pt: 'Visualização 3D indisponível' },
+  webglText: {
+    en: 'WebGL is disabled or unsupported in this browser. Base simulation and controls remain active.',
+    pt: 'WebGL está desativado ou não é suportado neste navegador. A simulação e os controles continuam funcionando.',
+  },
 }
 
 export default function Scene() {
@@ -82,6 +188,7 @@ export default function Scene() {
   const speed = useGameStore((s) => s.speed)
   const [muted, setMuted] = useState(() => sound.isMuted())
   const [rotationStep, setRotationStep] = useState<RotationStep>(0)
+  const webglSupported = useMemo(() => supportsWebGL(), [])
 
   // Alarm and storm loops follow the game state, so they last exactly as long as the
   // config says. Silent while paused (briefings) or once the game is over.
@@ -119,21 +226,86 @@ export default function Scene() {
   const previewCenter =
     placing && hoverTile && preview ? tileCenter(hoverTile, placingSize, grid) : null
 
+  const habitatCorridors = computeHabitatCorridors(game.structures, config, grid)
+  const pendingDevilPanelIds = new Set<string>()
+  const devilStrikes: DustDevilStrike[] = (() => {
+    const recent = game.log.filter(
+      (entry) =>
+        entry.kind === 'damaged' &&
+        entry.cause !== undefined &&
+        DUST_DEVIL_RULE_IDS.has(entry.cause) &&
+        game.time.elapsed - entry.at >= 0 &&
+        game.time.elapsed - entry.at <= 10,
+    )
+    if (recent.length === 0) return []
+    let sumX = 0
+    let sumZ = 0
+    for (const s of game.structures) {
+      const sz = structureDef(s.type)?.size ?? 1
+      const [sx, , szz] = tileCenter(s.tile, sz, grid)
+      sumX += sx
+      sumZ += szz
+    }
+    const cx = game.structures.length > 0 ? sumX / game.structures.length : 0
+    const cz = game.structures.length > 0 ? sumZ / game.structures.length : 0
+
+    return recent.slice(-2).map((entry) => {
+      const progress = (game.time.elapsed - entry.at) / 10
+      if (progress < 0.38) {
+        pendingDevilPanelIds.add(entry.ref)
+      }
+      const target = game.structures.find((s) => s.id === entry.ref)
+      const targetSize = target ? (structureDef(target.type)?.size ?? 1) : 1
+      const [tx, , tz] = target ? tileCenter(target.tile, targetSize, grid) : [0, 0, 0]
+      const dx = tx - cx
+      const dz = tz - cz
+      const len = Math.hypot(dx, dz)
+      const outX = len > 1e-4 ? dx / len : 0.707
+      const outZ = len > 1e-4 ? dz / len : -0.707
+      return {
+        id: `${entry.ref}-${entry.at}`,
+        targetX: tx,
+        targetZ: tz,
+        outX,
+        outZ,
+        progress,
+      }
+    })
+  })()
+  const liveWaypoints = astronautWaypoints(game, config, grid)
+  const activeWaypoints =
+    import.meta.env.DEV &&
+    !import.meta.env.VITEST &&
+    devOverrides.astronautsPreview &&
+    liveWaypoints.length === 0
+      ? buildDevPreviewWaypoints(game.structures)
+      : liveWaypoints
+
   const skyColor = look.radiationTint
     ? '#3d1518'
     : look.dark
       ? '#0c122b'
       : look.dustHaze > 0.1
         ? '#8a4524'
-        : '#2a1a16'
+        : look.cold >= 0.7
+          ? '#1e2c3e'
+          : '#2a1a16'
   const ambientColor = look.radiationTint
     ? '#f0a098'
     : look.dark
       ? '#6b7ee6'
       : look.dustHaze > 0.1
         ? '#e69b67'
-        : '#ffd9c4'
-  const sunColor = look.radiationTint ? '#ffd0c4' : look.dark ? '#8ea4ff' : '#fff2e2'
+        : look.cold >= 0.7
+          ? '#bfe0ff'
+          : '#ffd9c4'
+  const sunColor = look.radiationTint
+    ? '#ffd0c4'
+    : look.dark
+      ? '#8ea4ff'
+      : look.cold >= 0.7
+        ? '#e3f4ff'
+        : '#fff2e2'
   const ambientIntensity = look.dark ? 0.52 : 0.28 + 0.62 * look.light
   const sunIntensity = look.dark ? 0.56 : 1.4 * look.light
 
@@ -156,120 +328,160 @@ export default function Scene() {
     setMuted(!muted)
   }
 
+  const webglFallback = (
+    <div className={styles.webglFallback} role="region" aria-label={t(strings.webglTitle)}>
+      <div className={styles.webglFallbackCard}>
+        <h2 className={styles.webglFallbackTitle}>{t(strings.webglTitle)}</h2>
+        <p className={styles.webglFallbackText}>{t(strings.webglText)}</p>
+      </div>
+    </div>
+  )
+
   return (
     <div className={styles.wrapper}>
       {look.radiationTint && (
         <div className={styles.radiationTint} data-testid="radiation-warning-tint" />
       )}
-      <Canvas
-        orthographic
-        camera={{ position: cameraPositionForStep(0), zoom: 42, near: -100, far: 200 }}
-      >
-        <color attach="background" args={[skyColor]} />
-        {look.dustHaze > 0 && (
-          <fog
-            attach="fog"
-            args={[
-              '#a8562d',
-              Math.max(15, 29 - look.dustHaze * 12),
-              Math.max(32, 66 - look.dustHaze * 30),
-            ]}
-          />
-        )}
-        <ambientLight color={ambientColor} intensity={ambientIntensity} />
-        <directionalLight color={sunColor} position={[8, 12, 4]} intensity={sunIntensity} />
-        {look.dark && <hemisphereLight args={['#6e82e8', '#2a1c3d', 0.45]} />}
-
-        <CameraRig step={rotationStep} controlsRef={controlsRef} />
-
-        {/* Unified Hellas Planitia terrain with stepped canyons, craters and rocks */}
-        <Terrain gridWidth={grid.width} gridHeight={grid.height} />
-
-        {/* Atmospheric dust haze clouds during local or global dust storms (Lote 3) */}
-        {look.dustHaze > 0 && <DustHazeClouds intensity={look.dustHaze} />}
-
-        {/* Interactive 12x12 outpost buildable grid */}
-        <mesh
-          rotation-x={-Math.PI / 2}
-          onPointerMove={onGroundMove}
-          onPointerLeave={onGroundLeave}
-          onClick={onGroundClick}
-        >
-          <planeGeometry args={[grid.width, grid.height]} />
-          <meshStandardMaterial color={GROUND} flatShading />
-        </mesh>
-        <gridHelper args={[grid.width, grid.width, '#6b2a18', '#6b2a18']} position={[0, 0.01, 0]} />
-
-        {/* Procedural walkways connecting placed structures & low-poly base streetlamps */}
-        {game.structures.length > 0 && (
-          <BasePathwaysAndLights structures={game.structures} dark={look.dark} />
-        )}
-
-        {game.structures.map((s) => {
-          const size = structureDef(s.type)?.size ?? 1
-          const [x, , z] = tileCenter(s.tile, size, grid)
-          const shouldOverrideStatus =
-            import.meta.env.DEV &&
-            !import.meta.env.VITEST &&
-            devOverrides.structureStatus !== 'auto' &&
-            (selectedId === null || selectedId === s.id)
-          const renderedStructure =
-            shouldOverrideStatus && devOverrides.structureStatus !== 'auto'
-              ? { ...s, status: devOverrides.structureStatus }
-              : s
-          return (
-            <StructureModel
-              key={s.id}
-              structure={renderedStructure}
-              size={size}
-              position={[x, 0, z]}
-              selected={s.id === selectedId}
-              onSelect={onStructureSelect}
-              visual={look}
-            />
-          )
-        })}
-
-        {preview?.tiles.map((tile) => {
-          const [x, , z] = tileCenter(tile, 1, grid)
-          return (
-            <mesh key={tile.join(',')} position={[x, 0.05, z]} rotation-x={-Math.PI / 2}>
-              <planeGeometry args={[0.95, 0.95]} />
-              <meshBasicMaterial
-                color={preview.valid ? '#5bd6a0' : '#ff6b6b'}
-                transparent
-                opacity={0.42}
+      {look.cold >= 0.7 && <div className={styles.coldRim} data-testid="winter-cold-rim" />}
+      {!webglSupported ? (
+        webglFallback
+      ) : (
+        <SceneErrorBoundary fallback={webglFallback}>
+          <Canvas
+            orthographic
+            camera={{ position: cameraPositionForStep(0), zoom: 42, near: -100, far: 200 }}
+          >
+            <color attach="background" args={[skyColor]} />
+            {look.dustHaze > 0 && (
+              <fog
+                attach="fog"
+                args={[
+                  '#a8562d',
+                  Math.max(15, 29 - look.dustHaze * 12),
+                  Math.max(32, 66 - look.dustHaze * 30),
+                ]}
               />
+            )}
+            <ambientLight color={ambientColor} intensity={ambientIntensity} />
+            <directionalLight color={sunColor} position={[8, 12, 4]} intensity={sunIntensity} />
+            {look.dark && <hemisphereLight args={['#6e82e8', '#2a1c3d', 0.45]} />}
+
+            <CameraRig step={rotationStep} controlsRef={controlsRef} />
+
+            {/* Unified Hellas Planitia terrain with stepped canyons, craters and rocks */}
+            <Terrain gridWidth={grid.width} gridHeight={grid.height} />
+
+            {/* Atmospheric dust haze clouds, dust devils & winter freeze crystals */}
+            {look.dustHaze > 0 && <DustHazeClouds intensity={look.dustHaze} />}
+            {(look.dustDevils > 0 || devilStrikes.length > 0) && (
+              <DustDevils count={look.dustDevils} strikes={devilStrikes} />
+            )}
+            {look.cold > 0.05 && <WinterColdEffect intensity={look.cold} />}
+
+            {/* Interactive 12x12 outpost buildable grid */}
+            <mesh
+              rotation-x={-Math.PI / 2}
+              onPointerMove={onGroundMove}
+              onPointerLeave={onGroundLeave}
+              onClick={onGroundClick}
+            >
+              <planeGeometry args={[grid.width, grid.height]} />
+              <meshStandardMaterial color={GROUND} flatShading />
             </mesh>
-          )
-        })}
+            <gridHelper
+              args={[grid.width, grid.width, '#6b2a18', '#6b2a18']}
+              position={[0, 0.01, 0]}
+            />
 
-        {placing && preview && previewCenter && (
-          <StructureModel
-            structure={{
-              id: '__preview__',
-              type: placing,
-              tile: hoverTile!,
-              status: 'active',
-              upgrades: [],
-            }}
-            size={placingSize}
-            position={previewCenter}
-            selected={false}
-            onSelect={() => {}}
-            preview={preview.valid ? 'valid' : 'invalid'}
-          />
-        )}
+            {/* Procedural walkways, trail-side power/O2 conduits & base streetlamps */}
+            {game.structures.length > 0 && (
+              <BasePathwaysAndLights structures={game.structures} dark={look.dark} />
+            )}
 
-        <MapControls
-          ref={controlsRef}
-          enableRotate={false}
-          enablePan={true}
-          screenSpacePanning={false}
-          minZoom={25}
-          maxZoom={90}
-        />
-      </Canvas>
+            {/* Modular pressurized corridors linking adjacent habitats */}
+            <HabitatCorridors corridors={habitatCorridors} nightGlow={look.dark} />
+
+            {/* Decorative EVA astronauts walking in straight lines with distinct suit accents */}
+            <AstronautMarkers
+              waypoints={activeWaypoints}
+              structures={game.structures}
+              dark={look.dark}
+            />
+
+            {game.structures.map((s) => {
+              const size = structureDef(s.type)?.size ?? 1
+              const [x, , z] = tileCenter(s.tile, size, grid)
+              const shouldOverrideStatus =
+                import.meta.env.DEV &&
+                !import.meta.env.VITEST &&
+                devOverrides.structureStatus !== 'auto' &&
+                (selectedId === null || selectedId === s.id)
+              const renderedStructure =
+                shouldOverrideStatus && devOverrides.structureStatus !== 'auto'
+                  ? { ...s, status: devOverrides.structureStatus }
+                  : pendingDevilPanelIds.has(s.id) && s.status === 'damaged'
+                    ? { ...s, status: 'active' as const }
+                    : s
+              return (
+                <StructureModel
+                  key={s.id}
+                  structure={renderedStructure}
+                  size={size}
+                  position={[x, 0, z]}
+                  selected={s.id === selectedId}
+                  onSelect={onStructureSelect}
+                  visual={look}
+                />
+              )
+            })}
+
+            {preview?.tiles.map((tile) => {
+              const [x, , z] = tileCenter(tile, 1, grid)
+              return (
+                <mesh
+                  key={tile.join(',')}
+                  position={[x, 0.05, z]}
+                  rotation-x={-Math.PI / 2}
+                  raycast={CLOUD_NOOP_RAYCAST}
+                >
+                  <planeGeometry args={[0.95, 0.95]} />
+                  <meshBasicMaterial
+                    color={preview.valid ? '#5bd6a0' : '#ff6b6b'}
+                    transparent
+                    opacity={0.42}
+                  />
+                </mesh>
+              )
+            })}
+
+            {placing && preview && previewCenter && (
+              <StructureModel
+                structure={{
+                  id: '__preview__',
+                  type: placing,
+                  tile: hoverTile!,
+                  status: 'active',
+                  upgrades: [],
+                }}
+                size={placingSize}
+                position={previewCenter}
+                selected={false}
+                onSelect={() => {}}
+                preview={preview.valid ? 'valid' : 'invalid'}
+              />
+            )}
+
+            <MapControls
+              ref={controlsRef}
+              enableRotate={false}
+              enablePan={true}
+              screenSpacePanning={false}
+              minZoom={25}
+              maxZoom={90}
+            />
+          </Canvas>
+        </SceneErrorBoundary>
+      )}
 
       {DevVisualInspector && (
         <Suspense fallback={null}>
@@ -570,20 +782,6 @@ function DustHazeClouds({ intensity }: { intensity: number }) {
   )
 }
 
-interface TrailStripSpec {
-  x: number
-  z: number
-  lenX: number
-  lenZ: number
-  axis: 'x' | 'z'
-  length: number
-}
-
-interface JunctionNodeSpec {
-  x: number
-  z: number
-}
-
 interface DockRampSpec {
   x: number
   z: number
@@ -654,7 +852,7 @@ function BasePathwaysAndLights({
   dark: boolean
 }) {
   const glowTex = useMemo(() => getRadialGlowTexture(), [])
-  const { strips, treadPlates, junctions, ramps, catwalks, beacons } = useMemo(() => {
+  const { strips, treadPlates, junctions, conduits, ramps, catwalks, beacons } = useMemo(() => {
     const nodes = structures.map((s, idx) => {
       const size = structureDef(s.type)?.size ?? 1
       const [cx, , cz] = tileCenter(s.tile, size, grid)
@@ -1209,10 +1407,13 @@ function BasePathwaysAndLights({
       hasPoolLight: poolSet.has(idx),
     }))
 
+    const conduits = computeConduitRuns(stripList, junctionList, structures, config)
+
     return {
       strips: stripList,
       treadPlates: plateList,
       junctions: junctionList,
+      conduits,
       ramps: rampList,
       catwalks: catwalkList,
       beacons: finalBeacons,
@@ -1255,6 +1456,81 @@ function BasePathwaysAndLights({
           <mesh position={[0, 0.025, 0]} raycast={CLOUD_NOOP_RAYCAST}>
             <boxGeometry args={[0.1, 0.004, 0.1]} />
             <meshStandardMaterial color="#ff7a29" roughness={0.65} flatShading />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Trail-side power cables (amber/orange) & pressurized O2 pipes (cyan) */}
+      {conduits.lines.map((line, idx) => {
+        const isPower = line.kind === 'power'
+        const isX = line.axis === 'x'
+        const span = isX ? line.lenX : line.lenZ
+        const pipeRadius = isPower ? 0.011 : 0.014
+        const pipeColor = isPower
+          ? line.active
+            ? '#ff9138'
+            : '#7b5239'
+          : line.active
+            ? '#63c5da'
+            : '#4f6b75'
+        return (
+          <group key={`conduit-${idx}`} position={[line.x, 0.016, line.z]}>
+            {/* Low-profile armored cradle channel */}
+            <mesh raycast={CLOUD_NOOP_RAYCAST}>
+              <boxGeometry
+                args={[
+                  isX ? line.lenX : line.lenX + 0.012,
+                  0.012,
+                  !isX ? line.lenZ : line.lenZ + 0.012,
+                ]}
+              />
+              <meshStandardMaterial color={isPower ? '#2e3846' : '#3d4a5c'} flatShading />
+            </mesh>
+            {/* 6-sided cylindrical power cable / pressurized O2 pipe cleanly above junction plates */}
+            <mesh
+              position={[0, 0.016, 0]}
+              rotation={isX ? [0, 0, Math.PI / 2] : [Math.PI / 2, 0, 0]}
+              raycast={CLOUD_NOOP_RAYCAST}
+            >
+              <cylinderGeometry args={[pipeRadius, pipeRadius, span, 6]} />
+              <meshStandardMaterial
+                color={pipeColor}
+                emissive={line.active ? (isPower ? '#ff7a29' : '#35a6c7') : '#000000'}
+                emissiveIntensity={line.active ? (dark ? 0.85 : 0.3) : 0}
+                flatShading
+              />
+            </mesh>
+            {/* Mid-span metallic saddle clamp for longer runs */}
+            {span >= 0.45 && (
+              <mesh position={[0, 0.016, 0]} raycast={CLOUD_NOOP_RAYCAST}>
+                <boxGeometry args={[isX ? 0.036 : 0.038, 0.022, !isX ? 0.036 : 0.038]} />
+                <meshStandardMaterial color="#2e3846" flatShading />
+              </mesh>
+            )}
+          </group>
+        )
+      })}
+
+      {/* Umbilical splitter terminals at trail intersections */}
+      {conduits.nodes.map((node, idx) => (
+        <group key={`conduit-node-${idx}`} position={[node.x, 0.026, node.z]}>
+          <mesh position={[0.145, 0, 0.145]} raycast={CLOUD_NOOP_RAYCAST}>
+            <boxGeometry args={[0.044, 0.024, 0.044]} />
+            <meshStandardMaterial
+              color={node.hasPower ? '#ff9138' : '#7b5239'}
+              emissive={node.hasPower ? '#ff7a29' : '#000000'}
+              emissiveIntensity={node.hasPower ? (dark ? 0.75 : 0.25) : 0}
+              flatShading
+            />
+          </mesh>
+          <mesh position={[-0.145, 0, -0.145]} raycast={CLOUD_NOOP_RAYCAST}>
+            <boxGeometry args={[0.048, 0.026, 0.048]} />
+            <meshStandardMaterial
+              color={node.hasOxygen ? '#63c5da' : '#4f6b75'}
+              emissive={node.hasOxygen ? '#35a6c7' : '#000000'}
+              emissiveIntensity={node.hasOxygen ? (dark ? 0.7 : 0.25) : 0}
+              flatShading
+            />
           </mesh>
         </group>
       ))}

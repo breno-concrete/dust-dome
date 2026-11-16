@@ -1,6 +1,29 @@
 <!--
 Sync Impact Report
-Version: 3.1.0 → 3.2.0 (MINOR: bringing an astronaut inside pauses their job until Resume)
+Version: 3.4.0 → 3.5.0 (MINOR: cheaper structures, asked by the product owners)
+Modified sections: II.6 (costs: oxygen generator 20 hematite, ice melter 15 hematite, iron
+  refinery 35 hematite + 20 regolith, pressurized greenhouse 15 regolith + 5 iron, steel &
+  alloy factory 30 regolith + 30 iron, compact nuclear reactor 40 regolith + 10 steel)
+Follow-up TODOs: none (structures.json changes in the same PR)
+Source: price list sent by the product owners on 2026-11-15, after the second playtest
+Previous: 3.3.0 → 3.4.0 (MINOR: second playtest of 2026-11-15)
+Modified sections: VI (the radiation alarm drops a fast game to 1×), II.6 (the repair workshop
+  costs 15 iron, not 25; a demolition is confirmed before it is queued), II.11 (the alarm drops
+  the speed to 1× and leaves the clock and the crew panel usable)
+Follow-up TODOs: none (config, store, engine and UI change in the same PR)
+Source: second playtest of 2026-11-15 (at 4× the 10 s alarm lasted 2.5 real seconds; the workshop
+  was too expensive to reach before the panels broke; one click demolished a machine)
+Previous: 3.2.0 → 3.3.0 (MINOR: playtest fixes of 2026-11-15 asked by the product owners)
+Modified sections: II.6 (the base starts with 8 repair parts), II.7 (machines switched off for
+  lack of power come back when the batteries reach a restore share of their capacity, 25% in
+  v1, instead of waiting for full batteries; the power switch of a switched-off type shows Off),
+  II.11 (the radiation alarm says that only a habitat with a radiation shelter is safe, so
+  "inside" is not enough), II.15 (mission.json holds the battery restore share)
+Follow-up TODOs: none (engine, UI, config and research R6 change in the same PR)
+Source: playtest of 2026-11-15 (the battery seemed not to work, the switches looked on while the
+  machines had no power, the first spring had no parts to repair the panels, and the radiation
+  alarm said "keep everyone inside" while a habitat without a shelter protects nobody)
+Previous: 3.1.0 → 3.2.0 (MINOR: bringing an astronaut inside pauses their job until Resume)
 Modified sections: II.9 (a job paused by "Bring inside" / "Everyone inside" waits for the
   player's Resume; the least exposed free astronaut then takes it; radiation storms, the 75%
   automatic return and winter are unchanged)
@@ -145,6 +168,8 @@ and solar storms, so that 32 colonists can arrive.
 - The game runs in real time. The engine advances with `tick(state, config, dtSeconds)`, driven by
   a timer in the store; the engine itself has no clock.
 - **Pause** and speed controls **1× / 2× / 4×** are mandatory and always visible.
+- When the radiation alarm starts (II.11), a game running at 2× or 4× drops to **1×** by itself,
+  so the player has the whole warning. The player may speed up again.
 - Commander briefings and the end-of-mission debrief pause the game.
 - The same seed always produces the same mission (same event times and targets).
 
@@ -281,23 +306,23 @@ level 1 structure, **40 s** for level 2 and **60 s** for level 3.
 | Solar panel | 15 hematite | 1×1 | produces (II.7) | — | Output varies by season and events. |
 | Battery bank | 20 hematite | 1×1 | — | — | Stores 1,500 EU. |
 | Mine | 25 hematite | 2×2 | 3 / 6 kW | 25 hematite + 20 regolith / 45 hematite + 35 regolith | Clogs with dust in spring and summer (II.11). |
-| Oxygen generator | 30 hematite | 1×1 | 6 / 10 kW | 4 O₂ / 7 O₂ | Splits atmospheric CO₂ into oxygen (MOXIE). At base it supports the 4-person crew; max adds 3 U of surplus. |
-| Ice melter | 20 hematite | 1×1 | 4 / 8 kW | 30 water / 55 water | Extracts and melts buried ice. Extra heating demand in cold seasons (II.7). |
+| Oxygen generator | 20 hematite | 1×1 | 6 / 10 kW | 4 O₂ / 7 O₂ | Splits atmospheric CO₂ into oxygen (MOXIE). At base it supports the 4-person crew; max adds 3 U of surplus. |
+| Ice melter | 15 hematite | 1×1 | 4 / 8 kW | 30 water / 55 water | Extracts and melts buried ice. Extra heating demand in cold seasons (II.7). |
 
 ### Level 2
 
 | Structure | Cost | Tiles | Power base / max | Per season (base / max) | Notes |
 |---|---|---|---|---|---|
-| Iron refinery | 50 hematite + 20 regolith | 2×2 | 6 / 12 kW | uses 30 / 60 hematite → 18 / 36 iron | Costs no iron because it produces iron. |
-| Pressurized greenhouse | 15 regolith + 20 iron | 2×2 | 5 / 9 kW | uses 15 / 30 water → 4 / 8 food | Extra heating demand in cold seasons (II.7); takes thermal insulation. |
-| Repair workshop | 25 iron | 1×1 | 2 / 5 kW | uses 4 / 8 iron → 10 / 20 repair parts | |
+| Iron refinery | 35 hematite + 20 regolith | 2×2 | 6 / 12 kW | uses 30 / 60 hematite → 18 / 36 iron | Costs no iron because it produces iron. |
+| Pressurized greenhouse | 15 regolith + 5 iron | 2×2 | 5 / 9 kW | uses 15 / 30 water → 4 / 8 food | Extra heating demand in cold seasons (II.7); takes thermal insulation. |
+| Repair workshop | 15 iron | 1×1 | 2 / 5 kW | uses 4 / 8 iron → 10 / 20 repair parts | |
 
 ### Level 3
 
 | Structure | Cost | Tiles | Power base / max | Per season (base / max) | Notes |
 |---|---|---|---|---|---|
-| Steel & alloy factory | 30 regolith + 45 iron | 2×2 | 10 / 18 kW | uses 15 / 30 iron → 9 / 18 steel | Paid with iron because it is the only source of steel. |
-| Compact nuclear reactor | 40 regolith + 30 steel | 2×2 | **produces 40 kW constant** | — | Unaffected by seasons, darkness, storms or any event. Consumes nothing. |
+| Steel & alloy factory | 30 regolith + 30 iron | 2×2 | 10 / 18 kW | uses 15 / 30 iron → 9 / 18 steel | Paid with iron because it is the only source of steel. |
+| Compact nuclear reactor | 40 regolith + 10 steel | 2×2 | **produces 40 kW constant** | — | Unaffected by seasons, darkness, storms or any event. Consumes nothing. |
 
 ### Upgrades
 
@@ -313,7 +338,7 @@ Each upgrade is installed on one structure, takes 15 s and one astronaut outside
 
 - The player may demolish any finished structure, or cancel one still under construction.
 - Demolishing is an external job: one astronaut outside for 15 s (II.9), blocked like every
-  external job.
+  external job. The game asks the player to confirm before it queues the job.
 - When the job ends, everything that was paid comes back to the wallet (100%): the structure's
   cost and its installed upgrades, whatever its state (damaged, clogged or short-circuited).
 - Not allowed: the last habitat module; a habitat whose occupants do not fit in the other
@@ -325,7 +350,7 @@ Each upgrade is installed on one structure, takes 15 s and one astronaut outside
 | Item | Starting value |
 |---|---|
 | Structures | 1 habitat module, 1 mine, 2 solar panels, 1 oxygen generator, 1 ice melter, 1 pressurized greenhouse next to the habitat (all placed, all at Base) |
-| Materials | 60 hematite, 40 regolith, 0 iron, 0 steel, 0 repair parts |
+| Materials | 60 hematite, 40 regolith, 0 iron, 0 steel, 8 repair parts (two panel repairs) |
 | Reserves | 8 O₂, 20 water, 8 food (O₂ and food: two seasons for the crew; the water also feeds the greenhouse) |
 | Batteries | none |
 
@@ -341,7 +366,8 @@ Each upgrade is installed on one structure, takes 15 s and one astronaut outside
 **Power switches.** Each structure **type** (not each unit) has one switch: **Off / Base / Max**,
 applied to all structures of that type. Off draws 0 kW and produces nothing. Switches exist for:
 mine, oxygen generator, ice melter, iron refinery, greenhouse, repair workshop, steel factory.
-The habitat has no switch: it always draws its heating demand.
+The habitat has no switch: it always draws its heating demand. When the brownout switches a type
+off, its switch shows Off and says it comes back by itself to the player's setting.
 
 **Balance.** The HUD power meter shows production − demand.
 - Surplus charges batteries (1 EU per kW per second, no losses).
@@ -350,6 +376,9 @@ The habitat has no switch: it always draws its heating demand.
   steel factory → repair workshop → iron refinery → mine → ice melter → greenhouse → oxygen
   generator. The habitat is never switched off; if even its heating cannot be met, the base is
   **unheated** and the empty-reserve rule applies (II.2).
+- A switched-off type comes back by itself when production alone can run it, or when the
+  batteries hold **25% of their capacity** again; then everything runs on the batteries until
+  they are empty. The HUD shows the battery charge with a mark at that share.
 
 **Heating demand (kW, Base setting).** Max adds +4 kW for the greenhouse and the ice melter.
 Thermal insulation halves the cold add-on, the part above the spring and summer value.
@@ -499,8 +528,12 @@ event, and its text explains both the cold and the missing sunlight. Level 3 inf
 ### Radiation Storm (cycles 2–4)
 
 - One per cycle, at a seeded random time in spring, summer or autumn.
-- A **10-second alarm** sounds. The player taps **Take shelter** (all astronauts) or sends
-  astronauts one by one into a habitat with a radiation shelter. Jobs pause and resume afterwards.
+- A **10-second alarm** sounds and a fast game drops to 1× (principle VI). The player taps
+  **Take shelter** (all astronauts) or sends astronauts one by one into a habitat with a
+  radiation shelter: the alarm leaves the clock and the crew panel usable. Jobs pause and resume
+  afterwards.
+  The alarm says that only a habitat with a radiation shelter is safe and, when the shelters have
+  no room for the whole crew, that the others are in danger even inside.
 - When the storm hits (lasting 20 s), astronauts outside or in a habitat without a shelter die.
 - The alert names the real solar particle event from NASA DONKI it is modeled on (date and link).
 
@@ -559,7 +592,7 @@ The contract PR replaces the v1 example config with these files (all owned by th
 | `upgrades.json` | id, target structure types, cost, effect, explain |
 | `seasons.json` | order, real sols, duration at 1×, solar output per season, heating tables per cycle |
 | `events.json` | per cycle and season: kind, interval range, duration, effects, explain, source |
-| `mission.json` | crew, colonists, needs per person, win targets, starting base, job times (upgrade, repair, clean, demolish), exposure rules (rate, recovery, automatic return and resume levels), brownout order, QTE parameters, radiation storm rules |
+| `mission.json` | crew, colonists, needs per person, win targets, starting base, job times (upgrade, repair, clean, demolish), exposure rules (rate, recovery, automatic return and resume levels), brownout order, battery restore share, QTE parameters, radiation storm rules |
 
 CI keeps enforcing the design rules on these files: every buildable structure and upgrade has a
 cost; every consumer has a power draw; every event has an explanation and a source; every text
@@ -623,4 +656,4 @@ Amendments go through a `shared/` pull request approved by a second team member;
 Part II also need one product owner's approval. Every pull request must respect the ownership
 table and the principles above.
 
-**Version**: 3.2.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-15
+**Version**: 3.5.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-15

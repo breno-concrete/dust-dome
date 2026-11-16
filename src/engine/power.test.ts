@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { config } from '../config/loadConfig'
-import { batteryCapacity, computePower, demandAtSwitches } from './power'
+import { batteryCapacity, computePower, demandAtSwitches, structurePower } from './power'
 import { gameAt, onlyStructures, withEvents, withStructures, type StructureSpec } from './testState'
 import type { GameState, PowerMode, SeasonId, StructureDef } from './types'
 
@@ -8,6 +8,7 @@ import type { GameState, PowerMode, SeasonId, StructureDef } from './types'
 
 const seasons = config.seasons.seasons.map((s) => s.id)
 const order = config.mission.brownoutOrder
+const restoreShare = config.mission.batteryRestoreShare
 
 function defOf(id: string): StructureDef {
   const def = config.structures.find((d) => d.id === id)
@@ -248,12 +249,13 @@ describe('computePower', () => {
   it('a shed type comes back when production alone covers it', () => {
     const s = base(1, 'spring', [habitat.id, 'mine', bank.id])
     const both = demandAtSwitches(s, config)
-    const shedMine = { ...s, batteryEu: bankEu() / 2, power: { ...s.power, shed: ['mine'] } }
+    // Some charge, but below the restore share: only production can bring the mine back.
+    const low = (bankEu() * restoreShare) / 2
+    const shedMine = { ...s, batteryEu: low, power: { ...s.power, shed: ['mine'] } }
 
     const covered = computePower(withProduction(shedMine, both), config, 1)
     expect(covered.power.shed).toEqual([])
 
-    // Half-charged batteries could cover the mine, but only production brings it back.
     const short = computePower(withProduction(shedMine, both - baseDraw('mine') / 2), config, 1)
     expect(short.power.shed).toEqual(['mine'])
   })
@@ -300,6 +302,50 @@ describe('computePower', () => {
     expect(after.batteryEu).toBeLessThan(bankEu())
   })
 
+  // Playtest 2026-11-15: waiting for full batteries kept the machines off for more than a season.
+  describe('batteries bring shed types back at batteryRestoreShare', () => {
+    const s = base(1, 'spring', [habitat.id, ...order, bank.id])
+    const shedAll = (batteryEu: number) => ({
+      ...s,
+      batteryEu,
+      power: { ...s.power, shed: [...order] },
+    })
+
+    it('the setup: the restore share is a part of the capacity, not all of it', () => {
+      expect(restoreShare).toBeGreaterThan(0)
+      expect(restoreShare).toBeLessThan(1)
+    })
+
+    it('every shed type comes back once the batteries hold the restore share', () => {
+      const after = computePower(shedAll(bankEu() * restoreShare), config, 1)
+      expect(after.power.shed).toEqual([])
+      expect(after.power.demandKw).toBeCloseTo(demandAtSwitches(s, config))
+    })
+
+    it('just below the restore share the shed types stay off and the batteries keep charging', () => {
+      const below = bankEu() * restoreShare - 1
+      const after = computePower(
+        withProduction(shedAll(below), baseDraw(habitat.id) + 1),
+        config,
+        1,
+      )
+      expect(after.power.shed).toEqual(expect.arrayContaining(order))
+      expect(after.batteryEu).toBeGreaterThan(below)
+    })
+
+    it('the share counts every finished battery bank', () => {
+      const two = withStructures(s, config, [{ type: bank.id, tile: [10, 10] }])
+      const half = {
+        ...two,
+        batteryEu: bankEu() * restoreShare,
+        power: { ...two.power, shed: [...order] },
+      }
+      expect(computePower(half, config, 1).power.shed).toEqual(expect.arrayContaining(order))
+      const enough = { ...half, batteryEu: 2 * bankEu() * restoreShare }
+      expect(computePower(enough, config, 1).power.shed).toEqual([])
+    })
+  })
+
   it('a step with batteries above empty does not shed', () => {
     const s = { ...base(1, 'spring', [habitat.id, ...order, bank.id]), batteryEu: 1000 }
     const after = computePower(s, config, 1)
@@ -333,5 +379,28 @@ describe('computePower', () => {
     const restored = computePower(enough, config, 1)
     expect(restored.power.shed).toEqual([])
     expect(powerLogs(restored)).toHaveLength(before + 2)
+  })
+})
+
+// Playtest 2026-11-15: the panel of a machine showed the season's table value, not what it really
+// makes or draws right now (a solar panel "made 4 kW" in the dark winter).
+describe('structurePower', () => {
+  it('a solar panel makes nothing in the dark winter and its season value otherwise', () => {
+    const dark = base(config.seasons.winterDarknessFromCycle, 'winter', [panel.id])
+    expect(structurePower(dark, config, dark.structures[0])).toEqual({ makesKw: 0, usesKw: 0 })
+    const spring = base(1, 'spring', [panel.id])
+    expect(structurePower(spring, config, spring.structures[0]).makesKw).toBeCloseTo(
+      solarKw('spring'),
+    )
+  })
+
+  it('a consumer uses what its switch asks for, and nothing while the brownout has it off', () => {
+    const consumer = config.structures.find((d) => d.switchable && !d.heatingKw)!
+    if (consumer.power.kind !== 'consumer') throw new Error('not a consumer')
+    const s = base(1, 'spring', [consumer.id])
+    const [machine] = s.structures
+    expect(structurePower(s, config, machine)).toEqual({ makesKw: 0, usesKw: consumer.power.minKw })
+    const off = { ...s, power: { ...s.power, shed: [consumer.id] } }
+    expect(structurePower(off, config, machine).usesKw).toBe(0)
   })
 })

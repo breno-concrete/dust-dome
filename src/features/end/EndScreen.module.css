@@ -1,12 +1,85 @@
+/* The end screen: one calm sheet of paper on a flat dark background, in the game's warm palette.
+   Type and thin rules do the work (no cards, glass, glow, gradients or colored side bars). The
+   tokens are re-pointed inside .page, so the Button, the portrait and the commander's advice
+   follow. */
+.page {
+  --color-surface: #fbf6ea;
+  --color-surface-hover: #efe6d2;
+  --color-surface-border: rgb(148 119 91 / 40%);
+  --color-text: #3f3a36;
+  --color-muted: #5c6358;
+  --color-accent: #a9674c;
+  --color-warning: #9a4f1f;
+  --color-danger: #a8402f;
+  --color-ok: #4f6b2f;
+  --color-focus: #a9674c;
+  --radius: 12px;
+
+  min-height: 100dvh;
+  padding: 40px 24px 56px;
+  background: #3a1d15;
+  color-scheme: light;
+}
+
+.sheet {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 40px 44px 44px;
+  background: var(--color-surface);
+  border-radius: 16px;
+  color: var(--color-text);
+}
+
+.title {
+  margin: 0 0 var(--space-4);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.subtitle {
+  margin: 40px 0 var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-surface-border);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.commanderBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.commanderBanner p {
+  flex: 1;
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.55;
+}
+
 .section {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  background: var(--color-surface);
-  border: 1px solid var(--color-surface-border);
-  border-radius: var(--radius);
-  padding: var(--space-3);
-  margin-bottom: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-surface-border);
+}
+
+.section h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.section h4 {
+  margin: var(--space-2) 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .lines,
@@ -22,31 +95,66 @@
 .loss,
 .hit,
 .event {
-  border-left: 4px solid var(--color-muted);
-  padding-left: var(--space-2);
+  padding: 0;
 }
 
-.loss {
-  border-left-color: var(--color-danger);
-}
-
-.hit {
-  border-left-color: var(--color-warning);
-}
-
-.event {
-  border-left-color: var(--color-accent);
+.lines p,
+.weather p {
+  margin: 0;
 }
 
 .what {
-  font-weight: bold;
+  font-weight: 700;
+}
+
+.loss .what {
+  color: var(--color-danger);
+}
+
+.hit .what {
+  color: var(--color-warning);
 }
 
 .ok {
+  margin: 0;
   color: var(--color-ok);
 }
 
-.weather p,
-.lines p {
-  margin: 0;
+.section a {
+  color: #8a4a30;
+  text-decoration: underline;
+}
+
+.page .again {
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-4);
+  min-height: 52px;
+  border-radius: 12px;
+  background: #a9674c;
+  color: #fffcf4;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.page .again:hover:not(:disabled) {
+  background: #9b5a41;
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 12px 8px 32px;
+  }
+
+  .sheet {
+    padding: 24px 18px 28px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .commanderBanner {
+    flex-direction: column;
+    text-align: center;
+  }
 }
