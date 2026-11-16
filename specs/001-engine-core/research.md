@@ -75,7 +75,8 @@ Tolerance used everywhere below: `EPS = 1e-9` (floating-point only, not a balanc
 ## R6. Brownout without flicker
 
 - **Decision**: `computePower` starts from the previous step's `power.shed` set.
-  1. If the batteries are **full** (capacity > 0 and charge ≥ capacity − EPS), clear the set.
+  1. If the batteries are **charged** (capacity > 0 and charge ≥ capacity ×
+     `mission.batteryRestoreShare` − EPS), clear the set.
      Otherwise restore shed types in reverse brownout order (most vital first) when production
      alone covers the demand with that type back on. A type that does not fit is skipped, not a
      stop: a less vital type that draws less can still come back (issue #45).
@@ -89,11 +90,16 @@ Tolerance used everywhere below: `EPS = 1e-9` (floating-point only, not a balanc
 - **Rationale**: re-deciding from scratch every step makes the shed types blink on and off every
   0.25 s once the batteries are almost empty (charge a little → run everything → empty → shed…),
   which would flash the UI and spam the debrief. With this rule the base runs on the batteries
-  until they are empty, sheds, recharges with the surplus until full, and then tries again: a slow
-  cycle a child can follow. With no batteries at all the set depends only on production, which is
-  stable inside a season.
-- **Alternatives**: recompute every step (flicker); a restore threshold such as "10 % charge"
-  (a new balance value for the POs to own, for little benefit); a minimum off time (same).
+  until they are empty, sheds, recharges with the surplus up to the restore share, and then tries
+  again: a slow cycle a child can follow. With no batteries at all the set depends only on
+  production, which is stable inside a season.
+- **Playtest 2026-11-15**: the first rule waited for **full** batteries. With 2 kW of surplus a
+  1,500 EU bank takes 750 s to fill, longer than the whole spring, so the machines stayed off while
+  the battery charged and the POs read it as "the battery does not work". The restore share
+  (25% in v1) is now a balance value in `mission.json`.
+- **Alternatives**: recompute every step (flicker); wait for full batteries (the first rule, too
+  slow); bring types back one by one when the batteries can run them for N seconds (harder for a
+  child to predict); a minimum off time.
 
 ## R7. Battery charge
 

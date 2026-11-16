@@ -19,6 +19,12 @@ export interface ModalProps {
   /** 'alertdialog' for emergencies that need the player's attention right now. */
   role?: 'dialog' | 'alertdialog'
   onClose?: () => void
+  /**
+   * false = the rest of the screen stays usable (clicks pass around the dialog, Tab may leave
+   * it). For alerts the player must answer with the game's own controls, like the radiation
+   * alarm, which needs the clock and the crew panel.
+   */
+  blocking?: boolean
   children: ReactNode
   footer?: ReactNode
 }
@@ -30,6 +36,7 @@ export function Modal({
   tone = 'dark',
   role = 'dialog',
   onClose,
+  blocking = true,
   children,
   footer,
 }: ModalProps) {
@@ -42,10 +49,14 @@ export function Modal({
     if (!isOpen) return
     const before = document.activeElement as HTMLElement | null
     const dialog = dialogRef.current
-    const first = dialog?.querySelector<HTMLElement>(FOCUSABLE)
+    // The dialog may name where the focus starts (data-autofocus), e.g. its main action instead
+    // of a link that happens to come first.
+    const first =
+      dialog?.querySelector<HTMLElement>('[data-autofocus]') ??
+      dialog?.querySelector<HTMLElement>(FOCUSABLE)
     ;(first ?? dialog)?.focus()
     const trap = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab' || !dialog) return
+      if (e.key !== 'Tab' || !dialog || !blocking) return
       const items = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)]
       if (items.length === 0) {
         e.preventDefault()
@@ -69,7 +80,7 @@ export function Modal({
       document.removeEventListener('keydown', trap)
       before?.focus?.()
     }
-  }, [isOpen])
+  }, [isOpen, blocking])
 
   useEffect(() => {
     if (!isOpen || !onClose) return
@@ -88,6 +99,7 @@ export function Modal({
         styles.backdrop,
         tone === 'light' && styles.backdropLight,
         tone === 'light' && size === 'wide' && styles.backdropWide,
+        !blocking && styles.passThrough,
       ]
         .filter(Boolean)
         .join(' ')}
@@ -100,7 +112,7 @@ export function Modal({
           .filter(Boolean)
           .join(' ')}
         role={role}
-        aria-modal="true"
+        aria-modal={blocking}
         aria-label={title}
         onClick={(e) => e.stopPropagation()}
       >

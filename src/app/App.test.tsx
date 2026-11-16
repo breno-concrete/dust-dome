@@ -61,3 +61,30 @@ describe('App shell: radiation alarm', () => {
     expect(crew.every((a) => a.location === 'inside')).toBe(true)
   })
 })
+
+// Playtest 2026-11-15: a loss was never announced (constitution II.12).
+describe('App shell: commander notices', () => {
+  beforeEach(() => {
+    act(() => useGameStore.getState().start(42))
+    useLang.setState({ lang: 'en' })
+  })
+  afterEach(cleanup)
+
+  it('shows the commander announcing a loss during the game', () => {
+    act(() => {
+      const g = useGameStore.getState().game!
+      const entry = { at: 5, cycle: 1, season: 'spring' as const, kind: 'death' as const }
+      useGameStore.setState({
+        game: {
+          ...g,
+          briefing: null,
+          log: [...g.log, { ...entry, ref: g.crew[0].id, cause: 'empty_food' }],
+        },
+      })
+    })
+    render(<App />)
+    expect(screen.getByTestId('vega-notice').textContent).toContain(
+      useGameStore.getState().game!.crew[0].name,
+    )
+  })
+})

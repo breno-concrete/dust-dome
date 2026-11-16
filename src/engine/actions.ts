@@ -3,6 +3,7 @@
 import { isHousing, occupantsOf, protects, roomIn } from './habitats'
 import { beingDemolished, dustStormActive, externalJobsBlocked, jobSeconds } from './jobs'
 import { placementError, sideGroups } from './placement'
+import { computePower } from './power'
 import type {
   ActionError,
   ActionResult,
@@ -121,7 +122,10 @@ export function setPowerMode(
   mode: PowerMode,
 ): ActionResult {
   if (over(state) || !defOf(config, type)?.switchable) return refuse(state, 'not_allowed')
-  return ok({ ...state, powerModes: { ...state.powerModes, [type]: mode } })
+  const switched = { ...state, powerModes: { ...state.powerModes, [type]: mode } }
+  // The power report follows the switch at once (0 s: no charge moves), so the HUD is right even
+  // while the game is paused or a briefing is open.
+  return ok(computePower(switched, config, 0))
 }
 
 /** Called after the repair QTE: success queues the repair job; failure loses the parts. */

@@ -67,7 +67,7 @@
       "pt": "São parafusos, cabos e componentes feitos de ferro na nossa oficina para consertar máquinas estragadas. Sempre que um redemoinho ou curto-circuito danificar algo, precisamos de 4 peças para o reparo. Ter peças reservas garante que um pequeno defeito não vire um grande problema na missão."
     },
     "icon": "repair_parts",
-    "start": 0
+    "start": 8
   },
   {
     "id": "oxygen",

@@ -1,5 +1,11 @@
 // Owner: Dev B. Prototype-inspired HUD for reserves, time, materials, energy and crew.
-import { secondsLeftInSeason, seasonDef, targets } from '../../app/selectors'
+import {
+  batteryCapacityEu,
+  batteryRestoreShare,
+  secondsLeftInSeason,
+  seasonDef,
+  targets,
+} from '../../app/selectors'
 import { useGameStore, type Speed } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import type { ResourceId } from '../../engine/types'
@@ -15,18 +21,35 @@ const strings = {
   pause: { en: 'Pause', pt: 'Pausar' },
   resume: { en: 'Resume', pt: 'Continuar' },
   power: { en: 'Power', pt: 'Energia' },
+  battery: { en: 'Battery', pt: 'Bateria' },
+  noBattery: { en: 'No battery', pt: 'Sem bateria' },
+  charging: { en: 'Charging', pt: 'Carregando' },
+  inUse: { en: 'In use', pt: 'Em uso' },
+  full: { en: 'Full', pt: 'Cheia' },
+  batteryMark: {
+    en: 'Machines switched off for lack of power come back on at this mark',
+    pt: 'As máquinas desligadas por falta de energia voltam a ligar nesta marca',
+  },
   crew: { en: 'Crew', pt: 'Tripulação' },
-  inside: { en: 'Sheltered', pt: 'Abrigado' },
+  // Only a habitat with a radiation shelter shelters (II.11): inside is just inside.
+  inside: { en: 'Inside', pt: 'Dentro' },
   outside: { en: 'EVA', pt: 'Externo' },
   allInside: { en: 'All inside', pt: 'Todos para dentro' },
   bringInside: { en: 'Bring {name} inside', pt: 'Trazer {name} para dentro' },
   bringInsideShort: { en: 'Bring in', pt: 'Trazer' },
   deceased: { en: 'Lost', pt: 'Perdido' },
+  // Inside and not allowed out yet: above the level to work again, or resting by order.
+  recovering: { en: 'Recovering', pt: 'Recuperando' },
   lifeSupport: { en: 'Life support reserves', pt: 'Reservas vitais' },
   gameClock: { en: 'Game clock', pt: 'Relógio do jogo' },
   missionHud: { en: 'Mission status', pt: 'Status da missão' },
   powerDeficit: { en: 'Warning: power deficit!', pt: 'Alerta: falta de energia!' },
   powerStable: { en: 'Power grid stable', pt: 'Rede de energia estável' },
+  machinesOff: { en: '{n} off', pt: '{n} desligadas' },
+  unheated: {
+    en: 'The habitat has no heating! The crew will freeze. Get more power now!',
+    pt: 'O habitat está sem aquecimento! A tripulação vai congelar. Consiga mais energia já!',
+  },
   radiation: { en: 'Radiation', pt: 'Radiação' },
   speedControls: { en: 'Game speed controls', pt: 'Controles de velocidade' },
   speedLabel: { en: '{n}x speed', pt: 'Velocidade {n}x' },
@@ -135,7 +158,27 @@ export function Hud() {
 
   if (!game) return null
   const season = seasonDef(game.time.season)
-  const isPowerDeficit = game.power.balanceKw < 0
+  // Machines switched off by the brownout are a power shortage too, whatever the balance says.
+  const shedCount = game.power.shed.length
+  const isPowerDeficit = game.power.balanceKw < 0 || shedCount > 0
+  const { warnAt, resumeAt } = config.mission.exposure
+  const weather = game.activeEvents
+    .filter((e) => e.kind !== 'cold')
+    .map((e) => config.events.find((r) => r.id === e.ruleId))
+    .find((r) => r !== undefined)
+  const batteryCapacity = batteryCapacityEu({ game })
+  const batteryEu = Math.round(game.batteryEu)
+  const batteryShare = batteryCapacity > 0 ? game.batteryEu / batteryCapacity : 0
+  const batteryState =
+    batteryCapacity === 0
+      ? null
+      : batteryEu >= batteryCapacity
+        ? strings.full
+        : game.power.balanceKw > 0
+          ? strings.charging
+          : game.power.balanceKw < 0 && batteryEu > 0
+            ? strings.inUse
+            : null
   const isPaused = speed === 0
 
   // What a screen reader hears when something needs attention (kept quiet otherwise).
@@ -145,7 +188,7 @@ export function Hud() {
     ),
     ...(isPowerDeficit ? [t(strings.powerDeficit)] : []),
     ...game.crew
-      .filter((a) => a.alive && a.exposure >= 0.75)
+      .filter((a) => a.alive && a.exposure >= warnAt)
       .map((a) => t(strings.exposureAlert).replace('{name}', a.name.split(' ')[0]!)),
   ]
 
@@ -154,6 +197,16 @@ export function Hud() {
       <div role="status" aria-live="polite" className={styles.srOnly}>
         {alerts.join('. ')}
       </div>
+      {game.power.unheated && (
+        <p role="alert" className={styles.heatAlert}>
+          <Icon name="alert" size={18} /> {t(strings.unheated)}
+        </p>
+      )}
+      {weather && (
+        <p className={styles.weather} data-testid="weather">
+          <Icon name="alert" size={16} /> {t(weather.name)}
+        </p>
+      )}
       <section
         className={[styles.panel, styles.lifePanel].join(' ')}
         aria-label={t(strings.lifeSupport)}
@@ -262,12 +315,60 @@ export function Hud() {
             <Icon name="power" size={24} />
           </span>
           <span className={styles.materialValues}>
-            <small>{t(strings.power)}</small>
+            <small>
+              {t(strings.power)}
+              {shedCount > 0 && (
+                <span className={styles.batteryState}>
+                  {' '}
+                  · {t(strings.machinesOff).replace('{n}', String(shedCount))}
+                </span>
+              )}
+            </small>
             <strong>
               {game.power.balanceKw >= 0 ? '+' : ''}
               {game.power.balanceKw}
               <em> kW</em>
             </strong>
+          </span>
+        </div>
+        <div
+          data-testid="battery"
+          className={[styles.material, styles.energyStat, styles.batteryStat].join(' ')}
+        >
+          <span className={styles.materialIcon}>
+            <Icon name="battery" size={24} />
+          </span>
+          <span className={styles.materialValues}>
+            <small>
+              {t(strings.battery)}
+              {batteryState && <span className={styles.batteryState}> · {t(batteryState)}</span>}
+            </small>
+            {batteryCapacity > 0 ? (
+              <>
+                <strong>{Math.round(batteryShare * 100)}%</strong>
+                <span
+                  className={styles.batteryBar}
+                  role="progressbar"
+                  aria-label={t(strings.battery)}
+                  aria-valuemin={0}
+                  aria-valuemax={batteryCapacity}
+                  aria-valuenow={batteryEu}
+                >
+                  <span
+                    className={styles.batteryFill}
+                    style={{ width: `${Math.min(1, batteryShare) * 100}%` }}
+                  />
+                  <span
+                    className={styles.batteryMark}
+                    data-testid="battery-restore-mark"
+                    title={t(strings.batteryMark)}
+                    style={{ left: `${batteryRestoreShare * 100}%` }}
+                  />
+                </span>
+              </>
+            ) : (
+              <strong>{t(strings.noBattery)}</strong>
+            )}
           </span>
         </div>
       </section>
@@ -289,7 +390,18 @@ export function Hud() {
           </button>
         </div>
         {game.crew.map((astronaut, idx) => {
-          const isWarning = astronaut.exposure >= 0.75
+          const isWarning = astronaut.exposure >= warnAt
+          const isRecovering =
+            astronaut.alive &&
+            astronaut.location === 'inside' &&
+            (astronaut.resting || astronaut.exposure > resumeAt)
+          const where = !astronaut.alive
+            ? strings.deceased
+            : astronaut.location === 'outside'
+              ? strings.outside
+              : isRecovering
+                ? strings.recovering
+                : strings.inside
           const exposurePercent = Math.round(astronaut.exposure * 100)
           const accent = astronautAccentColor(astronaut.id, idx)
           const memberClasses = [
@@ -305,7 +417,7 @@ export function Hud() {
               key={astronaut.id}
               className={memberClasses}
               data-testid={`crew-member-${astronaut.id}`}
-              title={`${astronaut.name}: ${astronaut.alive ? (astronaut.location === 'inside' ? t(strings.inside) : t(strings.outside)) : t(strings.deceased)} (${t(strings.radiation)}: ${exposurePercent}%)`}
+              title={`${astronaut.name}: ${t(where)} (${t(strings.radiation)}: ${exposurePercent}%)`}
             >
               <span
                 className={styles.astronautIcon}
@@ -316,6 +428,9 @@ export function Hud() {
               <span className={styles.astronautName}>{astronaut.name.split(' ')[0]}</span>
               {astronaut.alive ? (
                 <span className={styles.exposureValue}>
+                  {isRecovering && (
+                    <small className={styles.recovering}>{t(strings.recovering)}</small>
+                  )}
                   {exposurePercent}%
                   {isWarning && (
                     <Icon name="radiation" size={14} className={styles.radiationIcon} />

@@ -1,5 +1,6 @@
 // Owner: Dev B. Build menu: structures grouped by technology level.
 import { useState } from 'react'
+import { outdoorJobsBlocked } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
 import { Button } from '../../ui-kit/Button'
@@ -7,7 +8,9 @@ import { Card } from '../../ui-kit/Card'
 import { Icon, type IconName } from '../../ui-kit/Icon'
 import { useT } from '../../ui-kit/i18n'
 import { Modal } from '../../ui-kit/Modal'
+import { actionErrorMessages } from './actionErrors'
 import styles from './Panel.module.css'
+import { useTutorialUi } from './tutorial'
 import { UpgradePanel } from './UpgradePanel'
 
 const strings = {
@@ -18,6 +21,10 @@ const strings = {
   cancelPlacement: { en: 'Cancel placement', pt: 'Cancelar posicionamento' },
   scienceFacts: { en: 'Science facts', pt: 'Fatos científicos' },
   missing: { en: 'Missing', pt: 'Faltam' },
+  blocked: {
+    en: 'It is too dark and cold to build outside. Wait for spring!',
+    pt: 'Está escuro e frio demais para construir lá fora. Espere a primavera!',
+  },
   level: {
     1: { en: 'Level 1 · Raw materials', pt: 'Nível 1 · Recursos brutos' },
     2: { en: 'Level 2 · Processed metals', pt: 'Nível 2 · Metais processados' },
@@ -31,10 +38,13 @@ export function BuildMenu() {
   const game = useGameStore((s) => s.game)
   const placing = useGameStore((s) => s.placing)
   const beginPlacement = useGameStore((s) => s.beginPlacement)
+  const lastError = useGameStore((s) => s.lastError)
   const [isOpen, setIsOpen] = useState(false)
+  const pointedOut = useTutorialUi((s) => s.highlight === 'build')
   const t = useT()
 
   if (!game) return null
+  const blocked = outdoorJobsBlocked({ game })
 
   return (
     <>
@@ -43,6 +53,11 @@ export function BuildMenu() {
           <span>
             {t(strings.whereToBuild)}
             <small>{t(strings.pickSpot)}</small>
+            {lastError && (
+              <small role="alert" className={styles.missing}>
+                {t(actionErrorMessages[lastError])}
+              </small>
+            )}
           </span>
           <Button
             variant="secondary"
@@ -55,7 +70,7 @@ export function BuildMenu() {
       )}
       <button
         type="button"
-        className={styles.buildDock}
+        className={[styles.buildDock, pointedOut && styles.tutorialPulse].filter(Boolean).join(' ')}
         aria-expanded={isOpen}
         onClick={() => setIsOpen(true)}
       >
@@ -70,6 +85,11 @@ export function BuildMenu() {
         onClose={() => setIsOpen(false)}
       >
         <div className={styles.buildCatalog}>
+          {blocked && (
+            <p className={styles.missing} role="status" data-testid="build-blocked">
+              <Icon name="alert" size={18} /> {t(strings.blocked)}
+            </p>
+          )}
           {LEVELS.map((level) => {
             const structures = config.structures.filter((structure) => structure.level === level)
             if (structures.length === 0) return null
@@ -110,7 +130,7 @@ export function BuildMenu() {
                           ]
                             .filter(Boolean)
                             .join(' ')}
-                          disabled={missing.length > 0}
+                          disabled={missing.length > 0 || blocked}
                           aria-describedby={
                             missingIds.length > 0 ? missingIds.join(' ') : undefined
                           }

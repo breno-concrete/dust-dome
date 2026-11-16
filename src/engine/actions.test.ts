@@ -202,6 +202,20 @@ describe('setPowerMode', () => {
       expectRefused(setPowerMode(s, config, type, 'max'), s, 'not_allowed')
     }
   })
+
+  // Playtest 2026-11-15: with the game paused, the HUD kept the old numbers after a switch.
+  it('refreshes the power report at once, without waiting for the next step', () => {
+    const s = createGame(config, 1)
+    const up = okState(setPowerMode(s, config, 'mine', 'max'))
+    // More demand, or no power for it: either way the report already tells.
+    expect(up.power.demandKw > s.power.demandKw || up.power.shed.includes('mine')).toBe(true)
+    const off = okState(setPowerMode(s, config, 'oxygen_generator', 'off'))
+    expect(off.power.demandKw).toBeLessThan(s.power.demandKw)
+    expect(off.power.balanceKw).toBeCloseTo(off.power.productionKw - off.power.demandKw)
+    // Asking for the report is not a step: batteries and the clock stay where they were.
+    expect(off.batteryEu).toBe(s.batteryEu)
+    expect(off.time).toEqual(s.time)
+  })
 })
 
 describe('startRepair', () => {

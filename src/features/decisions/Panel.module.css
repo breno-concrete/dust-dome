@@ -296,7 +296,8 @@
   bottom: 132px;
   z-index: 55;
   width: min(330px, calc(100vw - 56px));
-  max-height: calc(100dvh - 246px);
+  /* Stops below the camera and sound buttons of the scene. */
+  max-height: calc(100dvh - 304px);
   overflow: auto;
   padding: 23px;
   border-radius: 22px;
@@ -451,14 +452,15 @@
 
 .upgrades {
   position: absolute;
-  top: 126px;
+  /* Below the camera and sound buttons of the scene. */
+  top: 172px;
   right: 28px;
   z-index: 55;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   width: min(340px, calc(100vw - 2 * var(--space-3)));
-  max-height: calc(100dvh - 240px);
+  max-height: calc(100dvh - 312px);
   overflow: auto;
   padding: var(--space-3);
   border-radius: 22px;
@@ -488,6 +490,11 @@
   gap: var(--space-3);
 }
 
+.commanderCopy {
+  flex: 1;
+  min-width: 0;
+}
+
 .commander strong {
   font-size: 18px;
   font-weight: 800;
@@ -499,15 +506,198 @@
   line-height: 1.5;
 }
 
-.portrait {
-  display: grid;
-  flex: 0 0 64px;
-  place-items: center;
-  width: 64px;
-  height: 64px;
+.vegaFrame {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1.5px solid rgb(148 119 91 / 38%);
+  background: radial-gradient(
+    circle at 50% 26%,
+    rgb(255 252 244 / 96%) 0%,
+    rgb(234 219 195 / 90%) 66%,
+    rgb(198 162 128 / 78%) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 70%),
+    0 8px 18px rgb(63 42 28 / 16%);
+}
+
+.vegaFrame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    rgb(63 58 54 / 3.5%) 3px,
+    rgb(63 58 54 / 3.5%) 4px
+  );
+}
+
+.vegaFrame[data-mood='warning'] {
+  border-color: rgb(176 92 32 / 60%);
+  background: radial-gradient(
+    circle at 50% 26%,
+    rgb(255 249 239 / 96%) 0%,
+    rgb(241 204 160 / 92%) 68%,
+    rgb(204 129 67 / 82%) 100%
+  );
+}
+
+.vegaFrame[data-mood='alert'] {
+  border-color: rgb(188 46 34 / 72%);
+  background: radial-gradient(
+    circle at 50% 26%,
+    rgb(255 243 240 / 96%) 0%,
+    rgb(244 185 171 / 92%) 66%,
+    rgb(198 78 61 / 84%) 100%
+  );
+  box-shadow:
+    inset 0 0 18px rgb(220 56 38 / 28%),
+    0 8px 20px rgb(154 47 31 / 24%);
+}
+
+.vegaFrame[data-mood='welcome'] {
+  border-color: rgb(84 138 96 / 52%);
+  background: radial-gradient(
+    circle at 50% 26%,
+    rgb(247 252 245 / 96%) 0%,
+    rgb(216 234 211 / 90%) 68%,
+    rgb(156 192 155 / 78%) 100%
+  );
+}
+
+.vegaFrame[data-mood='celebrating'] {
+  border-color: rgb(186 135 42 / 58%);
+  background: radial-gradient(
+    circle at 50% 26%,
+    rgb(255 253 244 / 96%) 0%,
+    rgb(246 226 173 / 92%) 68%,
+    rgb(214 166 82 / 80%) 100%
+  );
+}
+
+.vegaFrame[data-mood='caring'] {
+  border-color: rgb(82 120 162 / 55%);
+  background: radial-gradient(
+    circle at 50% 26%,
+    rgb(245 249 255 / 96%) 0%,
+    rgb(205 221 240 / 92%) 68%,
+    rgb(136 171 201 / 78%) 100%
+  );
+}
+
+.vegaFrameBriefing {
+  width: 140px;
+  height: 152px;
+}
+
+.vegaFrameAlarm {
+  width: 132px;
+  height: 144px;
+}
+
+.vegaFrameDebrief {
+  width: 136px;
+  height: 148px;
+}
+
+.vegaFrameDebrief[data-mood='celebrating'] {
+  border-color: rgb(251 191 36 / 45%);
+  background: radial-gradient(
+    circle at 50% 34%,
+    rgb(250 232 184 / 94%) 0%,
+    rgb(156 176 164 / 86%) 62%,
+    rgb(46 66 78 / 92%) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 220 / 35%),
+    0 8px 20px rgb(0 0 0 / 35%);
+}
+
+.vegaFrameDebrief[data-mood='caring'] {
+  border-color: rgb(116 155 204 / 45%);
+  background: radial-gradient(
+    circle at 50% 34%,
+    rgb(224 236 250 / 92%) 0%,
+    rgb(125 152 186 / 84%) 62%,
+    rgb(36 52 78 / 94%) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(210 230 255 / 30%),
+    0 8px 20px rgb(0 0 0 / 35%);
+}
+
+.vegaImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  transform-origin: center bottom;
+  transform: scale(1.05);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 76%,
+    rgb(0 0 0 / 65%) 86%,
+    transparent 98%
+  );
+  mask-image: linear-gradient(to bottom, #000 0%, #000 76%, rgb(0 0 0 / 65%) 86%, transparent 98%);
+  filter: drop-shadow(0 4px 10px rgb(63 42 28 / 24%));
+}
+
+.vegaBadge {
+  position: absolute;
+  bottom: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border: 1px solid rgb(255 252 244 / 16%);
+  border-radius: 999px;
+  background: rgb(32 25 21 / 84%);
+  color: #fffcf4;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(4px);
+}
+
+.vegaLed {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #e4e6d9;
-  color: #3f4d2a;
+  background: #5bd6a0;
+  box-shadow: 0 0 6px #5bd6a0;
+}
+
+.vegaFrame[data-mood='warning'] .vegaLed {
+  background: #ffb347;
+  box-shadow: 0 0 6px #ffb347;
+}
+
+.vegaFrame[data-mood='caring'] .vegaLed {
+  background: #60a5fa;
+  box-shadow: 0 0 6px #60a5fa;
+}
+
+.vegaFrame[data-mood='alert'] .vegaLed {
+  background: #ff5a4d;
+  box-shadow: 0 0 8px #ff5a4d;
 }
 
 .briefingButton {
@@ -600,10 +790,24 @@
   line-height: 1.45;
 }
 
+.briefingWarning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 .alarm {
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
+}
+
+@media (max-width: 560px) {
+  .commander,
+  .alarm {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 }
 
 .alarm p {
@@ -770,5 +974,155 @@
     top: 84px;
     bottom: auto;
     max-height: calc(100dvh - 148px);
+  }
+}
+
+/* ---- Power switches: brownout and battery (playtest 2026-11-15) ---- */
+.segmented .segmentShed {
+  border-color: #e0b595;
+  background: #fae2d3;
+  color: #8a3f22;
+}
+
+.segmented .segmentChosen {
+  border: 1px dashed #8a7a66;
+}
+
+.powerShedNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8a3f22;
+}
+
+.powerBattery {
+  margin: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid rgb(148 119 91 / 20%);
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.powerBattery strong {
+  color: var(--color-text);
+}
+
+.shelterDanger {
+  font-weight: 800;
+  color: #9a2f1f;
+}
+
+/* ---- Commander Vega's tutorial ---- */
+.tutorialCard {
+  --color-surface: rgb(251 246 234 / 96%);
+  --color-text: #3f3a36;
+  --color-muted: #5c6358;
+
+  position: absolute;
+  bottom: 132px;
+  left: 50%;
+  z-index: 58;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(460px, calc(100vw - 2 * var(--space-3)));
+  transform: translateX(-50%);
+  padding: var(--space-3);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid rgb(148 119 91 / 30%);
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgb(85 57 41 / 22%);
+  color-scheme: light;
+}
+
+.tutorialWaiting {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tutorialActions,
+.tutorialFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.tutorialFooter {
+  width: 100%;
+}
+
+.tutorialCounter {
+  margin-right: auto;
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* The dock button Vega is pointing at. */
+.tutorialPulse {
+  animation: tutorialPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes tutorialPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(169 103 76 / 60%);
+  }
+
+  50% {
+    box-shadow: 0 0 0 10px rgb(169 103 76 / 0%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorialPulse {
+    animation: none;
+    outline: 4px solid #a9674c;
+  }
+}
+
+/* Phones held sideways: the card goes under the HUD so it does not cover the docks. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .tutorialCard {
+    top: 84px;
+    bottom: auto;
+    width: min(420px, 50vw);
+    padding: var(--space-2);
+  }
+}
+
+/* Vega's portrait shrinks to fit the small "do it" card. */
+.tutorialPortrait {
+  flex: 0 0 auto;
+}
+
+.tutorialPortrait .vegaFrameBriefing {
+  width: 84px;
+  height: 92px;
+  border-radius: 14px;
+}
+
+.tutorialPortrait .vegaBadge {
+  display: none;
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .commander .vegaFrameBriefing {
+    width: 88px;
+    height: 96px;
+  }
+
+  .tutorialPortrait .vegaFrameBriefing {
+    width: 64px;
+    height: 70px;
   }
 }

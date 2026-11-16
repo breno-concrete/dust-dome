@@ -325,7 +325,17 @@ header.hud > * {
 
 .deceased {
   opacity: 0.55;
+}
+
+/* Only the name is crossed out, so the word "Lost" next to it stays readable. */
+.deceased .astronautName {
   text-decoration: line-through;
+}
+
+.recovering {
+  color: #ac6b4c;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .deceasedLabel {
@@ -619,4 +629,78 @@ header.hud > * {
   .astronautName {
     display: none;
   }
+}
+
+/* ---- Battery charge (playtest 2026-11-15) ---- */
+.batteryStat .materialValues {
+  min-width: 0;
+}
+
+.batteryState {
+  font-weight: 700;
+}
+
+.batteryBar {
+  position: relative;
+  display: block;
+  width: 56px;
+  height: 6px;
+  margin-top: 2px;
+  border-radius: 3px;
+  background: #e4e2d6;
+}
+
+.batteryFill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: #ccb061;
+}
+
+.batteryMark {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  margin-left: -1px;
+  background: #3f3a36;
+}
+
+@media (max-height: 500px), (max-width: 700px) {
+  .batteryState {
+    display: none;
+  }
+
+  .batteryBar {
+    width: 36px;
+  }
+}
+
+/* Warnings in words, under the clock: no heating (lethal) and the active weather event. */
+.heatAlert,
+.weather {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.heatAlert {
+  top: 96px;
+  background: #8f2a1c;
+  color: #fff;
+}
+
+.weather {
+  top: 136px;
+  background: rgba(60, 40, 30, 0.8);
+  color: #ffe9c9;
+  font-size: 0.85rem;
 }

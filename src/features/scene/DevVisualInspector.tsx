@@ -5,6 +5,9 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { StructureStatus } from '../../engine/types'
 import { Button } from '../../ui-kit/Button'
+import { Modal } from '../../ui-kit/Modal'
+import { VegaPortrait } from '../decisions/VegaPortrait'
+import type { VegaMood } from '../decisions/vegaMood'
 import { RepairQteDialog } from '../repair/RepairQte'
 import styles from './DevVisualInspector.module.css'
 import { sound, type LoopId, type SoundId } from './sound'
@@ -21,6 +24,39 @@ const LOOP_SOUNDS: ReadonlyArray<{ id: LoopId; label: string }> = [
   { id: 'radiation-alarm', label: '🚨 Alarme' },
   { id: 'dust-storm-loop', label: '🌪️ Vento poeira' },
   { id: 'radiation-storm-loop', label: '☢️ Tempestade radiação' },
+]
+
+const VEGA_PREVIEW_MOODS: ReadonlyArray<{ id: VegaMood; label: string; sample: string }> = [
+  {
+    id: 'welcome',
+    label: '👋 Boas-vindas',
+    sample: 'Bem-vindos a Hellas Planitia, equipe! Vamos preparar nossa base em Marte.',
+  },
+  {
+    id: 'neutral',
+    label: '🙂 Neutra',
+    sample: 'O verão marciano traz mais luz solar, ótimo momento para carregar as baterias.',
+  },
+  {
+    id: 'warning',
+    label: '⚠️ Aviso',
+    sample: 'Atenção: o próximo inverno será severo. Construam o Isolamento Térmico!',
+  },
+  {
+    id: 'celebrating',
+    label: '🎉 Comemorando',
+    sample: 'Sobrevivemos ao primeiro ano em Marte, parabéns à toda a equipe!',
+  },
+  {
+    id: 'caring',
+    label: '💙 Apoio',
+    sample: 'Estamos na noite mais fria da missão, mas vamos superar isso juntos.',
+  },
+  {
+    id: 'alert',
+    label: '🚨 Alerta',
+    sample: 'Alerta máximo! Tempestade solar detectada — abrigar toda a tripulação agora!',
+  },
 ]
 
 export type DevWeatherPreset = 'auto' | 'summer' | 'dust_storm' | 'winter_dark'
@@ -72,6 +108,8 @@ export default function DevVisualInspector({
   }
   const [testingQte, setTestingQte] = useState(false)
   const [lastQteResult, setLastQteResult] = useState<'success' | 'fail' | null>(null)
+  const [previewVegaMood, setPreviewVegaMood] = useState<VegaMood | null>(null)
+  const activeVegaSample = VEGA_PREVIEW_MOODS.find((m) => m.id === previewVegaMood)
 
   return (
     <div className={styles.devPanel}>
@@ -84,6 +122,29 @@ export default function DevVisualInspector({
               setLastQteResult(success ? 'success' : 'fail')
             }}
           />,
+          document.body,
+        )}
+
+      {activeVegaSample &&
+        createPortal(
+          <Modal
+            isOpen
+            tone="light"
+            title={`Comandante Vega · Preview (${activeVegaSample.id})`}
+            onClose={() => setPreviewVegaMood(null)}
+            footer={<Button onClick={() => setPreviewVegaMood(null)}>Fechar preview</Button>}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+              <VegaPortrait
+                mood={activeVegaSample.id}
+                variant={activeVegaSample.id === 'alert' ? 'alarm' : 'briefing'}
+              />
+              <div>
+                <strong>Comandante Vega</strong>
+                <p style={{ margin: '6px 0 0', lineHeight: 1.5 }}>{activeVegaSample.sample}</p>
+              </div>
+            </div>
+          </Modal>,
           document.body,
         )}
 
@@ -196,6 +257,20 @@ export default function DevVisualInspector({
                 {lastQteResult === 'success' ? '✅ Reparo OK' : '❌ Falhou / Desistiu'}
               </span>
             )}
+          </div>
+
+          <div className={styles.devSectionTitle}>Comandante Vega (Shared Dev)</div>
+          <div className={styles.devRow}>
+            {VEGA_PREVIEW_MOODS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={chipClass(previewVegaMood === opt.id)}
+                onClick={() => setPreviewVegaMood(opt.id)}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
       )}
