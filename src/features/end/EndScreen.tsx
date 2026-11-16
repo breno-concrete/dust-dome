@@ -115,7 +115,7 @@ function Section({ section }: { section: DebriefSection }) {
   const headingId = `debrief-${section.cycle}-${section.season}`
   const hasDeaths = section.lines.some((l) => l.kind === 'death')
   return (
-    <section aria-labelledby={headingId} className={styles.section}>
+    <section aria-labelledby={headingId} className={styles.section} data-season={section.season}>
       <h3 id={headingId}>
         {t(strings.cycle)} {section.cycle} · {t(seasonDef(section.season)?.name ?? section.season)}
       </h3>

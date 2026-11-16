@@ -1150,16 +1150,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin: var(--space-3) 0;
-  padding: var(--space-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-surface-border);
-  border-left: 5px solid var(--color-accent);
-  border-radius: 20px;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
   color: var(--color-text);
-  box-shadow: 0 8px 24px rgb(40 14 8 / 28%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--advice-bg, var(--color-surface));
+  border: 3px solid var(--color-surface-border);
+  border-radius: 18px;
+  box-shadow: 5px 5px 0 var(--color-surface-border);
 }
 
 .vegaAdvice h2 {
@@ -1167,19 +1164,48 @@
   align-items: center;
   gap: var(--space-1);
   margin: 0;
-  font-size: var(--font-size-lg);
+  font-size: 22px;
+  font-weight: 900;
 }
 
 .vegaAdviceIntro {
   margin: 0;
+  font-weight: 700;
   line-height: 1.5;
 }
 
+/* Numbered tips: a round yellow number before each one. */
 .vegaAdviceList {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   margin: 0;
-  padding-left: var(--space-4);
+  padding: 0;
+  list-style: none;
+  counter-reset: tip;
   line-height: 1.5;
+}
+
+.vegaAdviceList li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 3px solid var(--color-surface-border);
+  border-radius: 14px;
+  background: #fff;
+  counter-increment: tip;
+}
+
+.vegaAdviceList li::before {
+  content: counter(tip);
+  display: grid;
+  flex: 0 0 32px;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-surface-border);
+  border-radius: 50%;
+  background: #ffc93c;
+  font-weight: 900;
 }
