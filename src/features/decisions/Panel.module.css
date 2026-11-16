@@ -190,19 +190,30 @@
   display: grid;
   place-items: center;
   width: 100%;
-  height: 96px;
+  height: 112px;
+  padding: 6px 10px;
+  overflow: hidden;
   border-radius: 14px;
-  background: #efe9dc;
+  background: radial-gradient(circle at 50% 42%, #f7f2e8 0%, #eadfce 100%);
   color: #7a5c3e;
 }
 
+.previewImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 5px rgb(46 56 70 / 16%));
+}
+
 .tier2 {
-  background: #e4ece6;
+  background: radial-gradient(circle at 50% 42%, #eef4ef 0%, #dce7df 100%);
   color: #3f6a60;
 }
 
 .tier3 {
-  background: #e6e8ef;
+  background: radial-gradient(circle at 50% 42%, #f0f2f7 0%, #dde2ec 100%);
   color: #4a5675;
 }
 

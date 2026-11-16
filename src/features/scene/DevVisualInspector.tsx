@@ -65,6 +65,9 @@ export interface DevVisualOverrides {
   weather: DevWeatherPreset
   frost: boolean
   radiationTint: boolean
+  dustDevils: boolean
+  cold: boolean
+  astronautsPreview: boolean
   structureStatus: StructureStatus | 'auto'
 }
 
@@ -176,6 +179,29 @@ export default function DevVisualInspector({
               onClick={() => onChange({ ...overrides, radiationTint: !overrides.radiationTint })}
             >
               ☢️ Alarme Radiação
+            </button>
+            <button
+              type="button"
+              className={chipClass(overrides.dustDevils)}
+              onClick={() => onChange({ ...overrides, dustDevils: !overrides.dustDevils })}
+            >
+              🌪️ Redemoinhos Poeira
+            </button>
+            <button
+              type="button"
+              className={chipClass(overrides.cold)}
+              onClick={() => onChange({ ...overrides, cold: !overrides.cold })}
+            >
+              🥶 Frio de Inverno
+            </button>
+            <button
+              type="button"
+              className={chipClass(overrides.astronautsPreview)}
+              onClick={() =>
+                onChange({ ...overrides, astronautsPreview: !overrides.astronautsPreview })
+              }
+            >
+              🧑‍🚀 Astronautas EVA
             </button>
           </div>
 

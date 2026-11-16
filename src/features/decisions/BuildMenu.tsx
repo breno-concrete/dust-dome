@@ -140,7 +140,13 @@ export function BuildMenu() {
                           }}
                         >
                           <span className={[styles.preview, styles[`tier${level}`]].join(' ')}>
-                            <Icon name="box" size={38} />
+                            <img
+                              className={styles.previewImg}
+                              src={`/structures/${structure.id}.webp`}
+                              alt=""
+                              aria-hidden="true"
+                              loading="lazy"
+                            />
                             <span className={styles.plus}>
                               <Icon name="plus" size={16} />
                             </span>

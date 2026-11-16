@@ -977,6 +977,8 @@ const DEFAULT_VISUAL: VisualState = {
   dark: false,
   frost: false,
   radiationTint: false,
+  dustDevils: 0,
+  cold: 0,
 }
 
 const PREVIEW_VALID_MATERIAL = new MeshStandardMaterial({
