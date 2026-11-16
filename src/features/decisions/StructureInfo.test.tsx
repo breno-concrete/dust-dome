@@ -151,4 +151,47 @@ describe('UpgradePanel: machine name, state and production bars', () => {
     expect(uses).toMatch(/Water/)
     expect(uses).toContain(String(def('greenhouse').inputs!.min.water))
   })
+
+  // Playtest 2026-11-15: a solar panel "made 4 kW" in the dark winter, and no machine said how
+  // much power it uses, though the tutorial promises it.
+  describe('real power numbers', () => {
+    it('a solar panel shows 0 kW in the dark winter', () => {
+      act(() => {
+        const g = useGameStore.getState().game!
+        const cycle = config.seasons.winterDarknessFromCycle
+        useGameStore.setState({ game: { ...g, time: { ...g.time, cycle, season: 'winter' } } })
+      })
+      select('solar_panel')
+      render(<UpgradePanel />)
+      const power = within(screen.getByTestId('structure-production')).getByRole('progressbar', {
+        name: 'Power',
+      })
+      expect(power.getAttribute('aria-valuenow')).toBe('0')
+    })
+
+    it('a machine says how much power it uses', () => {
+      select('oxygen_generator', { mode: 'min' })
+      render(<UpgradePanel />)
+      const min = (def('oxygen_generator').power as { minKw: number }).minKw
+      expect(screen.getByTestId('structure-power-use').textContent).toContain(`${min} kW`)
+    })
+
+    it('the habitat says how much power its heating uses', () => {
+      select('habitat')
+      render(<UpgradePanel />)
+      expect(screen.getByTestId('structure-power-use').textContent).toMatch(/[1-9][0-9]* kW/)
+    })
+
+    it('a machine without power uses 0 kW', () => {
+      select('oxygen_generator', { shed: true })
+      render(<UpgradePanel />)
+      expect(screen.getByTestId('structure-power-use').textContent).toContain('0 kW')
+    })
+
+    it('a solar panel has no power-use line', () => {
+      select('solar_panel')
+      render(<UpgradePanel />)
+      expect(screen.queryByTestId('structure-power-use')).toBeNull()
+    })
+  })
 })

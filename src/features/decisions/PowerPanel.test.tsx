@@ -61,6 +61,13 @@ describe('PowerPanel', () => {
   })
 
   it('marks the active mode of each switch and moves it when the player picks another', async () => {
+    // Plenty of power, so the new setting runs instead of being switched off by the brownout.
+    act(() => {
+      const g = useGameStore.getState().game!
+      const panel = g.structures.find((s) => s.type === 'solar_panel')!
+      const extra = [0, 1, 2].map((i) => ({ ...panel, id: `extra-panel-${i}` }))
+      useGameStore.setState({ game: { ...g, structures: [...g.structures, ...extra] } })
+    })
     render(<PowerPanel />)
     await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
 
@@ -148,6 +155,29 @@ describe('PowerPanel', () => {
     const battery = screen.getByTestId('power-battery')
     expect(battery.textContent).toContain(`${capacity / 2} / ${capacity} EU`)
     expect(battery.textContent).toContain('50%')
+  })
+
+  // Playtest 2026-11-15: "+0 kW, there is power for the whole base!" right above "Mine: No power!".
+  it('does not say there is power for the whole base while a type is switched off for lack of power', async () => {
+    act(() => {
+      const g = useGameStore.getState().game!
+      useGameStore.setState({ game: { ...g, power: { ...g.power, balanceKw: 0, shed: ['mine'] } } })
+    })
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+    expect(screen.queryByText('There is power for the whole base!')).toBeNull()
+    expect(screen.getByRole('alert').textContent).toContain('Not enough power')
+  })
+
+  // Playtest 2026-11-15: the machine panel and the power panel sat on top of each other.
+  it('closes when a machine is selected, so the two side panels never overlap', async () => {
+    render(<PowerPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /Power switches/ }))
+    expect(screen.getByRole('complementary')).toBeDefined()
+    act(() =>
+      useGameStore.getState().selectStructure(useGameStore.getState().game!.structures[0]!.id),
+    )
+    expect(screen.queryByRole('complementary')).toBeNull()
   })
 
   it('says the base has no battery yet when there is no battery bank', async () => {

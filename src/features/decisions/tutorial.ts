@@ -2,6 +2,8 @@
 // briefing. Reading steps first, then "do it" steps that wait for the player, then goodbye.
 // The texts live here (fixed UI texts); the product owners review them.
 import { create } from 'zustand'
+import { targets } from '../../app/selectors'
+import { config } from '../../config/loadConfig'
 import type { PowerMode } from '../../engine/types'
 import type { LocalizedText } from '../../config/schema'
 import type { VegaMood } from './vegaMood'
@@ -34,15 +36,48 @@ const DANGERS = ch('Dangers of Mars', 'Perigos de Marte')
 const PRACTICE = ch("Let's practice", 'Vamos praticar')
 const READY = ch('Ready!', 'Pronto!')
 
-export const TUTORIAL_STEPS: TutorialStep[] = [
+/**
+ * The numbers Vega says, read from the config so the tutorial always tells the current rules
+ * (constitution I: code never hard-codes balance values). Texts name them as {crew}, {parts}...
+ */
+const { mission, seasons } = config
+const housing = config.structures.find((d) => (d.capacity ?? 0) > 0)?.capacity ?? 1
+const NUMBERS: Record<string, number> = {
+  crew: mission.crew,
+  colonists: mission.colonists,
+  people: targets.people,
+  oxygen: targets.reserves.oxygen,
+  water: targets.reserves.water,
+  food: targets.reserves.food,
+  modules: Math.ceil(targets.habitatCapacity / housing),
+  cycles: seasons.cycles,
+  seasons: seasons.seasons.length,
+  yearMinutes: Math.round(seasons.seasons.reduce((sum, s) => sum + s.durationSeconds, 0) / 60),
+  warnAt: Math.round(mission.exposure.warnAt * 100),
+  grace: mission.emptyReserve.graceSeconds,
+  deathEvery: mission.emptyReserve.deathEverySeconds,
+  parts: mission.repair.parts,
+  insulationCycle: mission.insulationRequiredFromCycle,
+  stormCycle: mission.radiationStorm.fromCycle,
+  alarm: mission.radiationStorm.warningSeconds,
+}
+
+/** Replaces every {name} with its number; an unknown name stays, so a typo is easy to spot. */
+export function fillNumbers(text: string): string {
+  return text.replace(/\{(\w+)\}/g, (whole, name: string) =>
+    name in NUMBERS ? String(NUMBERS[name]) : whole,
+  )
+}
+
+const RAW_STEPS: TutorialStep[] = [
   {
     id: 'welcome',
     kind: 'read',
     chapter: MISSION,
     mood: 'welcome',
     text: {
-      en: "Hi, cadet! I'm Commander Vega. Our 4 astronauts landed on Mars at Hellas Planitia, where NASA radar found ice buried underground. In 4 Martian years, 32 colonists will arrive. Your job: get the base ready for them!",
-      pt: 'Oi, cadete! Eu sou a Comandante Vega. Nossos 4 astronautas pousaram em Marte, em Hellas Planitia, onde o radar da NASA achou gelo enterrado. Em 4 anos marcianos, 32 colonos vão chegar. Seu trabalho: deixar a base pronta para eles!',
+      en: "Hi, cadet! I'm Commander Vega. Our {crew} astronauts landed on Mars at Hellas Planitia, where NASA radar found ice buried underground. In {cycles} Martian years, {colonists} colonists will arrive. Your job: get the base ready for them!",
+      pt: 'Oi, cadete! Eu sou a Comandante Vega. Nossos {crew} astronautas pousaram em Marte, em Hellas Planitia, onde o radar da NASA achou gelo enterrado. Em {cycles} anos marcianos, {colonists} colonos vão chegar. Seu trabalho: deixar a base pronta para eles!',
     },
   },
   {
@@ -51,8 +86,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     chapter: MISSION,
     mood: 'neutral',
     text: {
-      en: 'To win, when the 32 colonists land at the end of year 4, the base must store 36 oxygen, 36 water and 36 food (one season for 36 people) and have 6 habitat modules to sleep in. The white mark on each top bar is that goal. You lose if all 4 astronauts are lost.',
-      pt: 'Para vencer, quando os 32 colonos pousarem no fim do ano 4, a base precisa guardar 36 de oxigênio, 36 de água e 36 de comida (uma estação para 36 pessoas) e ter 6 módulos habitacionais para dormir. A marquinha branca em cada barra do topo é essa meta. Você perde se os 4 astronautas forem perdidos.',
+      en: 'To win, when the {colonists} colonists land at the end of year {cycles}, the base must store {oxygen} oxygen, {water} water and {food} food (one season for {people} people) and have {modules} habitat modules to sleep in. The white mark on each top bar is that goal. You lose if all {crew} astronauts are lost.',
+      pt: 'Para vencer, quando os {colonists} colonos pousarem no fim do ano {cycles}, a base precisa guardar {oxygen} de oxigênio, {water} de água e {food} de comida (uma estação para {people} pessoas) e ter {modules} módulos habitacionais para dormir. A marquinha branca em cada barra do topo é essa meta. Você perde se os {crew} astronautas forem perdidos.',
     },
   },
   {
@@ -61,8 +96,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     chapter: TIME,
     mood: 'neutral',
     text: {
-      en: "A Martian year has 4 seasons and lasts 20 minutes of play. Mars' south is wild: summer is short and stormy, winter is long, dark and freezing. Use the clock to pause, or to go 2× or 4× faster. I pause the game whenever I talk to you.",
-      pt: 'Um ano marciano tem 4 estações e dura 20 minutos de jogo. O sul de Marte é selvagem: o verão é curto e cheio de tempestades, o inverno é longo, escuro e gelado. Use o relógio para pausar ou acelerar 2× ou 4×. Eu pauso o jogo sempre que falo com você.',
+      en: "A Martian year has {seasons} seasons and lasts {yearMinutes} minutes of play. Mars' south is wild: summer is short and stormy, winter is long, dark and freezing. Use the clock to pause, or to go 2× or 4× faster. I pause the game whenever I talk to you.",
+      pt: 'Um ano marciano tem {seasons} estações e dura {yearMinutes} minutos de jogo. O sul de Marte é selvagem: o verão é curto e cheio de tempestades, o inverno é longo, escuro e gelado. Use o relógio para pausar ou acelerar 2× ou 4×. Eu pauso o jogo sempre que falo com você.',
     },
   },
   {
@@ -81,8 +116,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     chapter: CREW,
     mood: 'caring',
     text: {
-      en: 'We have only 4 astronauts, and they do every job outside the base: building, upgrading, repairing and cleaning. Each astronaut does one job at a time, so choose what comes first. Their names and radiation are at the bottom left.',
-      pt: 'Temos só 4 astronautas, e eles fazem todos os trabalhos fora da base: construir, melhorar, consertar e limpar. Cada astronauta faz um trabalho por vez, então escolha o que vem primeiro. Os nomes e a radiação deles ficam no canto inferior esquerdo.',
+      en: 'We have only {crew} astronauts, and they do every job outside the base: building, upgrading, repairing and cleaning. Each astronaut does one job at a time, so choose what comes first. Their names and radiation are at the bottom left.',
+      pt: 'Temos só {crew} astronautas, e eles fazem todos os trabalhos fora da base: construir, melhorar, consertar e limpar. Cada astronauta faz um trabalho por vez, então escolha o que vem primeiro. Os nomes e a radiação deles ficam no canto inferior esquerdo.',
     },
   },
   {
@@ -91,8 +126,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     chapter: CREW,
     mood: 'warning',
     text: {
-      en: "Mars has no thick air or magnetic shield, so outside an astronaut's radiation keeps rising. At 75% they stop and come back inside to rest. You can also press Bring in to call someone home earlier. Radiation never kills by itself, but it keeps the crew from working.",
-      pt: 'Marte não tem ar grosso nem escudo magnético, então fora da base a radiação do astronauta só sobe. Ao chegar em 75%, ele para e volta para descansar. Você também pode apertar Trazer para chamar alguém antes. A radiação sozinha não mata, mas impede a tripulação de trabalhar.',
+      en: "Mars has no thick air or magnetic shield, so outside an astronaut's radiation keeps rising. At {warnAt}% they stop and come back inside to rest. You can also press Bring in to call someone home earlier. Radiation never kills by itself, but it keeps the crew from working.",
+      pt: 'Marte não tem ar grosso nem escudo magnético, então fora da base a radiação do astronauta só sobe. Ao chegar em {warnAt}%, ele para e volta para descansar. Você também pode apertar Trazer para chamar alguém antes. A radiação sozinha não mata, mas impede a tripulação de trabalhar.',
     },
   },
   {
@@ -151,8 +186,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     chapter: LIFE,
     mood: 'warning',
     text: {
-      en: 'If oxygen, water or food reaches zero, or the habitat has no heat, an astronaut is lost after 15 seconds, and another one every 15 seconds. A bar blinks when it holds less than one season for the crew. Act before it hits zero!',
-      pt: 'Se o oxigênio, a água ou a comida chegar a zero, ou se o habitat ficar sem aquecimento, um astronauta é perdido depois de 15 segundos, e outro a cada 15 segundos. A barra pisca quando guarda menos que uma estação para a tripulação. Aja antes de zerar!',
+      en: 'If oxygen, water or food reaches zero, or the habitat has no heat, an astronaut is lost after {grace} seconds, and another one every {deathEvery} seconds. A bar blinks when it holds less than one season for the crew. Act before it hits zero!',
+      pt: 'Se o oxigênio, a água ou a comida chegar a zero, ou se o habitat ficar sem aquecimento, um astronauta é perdido depois de {grace} segundos, e outro a cada {deathEvery} segundos. A barra pisca quando guarda menos que uma estação para a tripulação. Aja antes de zerar!',
     },
   },
   {
@@ -161,8 +196,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     chapter: DANGERS,
     mood: 'warning',
     text: {
-      en: 'Dust devils damage machines: they work at half power until repaired. A repair costs 4 repair parts and a quick bolt game. Dust also clogs machines: cleaning needs no parts, but an astronaut goes outside for a while. Select a machine to repair or clean it.',
-      pt: 'Redemoinhos de poeira danificam as máquinas: elas funcionam com metade da força até serem consertadas. Um conserto custa 4 peças de reparo e um jogo rápido de parafusos. A poeira também entope as máquinas: limpar não gasta peças, mas um astronauta sai por um tempo. Selecione uma máquina para consertar ou limpar.',
+      en: 'Dust devils damage machines: they work at half power until repaired. A repair costs {parts} repair parts and a quick bolt game. Dust also clogs machines: cleaning needs no parts, but an astronaut goes outside for a while. Select a machine to repair or clean it.',
+      pt: 'Redemoinhos de poeira danificam as máquinas: elas funcionam com metade da força até serem consertadas. Um conserto custa {parts} peças de reparo e um jogo rápido de parafusos. A poeira também entope as máquinas: limpar não gasta peças, mas um astronauta sai por um tempo. Selecione uma máquina para consertar ou limpar.',
     },
   },
   {
@@ -171,8 +206,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     chapter: DANGERS,
     mood: 'warning',
     text: {
-      en: 'Autumn and winter are cold, so habitats burn more power for heat. Before the winter of year 3, build Thermal insulation on the habitat: without it, the astronauts freeze when winter starts. In deep winter it is also too dark and cold to go outside.',
-      pt: 'O outono e o inverno são frios, então os habitats gastam mais energia para aquecer. Antes do inverno do ano 3, construa o Isolamento térmico no habitat: sem ele, os astronautas congelam quando o inverno começa. No inverno profundo também fica escuro e frio demais para sair.',
+      en: 'Autumn and winter are cold, so habitats burn more power for heat. Before the winter of year {insulationCycle}, build Thermal insulation on the habitat: without it, the astronauts freeze when winter starts. In deep winter it is also too dark and cold to go outside.',
+      pt: 'O outono e o inverno são frios, então os habitats gastam mais energia para aquecer. Antes do inverno do ano {insulationCycle}, construa o Isolamento térmico no habitat: sem ele, os astronautas congelam quando o inverno começa. No inverno profundo também fica escuro e frio demais para sair.',
     },
   },
   {
@@ -181,8 +216,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     chapter: DANGERS,
     mood: 'alert',
     text: {
-      en: 'From year 2, solar storms can hit, like the real ones NASA tracks. An alarm gives you 10 seconds. Astronauts who are not inside a habitat with a Radiation shelter are lost. Build that upgrade, then press Take shelter to bring everyone in!',
-      pt: 'A partir do ano 2, tempestades solares podem chegar, como as reais que a NASA acompanha. Um alarme dá 10 segundos para você. Astronautas que não estiverem num habitat com Abrigo antirradiação são perdidos. Construa essa melhoria e aperte Abrigar tripulação para trazer todos para dentro!',
+      en: 'From year {stormCycle}, solar storms can hit, like the real ones NASA tracks. An alarm gives you {alarm} seconds. Astronauts who are not inside a habitat with a Radiation shelter are lost. Build that upgrade, then press Take shelter to bring everyone in!',
+      pt: 'A partir do ano {stormCycle}, tempestades solares podem chegar, como as reais que a NASA acompanha. Um alarme dá {alarm} segundos para você. Astronautas que não estiverem num habitat com Abrigo antirradiação são perdidos. Construa essa melhoria e aperte Abrigar tripulação para trazer todos para dentro!',
     },
   },
   {
@@ -242,6 +277,11 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
   },
 ]
+
+export const TUTORIAL_STEPS: TutorialStep[] = RAW_STEPS.map((step) => ({
+  ...step,
+  text: { en: fillNumbers(step.text.en), pt: fillNumbers(step.text.pt) },
+}))
 
 export interface StepContext {
   placing: string | null

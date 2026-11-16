@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { config } from '../config/loadConfig'
 import { createGame } from '../engine/game'
-import { withStructures } from '../engine/testState'
-import { batteryCapacityEu, radiationShelterPlaces } from './selectors'
+import { gameAt, withEvents, withStructures } from '../engine/testState'
+import {
+  batteryCapacityEu,
+  outdoorJobsBlocked,
+  radiationShelterPlaces,
+  structurePowerKw,
+} from './selectors'
 
 // Playtest 2026-11-15: the HUD shows the battery charge and the alarm says who is safe.
 
@@ -39,5 +44,32 @@ describe('radiationShelterPlaces', () => {
       { type: 'habitat', tile: [7, 7], status: 'building', upgrades: [shelter.id] },
     ])
     expect(radiationShelterPlaces({ game })).toBe(habitat.capacity)
+  })
+})
+
+// Playtest 2026-11-15: the build menu let the player pick a structure in the dark winter, and
+// the machine panel showed power numbers the engine was not using.
+describe('outdoorJobsBlocked', () => {
+  it('is true only while an event keeps the astronauts inside', () => {
+    const game = gameAt(config, 1, 'spring')
+    expect(outdoorJobsBlocked({ game: null })).toBe(false)
+    expect(outdoorJobsBlocked({ game })).toBe(false)
+    const dark = withEvents(game, [{ kind: 'darkness', blocksExternalJobs: true }])
+    expect(outdoorJobsBlocked({ game: dark })).toBe(true)
+  })
+})
+
+describe('structurePowerKw', () => {
+  it('gives what a structure makes and uses right now, and null for an unknown one', () => {
+    const game = gameAt(config, config.seasons.winterDarknessFromCycle, 'winter')
+    const solar = game.structures.find((s) => s.type === 'solar_panel')!
+    expect(structurePowerKw({ game }, solar.id)).toEqual({ makesKw: 0, usesKw: 0 })
+    const habitatNow = structurePowerKw(
+      { game },
+      game.structures.find((s) => s.type === 'habitat')!.id,
+    )
+    expect(habitatNow!.usesKw).toBeGreaterThan(0)
+    expect(structurePowerKw({ game }, 'no-such-structure')).toBeNull()
+    expect(structurePowerKw({ game: null }, solar.id)).toBeNull()
   })
 })

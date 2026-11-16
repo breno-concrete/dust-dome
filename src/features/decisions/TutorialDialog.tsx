@@ -63,6 +63,12 @@ export function TutorialDialog({ onDone }: { onDone: () => void }) {
   const step = TUTORIAL_STEPS[current]!
   const isLast = current === TUTORIAL_STEPS.length - 1
 
+  // A finished step stays finished: the machine panel closes on any click outside it (even on
+  // "Start"), and that must not send the player back. Only "pick a panel" may be undone, by
+  // cancelling the placement before the panel is on the ground. (State adjusted while
+  // rendering: React renders again at once with the new index.)
+  if (current > index && step.check !== 'place') setIndex(current)
+
   // Point the dock buttons out while a step asks for them, and stop when the tutorial ends.
   useEffect(() => {
     setHighlight(step.highlight ?? null)

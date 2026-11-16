@@ -285,7 +285,8 @@
   bottom: 132px;
   z-index: 55;
   width: min(330px, calc(100vw - 56px));
-  max-height: calc(100dvh - 246px);
+  /* Stops below the camera and sound buttons of the scene. */
+  max-height: calc(100dvh - 304px);
   overflow: auto;
   padding: 23px;
   border-radius: 22px;
@@ -440,14 +441,15 @@
 
 .upgrades {
   position: absolute;
-  top: 126px;
+  /* Below the camera and sound buttons of the scene. */
+  top: 172px;
   right: 28px;
   z-index: 55;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   width: min(340px, calc(100vw - 2 * var(--space-3)));
-  max-height: calc(100dvh - 240px);
+  max-height: calc(100dvh - 312px);
   overflow: auto;
   padding: var(--space-3);
   border-radius: 22px;

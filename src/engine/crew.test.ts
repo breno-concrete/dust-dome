@@ -99,6 +99,23 @@ describe('updateCrew', () => {
       expect(next.jobs[0].astronautId).not.toBe(worker.id)
     })
 
+    // Playtest 2026-11-15: the radiation icon showed for one step only and nobody said why the
+    // astronaut came back (II.9: "the commander explains why").
+    it('logs the automatic return once, so the commander can explain it', () => {
+      const returns = (g: GameState) => g.log.filter((e) => e.kind === 'exposure_return')
+      const s = withCrew(gameAt(config, 1, 'spring'), [
+        { location: 'outside', exposure: exposure.warnAt - 0.001 },
+      ])
+      expect(returns(s)).toEqual([])
+
+      const after = updateCrew(s, config, 1)
+      expect(returns(after)).toHaveLength(1)
+      expect(returns(after)[0]).toMatchObject({ ref: s.crew[0].id, cycle: 1, season: 'spring' })
+
+      // Back inside, recovering: no second entry.
+      expect(returns(run(after, 20))).toHaveLength(1)
+    })
+
     it('exposure never kills: no astronaut stays outside past warnAt', () => {
       const s = withCrew(gameAt(config, 1, 'summer'), [{ location: 'outside', exposure: 0 }])
       const after = run(s, Math.ceil(duration('summer')))

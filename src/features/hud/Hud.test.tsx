@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { targets } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
+import type { GameState } from '../../engine/types'
 import { Hud } from './Hud'
 
 describe('Hud', () => {
@@ -200,6 +201,93 @@ describe('Hud', () => {
     it('says there is no battery yet when the base has no battery bank', () => {
       render(<Hud />)
       expect(screen.getByTestId('battery').textContent).toContain('No battery')
+    })
+  })
+
+  // Playtest 2026-11-15: in winter the HUD said "+0 kW" in green with every machine switched off.
+  describe('honest warnings', () => {
+    function setGame(patch: (g: GameState) => Partial<GameState>) {
+      act(() => {
+        const g = useGameStore.getState().game!
+        useGameStore.setState({ game: { ...g, ...patch(g) } })
+      })
+    }
+
+    it('power is short when the brownout switched machines off, even with a balance of 0', () => {
+      setGame((g) => ({ power: { ...g.power, balanceKw: 0, shed: ['mine', 'ice_melter'] } }))
+      render(<Hud />)
+      const power = screen.getByTestId('power')
+      expect(power.className).toContain('deficit')
+      expect(power.textContent).toContain('2 off')
+      expect(screen.getByRole('status').textContent).toContain('power deficit')
+    })
+
+    it('power is fine when nothing is switched off and the balance is not negative', () => {
+      render(<Hud />)
+      const power = screen.getByTestId('power')
+      expect(power.className).not.toContain('deficit')
+      expect(power.textContent).not.toContain('off')
+    })
+
+    it('warns in words when the habitat has no heating (principle VII)', () => {
+      setGame((g) => ({ power: { ...g.power, balanceKw: -12, unheated: true } }))
+      render(<Hud />)
+      expect(screen.getByRole('alert').textContent).toContain('no heating')
+    })
+
+    it('shows no heating alert while the habitat is heated', () => {
+      render(<Hud />)
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
+    it('names the weather event that is active, and nothing when the sky is calm', () => {
+      render(<Hud />)
+      expect(screen.queryByTestId('weather')).toBeNull()
+      const rule = config.events.find((e) => e.kind === 'dust_storm')!
+      setGame(() => ({
+        activeEvents: [
+          {
+            id: 'e1',
+            ruleId: rule.id,
+            kind: rule.kind,
+            endsAt: 999,
+            solarFactor: 0.6,
+            blocksExternalJobs: false,
+          },
+        ],
+      }))
+      expect(screen.getByTestId('weather').textContent).toContain(rule.name.en)
+    })
+
+    it('an astronaut inside is "Inside", not "Sheltered": only a radiation shelter shelters', () => {
+      render(<Hud />)
+      const member = screen.getByTestId(`crew-member-${useGameStore.getState().game!.crew[0].id}`)
+      expect(member.getAttribute('title')).toContain('Inside')
+      expect(member.getAttribute('title')).not.toContain('Sheltered')
+    })
+
+    it('an astronaut inside who is still above the level to go out again is "Recovering"', () => {
+      const { warnAt, resumeAt } = config.mission.exposure
+      setGame((g) => ({
+        crew: g.crew.map((a, i) => ({ ...a, exposure: i === 0 ? (warnAt + resumeAt) / 2 : 0 })),
+      }))
+      render(<Hud />)
+      const [first, second] = useGameStore.getState().game!.crew
+      const recovering = screen.getByTestId(`crew-member-${first.id}`)
+      expect(recovering.textContent).toContain('Recovering')
+      expect(recovering.getAttribute('title')).toContain('Recovering')
+      expect(screen.getByTestId(`crew-member-${second.id}`).textContent).not.toContain('Recovering')
+    })
+
+    it('warns about exposure at the level set in the mission config, not a fixed one', () => {
+      const { warnAt } = config.mission.exposure
+      setGame((g) => ({
+        crew: g.crew.map((a, i) => ({ ...a, exposure: i === 0 ? warnAt : warnAt - 0.01 })),
+      }))
+      render(<Hud />)
+      const [first, second] = useGameStore.getState().game!.crew
+      expect(screen.getByTestId(`crew-member-${first.id}`).className).toContain('warning')
+      expect(screen.getByTestId(`crew-member-${second.id}`).className).not.toContain('warning')
     })
   })
 })
