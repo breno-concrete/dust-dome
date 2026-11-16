@@ -131,6 +131,10 @@ header.hud > * {
   background: #dce1ce;
 }
 
+.timePanel .fullscreenButton {
+  display: none;
+}
+
 .materials {
   display: flex;
   flex-wrap: wrap;
@@ -562,9 +566,12 @@ header.hud > * {
   header.hud {
     --hud-inset: 8px;
 
-    grid-template-columns: minmax(0, 1.6fr) auto minmax(0, 1.1fr);
-    align-items: stretch;
-    gap: 8px;
+    top: max(6px, var(--safe-top));
+    left: max(8px, var(--safe-left));
+    right: max(8px, var(--safe-right));
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr);
+    align-items: start;
+    gap: 5px;
   }
 
   .lifePanel {
@@ -572,8 +579,9 @@ header.hud > * {
     grid-row: 1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    padding: 8px 10px;
+    gap: 4px;
+    padding: 6px 7px;
+    border-radius: 14px;
   }
 
   .timePanel {
@@ -581,8 +589,10 @@ header.hud > * {
     grid-row: 1;
     flex-wrap: nowrap;
     justify-self: center;
+    gap: 4px;
     min-height: 0;
-    padding: 6px 8px;
+    padding: 5px 6px;
+    border-radius: 14px;
   }
 
   .timeDivider {
@@ -590,25 +600,47 @@ header.hud > * {
   }
 
   .date strong {
-    font-size: 14px;
+    font-size: 12px;
+    line-height: 1.15;
+  }
+
+  .date > span {
+    gap: 3px;
+    font-size: 9px;
+  }
+
+  .seasonLabel {
+    min-width: 0;
+  }
+
+  .speeds {
+    gap: 3px;
   }
 
   .speeds .timeButton {
-    padding: 0 8px;
-    font-size: 13px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 6px;
+    font-size: 12px;
   }
 
-  /* Six values in three columns and two rows, instead of a tall stack. */
+  /* Seven values in 4x2 grid (battery spans 2 cols) so the top bar stays under 58px tall. */
   .materials {
     grid-column: 3;
     grid-row: 1;
     display: grid;
-    grid-template-columns: repeat(3, auto);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: center;
-    justify-content: start;
+    justify-content: stretch;
     min-height: 0;
-    padding: 6px 10px;
-    gap: 4px 10px;
+    padding: 5px 7px;
+    gap: 2px 4px;
+    border-radius: 14px;
+  }
+
+  .material {
+    gap: 3px;
+    min-width: 0;
   }
 
   .energyStat {
@@ -616,41 +648,142 @@ header.hud > * {
     border-left: 0;
   }
 
+  .batteryStat {
+    grid-column: span 2;
+  }
+
   .materialIcon svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .materialValues {
+    min-width: 0;
+  }
+
+  .materialValues small {
+    margin-bottom: 0;
+    font-size: 8px;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .materialValues strong {
-    font-size: 14px;
+    display: block;
+    font-size: 12px;
+    line-height: 1.15;
+    white-space: nowrap;
   }
 
-  /* The crew becomes a strip in the bottom-left corner, beside the two docks. */
+  .materialValues em {
+    font-size: 9px;
+  }
+
+  /* The crew becomes a single-row strip in the bottom-left corner, beside the two docks. */
   .crewPanel {
-    bottom: 8px;
-    left: 8px;
+    bottom: max(8px, var(--safe-bottom));
+    left: max(8px, var(--safe-left));
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 2px 8px;
+    gap: 4px;
     width: auto;
-    max-width: calc(100vw - 330px);
-    padding: 6px 8px;
+    max-width: calc(100vw - max(8px, var(--safe-left)) - max(8px, var(--safe-right)) - 300px);
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 5px 6px;
+    border-radius: 16px;
   }
 
   .crewHeader {
     flex: 0 0 auto;
-    gap: 10px;
+    gap: 4px;
     margin-bottom: 0;
   }
 
+  .crewHeading {
+    display: none;
+  }
+
+  .crewButton {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 6px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
   .crewMember {
+    flex: 0 0 auto;
+    gap: 3px;
     padding: 0;
     border-top: 0;
   }
 
+  .astronautIcon {
+    flex-basis: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .exposureLabel {
+    font-size: 8px;
+  }
+
+  .exposureValue {
+    font-size: 11px;
+  }
+
   .astronautName {
     display: none;
+  }
+
+  .heatAlert,
+  .weather {
+    padding: 4px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .heatAlert {
+    top: calc(max(6px, var(--safe-top)) + 64px);
+  }
+
+  .weather {
+    top: calc(max(6px, var(--safe-top)) + 96px);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 740px) {
+  .pauseLabel {
+    display: none;
+  }
+}
+
+@media (hover: none) and (pointer: coarse), (orientation: landscape) and (max-height: 520px) {
+  .timePanel .fullscreenButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: rgb(162 164 135 / 18%);
+    color: #4f5545;
+    box-shadow: none;
+  }
+
+  .timePanel .fullscreenButton:hover:not(:disabled) {
+    background: rgb(162 164 135 / 28%);
+  }
+
+  .timePanel .fullscreenButton[aria-pressed='true'] {
+    background: #e4e6d9;
+    color: #3f4d2a;
+    box-shadow: inset 0 0 0 1px rgb(117 133 83 / 35%);
   }
 }
 

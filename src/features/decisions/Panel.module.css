@@ -934,7 +934,7 @@
 @media (orientation: landscape) and (max-height: 520px) {
   .buildDock,
   .powerDock {
-    bottom: 8px;
+    bottom: max(8px, var(--safe-bottom));
     min-height: 48px;
     padding: 4px 10px;
     gap: 8px;
@@ -942,38 +942,88 @@
     font-size: 13px;
   }
 
+  .dockIcon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
   .buildDock {
-    right: 8px;
+    right: max(8px, var(--safe-right));
     width: 128px;
   }
 
   .powerDock {
-    right: calc(8px + 128px + 8px);
+    right: calc(max(8px, var(--safe-right)) + 128px + 8px);
     width: 150px;
   }
 
   .placementBanner {
-    right: 8px;
-    bottom: 64px;
+    right: max(8px, var(--safe-right));
+    bottom: calc(max(8px, var(--safe-bottom)) + 56px);
+    max-width: calc(100vw - max(16px, var(--safe-left) + var(--safe-right)));
+    gap: var(--space-2);
+    padding: 6px 10px;
+    font-size: 13px;
   }
 
   .power,
   .upgrades {
-    right: 8px;
+    right: max(8px, var(--safe-right));
     left: auto;
     width: min(330px, 46vw);
     padding: 12px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .power {
-    bottom: 64px;
-    max-height: calc(100dvh - 132px);
+    bottom: calc(max(8px, var(--safe-bottom)) + 56px);
+    max-height: calc(100dvh - max(14px, var(--safe-top) + var(--safe-bottom)) - 124px);
   }
 
   .upgrades {
-    top: 84px;
+    top: calc(max(6px, var(--safe-top)) + 68px);
     bottom: auto;
-    max-height: calc(100dvh - 148px);
+    max-height: calc(100dvh - max(14px, var(--safe-top) + var(--safe-bottom)) - 134px);
+  }
+
+  .cardGrid {
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 10px;
+  }
+
+  .structureCard {
+    padding: 8px 8px 10px;
+    border-radius: 14px;
+  }
+
+  .preview {
+    height: 72px;
+    padding: 4px 8px;
+  }
+
+  .structureName {
+    font-size: 15px;
+  }
+
+  .commander,
+  .alarm {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: 10px;
+  }
+
+  .commander p,
+  .alarm p {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .briefingButton {
+    min-height: 44px;
+    font-size: 15px;
   }
 }
 
@@ -1108,13 +1158,50 @@
   }
 }
 
-/* Phones held sideways: the card goes under the HUD so it does not cover the docks. */
+/* Phones held sideways: the card sits below camera controls on the left so it never covers docks or right panels. */
 @media (orientation: landscape) and (max-height: 520px) {
   .tutorialCard {
-    top: 84px;
+    top: calc(max(6px, var(--safe-top)) + 124px);
+    left: max(8px, var(--safe-left));
+    right: auto;
     bottom: auto;
-    width: min(420px, 50vw);
-    padding: var(--space-2);
+    transform: none;
+    width: min(350px, 49vw);
+    max-height: calc(100dvh - max(14px, var(--safe-top) + var(--safe-bottom)) - 188px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 10px;
+    gap: 4px;
+  }
+
+  .tutorialCard .commander {
+    gap: 8px;
+  }
+
+  .tutorialCard .commander strong {
+    font-size: 14px;
+  }
+
+  .tutorialCard .commander p {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .tutorialCard .tutorialWaiting {
+    margin: 2px 0 0;
+    font-size: 11px;
+  }
+
+  .tutorialActions {
+    gap: 6px;
+  }
+
+  .tutorialActions button {
+    min-height: 44px;
+    padding: 4px 10px;
+    font-size: 12px;
   }
 }
 
@@ -1134,14 +1221,23 @@
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
-  .commander .vegaFrameBriefing {
-    width: 88px;
-    height: 96px;
+  .commander .vegaFrameBriefing,
+  .vegaFrameBriefing,
+  .vegaFrameAlarm {
+    width: 84px;
+    height: 92px;
+  }
+
+  .vegaBadge {
+    padding: 2px 6px;
+    font-size: 7.5px;
+    letter-spacing: 0.03em;
+    max-width: calc(100% - 8px);
   }
 
   .tutorialPortrait .vegaFrameBriefing {
-    width: 64px;
-    height: 70px;
+    width: 48px;
+    height: 54px;
   }
 }
 
