@@ -1010,15 +1010,16 @@
   --color-text: #3f3a36;
   --color-muted: #5c6358;
 
+  /* Down at the bottom edge, between the crew panel (left) and the two docks (right). */
   position: absolute;
-  bottom: 132px;
-  left: 50%;
+  bottom: 28px;
+  left: calc(28px + 258px + 16px);
+  right: calc(28px + 175px + 14px + 220px + 16px);
   z-index: 58;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  width: min(460px, calc(100vw - 2 * var(--space-3)));
-  transform: translateX(-50%);
+  max-width: 460px;
   padding: var(--space-3);
   color: var(--color-text);
   background: var(--color-surface);
@@ -1026,6 +1027,23 @@
   border-radius: 22px;
   box-shadow: 0 10px 30px rgb(85 57 41 / 22%);
   color-scheme: light;
+}
+
+/* Not enough room beside the docks: centered, just above them. */
+@media (max-width: 1100px) {
+  .tutorialCard {
+    bottom: 116px;
+    left: 50%;
+    right: auto;
+    width: min(460px, calc(100vw - 2 * var(--space-3)));
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 560px) {
+  .tutorialCard {
+    bottom: 170px;
+  }
 }
 
 .tutorialWaiting {
