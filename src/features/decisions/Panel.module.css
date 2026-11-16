@@ -285,7 +285,8 @@
   bottom: 132px;
   z-index: 55;
   width: min(330px, calc(100vw - 56px));
-  max-height: calc(100dvh - 246px);
+  /* Stops below the camera and sound buttons of the scene. */
+  max-height: calc(100dvh - 304px);
   overflow: auto;
   padding: 23px;
   border-radius: 22px;
@@ -440,14 +441,15 @@
 
 .upgrades {
   position: absolute;
-  top: 126px;
+  /* Below the camera and sound buttons of the scene. */
+  top: 172px;
   right: 28px;
   z-index: 55;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   width: min(340px, calc(100vw - 2 * var(--space-3)));
-  max-height: calc(100dvh - 240px);
+  max-height: calc(100dvh - 312px);
   overflow: auto;
   padding: var(--space-3);
   border-radius: 22px;
@@ -1147,44 +1149,4 @@
   margin: 0;
   padding-left: var(--space-4);
   line-height: 1.5;
-}
-
-/* ---- Radiation storm: small message once the crew is inside ---- */
-.stormStatus {
-  --color-text: #3f3a36;
-  --color-muted: #5c6358;
-
-  position: absolute;
-  bottom: 132px;
-  left: 50%;
-  z-index: 58;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  width: min(460px, calc(100vw - 2 * var(--space-3)));
-  transform: translateX(-50%);
-  padding: var(--space-3);
-  color: var(--color-text);
-  background: rgb(251 246 234 / 96%);
-  border: 1px solid rgb(176 92 32 / 45%);
-  border-left: 5px solid #9a4f1f;
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgb(85 57 41 / 22%);
-  color-scheme: light;
-}
-
-.stormStatusTime {
-  margin: 2px 0 0;
-  color: var(--color-muted);
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-}
-
-@media (orientation: landscape) and (max-height: 520px) {
-  .stormStatus {
-    top: 84px;
-    bottom: auto;
-    width: min(420px, 50vw);
-    padding: var(--space-2);
-  }
 }

@@ -2,7 +2,7 @@
 // in TutorialDialog.test.tsx.
 import { describe, expect, it } from 'vitest'
 import { config } from '../../config/loadConfig'
-import { TUTORIAL_STEPS, isStepDone, type StepContext } from './tutorial'
+import { TUTORIAL_STEPS, fillNumbers, isStepDone, type StepContext } from './tutorial'
 import { VEGA_MOODS } from './vegaMood'
 
 const ctx = (patch: Partial<StepContext> = {}): StepContext => ({
@@ -151,5 +151,43 @@ describe('isStepDone', () => {
   it('"switch" is done when any power switch changed', () => {
     expect(isStepDone('switch', ctx())).toBe(false)
     expect(isStepDone('switch', ctx({ powerModes: { mine: 'max' } }))).toBe(true)
+  })
+})
+
+// Playtest 2026-11-15: the numbers Vega says were typed into the texts, so a balance change in
+// the config (like the price of the workshop) left the tutorial telling the old rule.
+describe('the numbers Vega says come from the config', () => {
+  const { mission } = config
+
+  it('fillNumbers puts the config values in place of the {names}', () => {
+    expect(fillNumbers('{parts} parts, {warnAt}%, {alarm} s, {grace} s, year {stormCycle}')).toBe(
+      `${mission.repair.parts} parts, ${mission.exposure.warnAt * 100}%, ` +
+        `${mission.radiationStorm.warningSeconds} s, ${mission.emptyReserve.graceSeconds} s, ` +
+        `year ${mission.radiationStorm.fromCycle}`,
+    )
+    expect(fillNumbers('{crew} + {colonists} = {people}')).toBe(
+      `${mission.crew} + ${mission.colonists} = ${mission.crew + mission.colonists}`,
+    )
+  })
+
+  it('leaves an unknown {name} alone, so a typo shows in the text review', () => {
+    expect(fillNumbers('{no_such_number}')).toBe('{no_such_number}')
+  })
+
+  it('no step is left with a {name} to fill, in either language', () => {
+    for (const s of TUTORIAL_STEPS) {
+      expect(s.text.en, s.id).not.toMatch(/[{}]/)
+      expect(s.text.pt, s.id).not.toMatch(/[{}]/)
+    }
+  })
+
+  it('the steps say the real rules', () => {
+    const text = (id: string) => TUTORIAL_STEPS.find((s) => s.id === id)!.text
+    expect(text('dust').en).toContain(`${mission.repair.parts} repair parts`)
+    expect(text('dust').pt).toContain(`${mission.repair.parts} peças de reparo`)
+    expect(text('radiation').en).toContain(`${mission.exposure.warnAt * 100}%`)
+    expect(text('storm').en).toContain(`${mission.radiationStorm.warningSeconds} seconds`)
+    expect(text('empty').en).toContain(`${mission.emptyReserve.graceSeconds} seconds`)
+    expect(text('welcome').en).toContain(`${mission.colonists} colonists`)
   })
 })

@@ -1,10 +1,8 @@
 // Owner: Dev B. Emergency alarm for a solar radiation storm (constitution II.11).
 // Shows the seconds left, the real NASA DONKI event it is modeled on and a one-click shelter.
-import { useState } from 'react'
 import { radiationShelterPlaces } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { Button } from '../../ui-kit/Button'
-import { Icon } from '../../ui-kit/Icon'
 import { Modal } from '../../ui-kit/Modal'
 import { useT } from '../../ui-kit/i18n'
 import styles from './Panel.module.css'
@@ -30,111 +28,77 @@ const strings = {
     pt: 'Os abrigos antirradiação têm lugar para {n} de {total} astronautas. Os outros correm perigo, até dentro!',
   },
   secondsLeft: { en: 'seconds left', pt: 'segundos restantes' },
+  passing: { en: 'The storm passes in {n} seconds.', pt: 'A tempestade passa em {n} segundos.' },
   basedOn: {
     en: 'Based on a real NASA DONKI event of',
     pt: 'Baseado num evento real do NASA DONKI de',
   },
   donki: { en: 'NASA DONKI', pt: 'NASA DONKI' },
   shelter: { en: 'Take shelter', pt: 'Abrigar tripulação' },
-  stillOutside: {
-    en: '{n} still outside!',
-    pt: '{n} ainda lá fora!',
-  },
-  safeInside: {
-    en: 'Everyone is inside. Stay put until the storm passes.',
-    pt: 'Todos estão dentro. Fiquem aí até a tempestade passar.',
-  },
-  stormComesIn: { en: 'The storm arrives in', pt: 'A tempestade chega em' },
-  stormEndsIn: { en: 'The storm ends in', pt: 'A tempestade acaba em' },
-  secondsShort: { en: 's', pt: 's' },
 }
 
 export function RadiationAlarmModal() {
-  const hasStorm = useGameStore((s) => Boolean(s.game?.radiationStorm))
-  // A new component for each storm, so "I already took shelter" never leaks into the next one.
-  return hasStorm ? <Alarm /> : null
-}
-
-function Alarm() {
   const storm = useGameStore((s) => s.game?.radiationStorm)
   const elapsed = useGameStore((s) => s.game?.time.elapsed ?? 0)
   const bringAllInside = useGameStore((s) => s.bringAllInside)
   const places = useGameStore((s) => radiationShelterPlaces(s))
   const alive = useGameStore((s) => s.game?.crew.filter((a) => a.alive).length ?? 0)
-  const outside = useGameStore(
-    (s) => s.game?.crew.filter((a) => a.alive && a.location === 'outside').length ?? 0,
-  )
-  // After "Take shelter" the big alarm gets out of the way, so the player can see the base.
-  const [tookShelter, setTookShelter] = useState(false)
   const t = useT()
   if (!storm) return null
 
   const isWarning = storm.phase === 'warning'
   const seconds = Math.max(0, Math.ceil(storm.phaseEndsAt - elapsed))
-  const danger =
-    places < alive ? (
-      <p className={styles.shelterDanger} data-testid="shelter-danger">
-        {places === 0
-          ? t(strings.noShelter)
-          : t(strings.notEnoughRoom)
-              .replace('{n}', String(places))
-              .replace('{total}', String(alive))}
-      </p>
-    ) : null
-
-  if (tookShelter && outside === 0) {
-    return (
-      <aside className={styles.stormStatus} role="status">
-        <Icon name="radiation" size={26} />
-        <div>
-          <strong>{t(strings.safeInside)}</strong>
-          <p className={styles.stormStatusTime}>
-            {t(isWarning ? strings.stormComesIn : strings.stormEndsIn)} <b>{seconds}</b>
-            {t(strings.secondsShort)}
-          </p>
-          {danger}
-        </div>
-      </aside>
-    )
-  }
 
   return (
     <Modal
       isOpen
       tone="light"
       role="alertdialog"
+      // The clock and the crew panel stay usable: slow down, pause, or bring astronauts in one
+      // by one (constitution II.11).
+      blocking={false}
       title={t(strings.title)}
       footer={
-        <Button
-          variant="danger"
-          className={styles.briefingButton}
-          onClick={() => {
-            bringAllInside()
-            setTookShelter(true)
-          }}
-        >
-          {t(strings.shelter)}
-        </Button>
+        // Once the storm hits it is too late to move anyone: nothing left to press.
+        isWarning ? (
+          <Button
+            variant="danger"
+            className={styles.briefingButton}
+            onClick={bringAllInside}
+            data-autofocus
+          >
+            {t(strings.shelter)}
+          </Button>
+        ) : undefined
       }
     >
       <div className={styles.alarm}>
         <VegaPortrait mood="alert" variant="alarm" />
         <div>
           <p>{t(isWarning ? strings.warning : strings.active)}</p>
-          {tookShelter && outside > 0 && (
-            <p className={styles.shelterDanger} data-testid="still-outside">
-              {t(strings.stillOutside).replace('{n}', String(outside))}
+          {places < alive && (
+            <p className={styles.shelterDanger} data-testid="shelter-danger">
+              {places === 0
+                ? t(strings.noShelter)
+                : t(strings.notEnoughRoom)
+                    .replace('{n}', String(places))
+                    .replace('{total}', String(alive))}
             </p>
           )}
-          {danger}
           {isWarning && (
             <p className={styles.countdown} data-testid="storm-countdown">
               <strong>{seconds}</strong> {t(strings.secondsLeft)}
             </p>
           )}
+          {!isWarning && (
+            <p className={styles.countdown} data-testid="storm-passing">
+              {t(strings.passing).replace('{n}', String(seconds))}
+            </p>
+          )}
           {storm.basedOn && (
             <p className={styles.alarmSource}>
-              {t(strings.basedOn)} {storm.basedOn.date}:{' '}
+              {/* The day is enough for a child: no clock time, no time zone letter. */}
+              {t(strings.basedOn)} {storm.basedOn.date.split('T')[0]}:{' '}
               <a href={storm.basedOn.url} target="_blank" rel="noreferrer">
                 {t(strings.donki)}
               </a>

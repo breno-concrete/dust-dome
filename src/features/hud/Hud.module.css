@@ -322,7 +322,17 @@
 
 .deceased {
   opacity: 0.55;
+}
+
+/* Only the name is crossed out, so the word "Lost" next to it stays readable. */
+.deceased .astronautName {
   text-decoration: line-through;
+}
+
+.recovering {
+  color: #ac6b4c;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .deceasedLabel {
@@ -661,4 +671,33 @@
   .batteryBar {
     width: 36px;
   }
+}
+
+/* Warnings in words, under the clock: no heating (lethal) and the active weather event. */
+.heatAlert,
+.weather {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.heatAlert {
+  top: 96px;
+  background: #8f2a1c;
+  color: #fff;
+}
+
+.weather {
+  top: 136px;
+  background: rgba(60, 40, 30, 0.8);
+  color: #ffe9c9;
+  font-size: 0.85rem;
 }

@@ -26,12 +26,29 @@ function addSolarPanel() {
     const g = useGameStore.getState().game!
     const base = g.structures.find((s) => s.type === 'solar_panel')!
     useGameStore.setState({
+      // Like placeAt: the panel is on the ground and the placement is over.
+      placing: null,
       game: {
         ...g,
         structures: [...g.structures, { ...base, id: 'tutorial-panel', status: 'building' }],
       },
     })
   })
+}
+
+const textOf = (check: string) => TUTORIAL_STEPS.find((s) => s.check === check)!.text.en
+const outro = TUTORIAL_STEPS[TUTORIAL_STEPS.length - 1]!
+
+/** Does the first three "do it" steps the way a player does: pick, place, select a machine. */
+async function practiceUntilSwitch() {
+  render(<BriefingDialog />)
+  await readIntro()
+  act(() => useGameStore.getState().beginPlacement('solar_panel'))
+  addSolarPanel()
+  act(() =>
+    useGameStore.getState().selectStructure(useGameStore.getState().game!.structures[0]!.id),
+  )
+  expect(await screen.findByText(textOf('switch'))).toBeDefined()
 }
 
 describe('Tutorial', () => {
@@ -140,6 +157,35 @@ describe('Tutorial', () => {
       expect(
         await screen.findByText(TUTORIAL_STEPS.find((s) => s.check === 'switch')!.text.en),
       ).toBeDefined()
+    })
+
+    // Playtest 2026-11-15: any click outside the machine's panel closes it, and the tutorial went
+    // back a step. "Start" on the last step closed the panel too, so the tutorial never ended.
+    it('a finished step stays finished when the machine panel closes', async () => {
+      await practiceUntilSwitch()
+      act(() => useGameStore.getState().selectStructure(null))
+      expect(screen.getByText(textOf('switch'))).toBeDefined()
+      expect(screen.queryByText(textOf('select'))).toBeNull()
+    })
+
+    it('Start on the last step ends the tutorial even if the machine panel closed', async () => {
+      await practiceUntilSwitch()
+      const type = config.structures.find((s) => s.switchable)!.id
+      act(() => useGameStore.getState().setPowerMode(type, 'off'))
+      expect(await screen.findByText(outro.text.en)).toBeDefined()
+      act(() => useGameStore.getState().selectStructure(null))
+      expect(screen.getByText(outro.text.en)).toBeDefined()
+      await userEvent.click(screen.getByRole('button', { name: 'Start' }))
+      expect(screen.getByText(springBriefing)).toBeDefined()
+    })
+
+    it('goes back to "pick a panel" when the placement is cancelled before placing', async () => {
+      render(<BriefingDialog />)
+      await readIntro()
+      act(() => useGameStore.getState().beginPlacement('solar_panel'))
+      expect(await screen.findByText(textOf('place'))).toBeDefined()
+      act(() => useGameStore.getState().beginPlacement(null))
+      expect(await screen.findByText(textOf('pick'))).toBeDefined()
     })
 
     it('can be skipped one by one, so nobody gets stuck', async () => {

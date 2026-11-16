@@ -109,6 +109,43 @@ describe('RadiationAlarmModal', () => {
 
   // Playtest 2026-11-15: the alarm said "keep everyone inside", but a habitat without a radiation
   // shelter protects nobody (constitution II.2).
+  // Playtest 2026-11-15: the alarm covered the clock and the crew panel, Enter opened the NASA
+  // link instead of sheltering, and "Take shelter" stayed on screen after the storm had hit.
+  describe('acting during the alarm', () => {
+    it('puts the keyboard focus on Take shelter, not on the NASA link', () => {
+      setStorm(makeStorm('warning', 110))
+      render(<RadiationAlarmModal />)
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Take shelter' }))
+    })
+
+    it('does not lock the rest of the screen: the clock and the crew panel stay usable', () => {
+      setStorm(makeStorm('warning', 110))
+      render(<RadiationAlarmModal />)
+      expect(screen.getByRole('alertdialog').getAttribute('aria-modal')).toBe('false')
+    })
+
+    it('once the storm hits, offers no Take shelter and counts the seconds until it passes', () => {
+      setStorm(makeStorm('active', 120), 105)
+      render(<RadiationAlarmModal />)
+      expect(screen.queryByRole('button', { name: 'Take shelter' })).toBeNull()
+      expect(screen.getByTestId('storm-passing').textContent).toContain('15')
+    })
+
+    it('shows the day of the real event without the clock time', () => {
+      act(() =>
+        setStorm({
+          phase: 'warning',
+          phaseEndsAt: 110,
+          basedOn: { date: '2024-05-10T13:02Z', url: DONKI_URL },
+        }),
+      )
+      render(<RadiationAlarmModal />)
+      const dialog = screen.getByRole('alertdialog')
+      expect(dialog.textContent).toContain('2024-05-10')
+      expect(dialog.textContent).not.toContain('T13:02Z')
+    })
+  })
+
   describe('who is safe', () => {
     const shelter = config.upgrades.find((u) => u.effect === 'radiation_shelter')!
     function withShelter() {
@@ -147,95 +184,6 @@ describe('RadiationAlarmModal', () => {
       setStorm(makeStorm('warning', 110))
       render(<RadiationAlarmModal />)
       expect(screen.queryByTestId('shelter-danger')).toBeNull()
-    })
-  })
-
-  // User feedback: after "Take shelter" the alarm stayed on the screen for the whole storm, hiding
-  // the base, so it looked like nothing had happened.
-  describe('after "Take shelter"', () => {
-    function sendCrewOutside(count = 4) {
-      act(() => {
-        const g = useGameStore.getState().game!
-        useGameStore.setState({
-          game: {
-            ...g,
-            crew: g.crew.map((a, i) => (i < count ? { ...a, location: 'outside' as const } : a)),
-          },
-        })
-      })
-    }
-    const outside = () =>
-      useGameStore.getState().game!.crew.filter((a) => a.location === 'outside').length
-
-    it('brings the astronauts in and gets the alarm out of the way', async () => {
-      sendCrewOutside()
-      setStorm(makeStorm('warning', 110), 100)
-      render(<RadiationAlarmModal />)
-      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
-      expect(outside()).toBe(0)
-      expect(screen.queryByRole('alertdialog')).toBeNull()
-      expect(screen.queryByRole('dialog')).toBeNull()
-    })
-
-    it('keeps a small message that does not block the game: everyone is inside, and how long', async () => {
-      sendCrewOutside()
-      setStorm(makeStorm('warning', 110), 100)
-      render(<RadiationAlarmModal />)
-      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
-      const status = screen.getByRole('status')
-      expect(status.textContent).toMatch(/inside/i)
-      expect(status.textContent).toContain('10')
-    })
-
-    it('the message counts down and follows the storm until it ends', async () => {
-      sendCrewOutside()
-      setStorm(makeStorm('warning', 110), 100)
-      render(<RadiationAlarmModal />)
-      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
-      setStorm(makeStorm('active', 130), 112)
-      expect(screen.getByRole('status').textContent).toContain('18')
-      setStorm(null)
-      expect(screen.queryByRole('status')).toBeNull()
-    })
-
-    it('still warns when there is no radiation shelter, even for the ones inside', async () => {
-      sendCrewOutside()
-      setStorm(makeStorm('warning', 110))
-      render(<RadiationAlarmModal />)
-      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
-      expect(screen.getByTestId('shelter-danger')).toBeDefined()
-    })
-
-    it('keeps the alarm and says who is still outside when someone could not come in', async () => {
-      sendCrewOutside(2)
-      act(() => useGameStore.setState({ bringAllInside: vi.fn() }))
-      setStorm(makeStorm('warning', 110))
-      render(<RadiationAlarmModal />)
-      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
-      expect(screen.getByRole('alertdialog')).toBeDefined()
-      expect(screen.getByTestId('still-outside').textContent).toContain('2')
-    })
-
-    it('the next storm raises the alarm again', async () => {
-      sendCrewOutside()
-      setStorm(makeStorm('warning', 110))
-      const { rerender } = render(<RadiationAlarmModal />)
-      await userEvent.click(screen.getByRole('button', { name: 'Take shelter' }))
-      setStorm(null)
-      rerender(<RadiationAlarmModal />)
-      sendCrewOutside()
-      setStorm(makeStorm('warning', 210), 200)
-      rerender(<RadiationAlarmModal />)
-      expect(screen.getByRole('alertdialog')).toBeDefined()
-    })
-
-    it('speaks Portuguese', async () => {
-      useLang.setState({ lang: 'pt' })
-      sendCrewOutside()
-      setStorm(makeStorm('warning', 110))
-      render(<RadiationAlarmModal />)
-      await userEvent.click(screen.getByRole('button', { name: 'Abrigar tripulação' }))
-      expect(screen.getByRole('status').textContent).toMatch(/dentro/i)
     })
   })
 })

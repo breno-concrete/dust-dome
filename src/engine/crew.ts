@@ -1,7 +1,7 @@
 // Owner: Breno. Exposure, deaths and shelters (constitution II.2, II.9; research R13–R15).
 import { capacityOf, protects } from './habitats'
 import { seasonDuration, seasonStartedThisStep } from './time'
-import type { Astronaut, GameConfig, GameState, Job, UpgradeDef } from './types'
+import type { Astronaut, GameConfig, GameState, Job, LogEntry, UpgradeDef } from './types'
 
 const EPS = 1e-9
 
@@ -30,6 +30,8 @@ function updateExposure(state: GameState, config: GameConfig, dt: number): GameS
   const { maxShareOfSeason, recoveryRate, warnAt } = config.mission.exposure
   const fill = 1 / (maxShareOfSeason * seasonDuration(config, state.time.season))
   let jobs = state.jobs
+  const { cycle, season, elapsed } = state.time
+  const returns: LogEntry[] = []
   const crew = state.crew.map((a): Astronaut => {
     if (!a.alive) return a
     if (a.location === 'inside') {
@@ -39,9 +41,11 @@ function updateExposure(state: GameState, config: GameConfig, dt: number): GameS
     const exposure = Math.min(1, a.exposure + fill * dt)
     if (exposure < warnAt - EPS) return { ...a, exposure }
     jobs = requeue(jobs, a.jobId)
+    // Logged so the commander can explain why they came back (II.9).
+    returns.push({ at: elapsed, cycle, season, kind: 'exposure_return', ref: a.id })
     return { ...a, exposure, location: 'inside', jobId: null }
   })
-  return { ...state, crew, jobs }
+  return { ...state, crew, jobs, log: returns.length > 0 ? [...state.log, ...returns] : state.log }
 }
 
 /** The job goes back to the queue with its remaining time; any free astronaut may continue it. */

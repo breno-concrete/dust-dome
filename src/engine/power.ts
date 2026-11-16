@@ -65,6 +65,21 @@ export function demandAtSwitches(state: GameState, config: GameConfig): number {
   return demandOf(state, config)
 }
 
+/**
+ * What one structure makes and uses right now (kW): season, darkness, storms, its condition, its
+ * switch and the brownout all counted. For the machine panel, so it shows the engine's numbers.
+ */
+export function structurePower(
+  state: GameState,
+  config: GameConfig,
+  s: StructureInstance,
+): { makesKw: number; usesKw: number } {
+  return {
+    makesKw: productionOf(s, state, config),
+    usesKw: state.power.shed.includes(s.type) ? 0 : drawOf(s, state, config),
+  }
+}
+
 /** Sum of the finished battery banks' capacity. */
 export function batteryCapacity(state: GameState, config: GameConfig): number {
   return state.structures.reduce((sum, s) => {

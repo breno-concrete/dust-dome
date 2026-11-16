@@ -1,5 +1,5 @@
 // Owner: Dev B. Shows only upgrades allowed for the selected structure.
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { hasPausedJob } from '../../app/selectors'
 import { useGameStore } from '../../app/store'
 import { config } from '../../config/loadConfig'
@@ -7,6 +7,7 @@ import { Button } from '../../ui-kit/Button'
 import { Card } from '../../ui-kit/Card'
 import { Icon } from '../../ui-kit/Icon'
 import { useT } from '../../ui-kit/i18n'
+import { actionErrorMessages } from './actionErrors'
 import styles from './Panel.module.css'
 import { StructureInfo } from './StructureInfo'
 
@@ -21,13 +22,33 @@ const strings = {
   },
   missingParts: { en: 'Missing {n} repair parts', pt: 'Faltam {n} peças de reparo' },
   cleanHint: {
-    en: 'Dust is clogging it. Someone goes outside for 10 seconds.',
-    pt: 'A poeira está entupindo. Alguém sai por 10 segundos.',
+    en: 'Dust is clogging it. Someone goes outside for {n} seconds.',
+    pt: 'A poeira está entupindo. Alguém sai por {n} segundos.',
+  },
+  cleanStorm: {
+    en: 'Wait for the dust storm to pass before cleaning.',
+    pt: 'Espere a tempestade de poeira passar para limpar.',
   },
   repairHint: {
-    en: 'It is broken. Spend repair parts and play the bolt game.',
-    pt: 'Está quebrada. Gaste peças de reparo e jogue o jogo dos parafusos.',
+    en: 'It is broken. Spend {n} repair parts and play the bolt game.',
+    pt: 'Está quebrada. Gaste {n} peças de reparo e jogue o jogo dos parafusos.',
   },
+  repairing: {
+    en: 'The repair is on the way: an astronaut takes care of it.',
+    pt: 'O conserto está a caminho: um astronauta cuida disso.',
+  },
+  cleaning: {
+    en: 'The cleaning is on the way: an astronaut takes care of it.',
+    pt: 'A limpeza está a caminho: um astronauta cuida disso.',
+  },
+  demolishing: {
+    en: 'This will be demolished. The materials come back when the job ends.',
+    pt: 'Isto vai ser demolido. Os materiais voltam quando o trabalho terminar.',
+  },
+  confirmDemolish: { en: 'Demolish this for sure?', pt: 'Demolir mesmo?' },
+  yesDemolish: { en: 'Yes, demolish', pt: 'Sim, demolir' },
+  keep: { en: 'Keep it', pt: 'Manter' },
+  installing: { en: 'Installing…', pt: 'Instalando…' },
   demolishHint: {
     en: 'You get all the materials back.',
     pt: 'Você recebe todos os materiais de volta.',
@@ -36,54 +57,6 @@ const strings = {
   install: { en: 'Install', pt: 'Instalar' },
   installed: { en: 'Installed', pt: 'Instalada' },
   missing: { en: 'Missing', pt: 'Faltam' },
-  notEnoughResources: {
-    en: 'There are not enough materials for this action.',
-    pt: 'Não há materiais suficientes para esta ação.',
-  },
-  tileBlocked: {
-    en: 'That spot is blocked. Choose a free tile.',
-    pt: 'Esse espaço está ocupado. Escolha um espaço livre.',
-  },
-  outOfBounds: {
-    en: 'That spot is outside the base grid.',
-    pt: 'Esse espaço está fora da grade da base.',
-  },
-  notConnected: {
-    en: 'Habitat modules must stay connected side by side.',
-    pt: 'Os módulos habitacionais precisam ficar conectados lado a lado.',
-  },
-  lastHabitat: {
-    en: 'The last habitat cannot be removed.',
-    pt: 'O último habitat não pode ser removido.',
-  },
-  noRoomForCrew: {
-    en: 'Move the crew before removing this habitat.',
-    pt: 'Mova a tripulação antes de remover este habitat.',
-  },
-  externalJobsBlocked: {
-    en: 'Outdoor jobs are blocked this season.',
-    pt: 'Trabalhos externos estão bloqueados nesta estação.',
-  },
-  notAllowed: {
-    en: 'You cannot do this right now.',
-    pt: 'Você não pode fazer isso agora.',
-  },
-  notImplemented: {
-    en: 'This action is not ready yet.',
-    pt: 'Esta ação ainda não está disponível.',
-  },
-}
-
-const actionErrorMessages = {
-  not_enough_resources: strings.notEnoughResources,
-  tile_blocked: strings.tileBlocked,
-  out_of_bounds: strings.outOfBounds,
-  not_connected: strings.notConnected,
-  last_habitat: strings.lastHabitat,
-  no_room_for_crew: strings.noRoomForCrew,
-  external_jobs_blocked: strings.externalJobsBlocked,
-  not_allowed: strings.notAllowed,
-  not_implemented: strings.notImplemented,
 }
 
 export function UpgradePanel() {
@@ -97,6 +70,8 @@ export function UpgradePanel() {
   const lastError = useGameStore((s) => s.lastError)
   const selectStructure = useGameStore((s) => s.selectStructure)
   const panelRef = useRef<HTMLElement>(null)
+  // The structure whose demolition the player was asked to confirm.
+  const [confirmFor, setConfirmFor] = useState<string | null>(null)
   const t = useT()
   const isOpen = Boolean(game?.structures.some(({ id }) => id === selectedStructureId))
 
@@ -125,6 +100,15 @@ export function UpgradePanel() {
     Math.ceil(config.mission.repair.parts - (game.stock['repair_parts'] ?? 0)),
   )
   const label = t(structureDef.name)
+  // Work already asked for on this structure: say so instead of offering the button again.
+  const jobs = game.jobs.filter((j) => j.structureId === structure.id)
+  const repairing = jobs.some((j) => j.kind === 'repair')
+  const cleaning = jobs.some((j) => j.kind === 'clean')
+  const demolishing = jobs.some((j) => j.kind === 'demolish')
+  const dustStorm = game.activeEvents.some(
+    (e) => e.kind === 'dust_storm' || e.kind === 'global_dust_storm',
+  )
+  const confirming = confirmFor === structure.id
 
   return (
     <section ref={panelRef} className={styles.upgrades} aria-label={label}>
@@ -141,7 +125,8 @@ export function UpgradePanel() {
             <p className={styles.hint}>{t(strings.resumeHint)}</p>
           </>
         )}
-        {needsRepair && (
+        {needsRepair && repairing && <p className={styles.hint}>{t(strings.repairing)}</p>}
+        {needsRepair && !repairing && (
           <>
             <Button
               variant="primary"
@@ -151,7 +136,9 @@ export function UpgradePanel() {
             >
               <Icon name="repair_parts" size={16} /> {t(strings.repair)}
             </Button>
-            <p className={styles.hint}>{t(strings.repairHint)}</p>
+            <p className={styles.hint}>
+              {t(strings.repairHint).replace('{n}', String(config.mission.repair.parts))}
+            </p>
             {partsMissing > 0 && (
               <p id="missing-repair-parts" className={styles.missing}>
                 {t(strings.missingParts).replace('{n}', String(partsMissing))}
@@ -159,18 +146,21 @@ export function UpgradePanel() {
             )}
           </>
         )}
-        {structure.status === 'clogged' && (
+        {structure.status === 'clogged' && cleaning && (
+          <p className={styles.hint}>{t(strings.cleaning)}</p>
+        )}
+        {structure.status === 'clogged' && !cleaning && (
           <>
-            <Button variant="primary" onClick={() => clean(structure.id)}>
+            <Button variant="primary" disabled={dustStorm} onClick={() => clean(structure.id)}>
               <Icon name="wrench" size={16} /> {t(strings.clean)}
             </Button>
-            <p className={styles.hint}>{t(strings.cleanHint)}</p>
+            <p className={styles.hint}>
+              {dustStorm
+                ? t(strings.cleanStorm)
+                : t(strings.cleanHint).replace('{n}', String(config.mission.jobs.cleanSeconds))}
+            </p>
           </>
         )}
-        <Button variant="danger" onClick={() => demolish(structure.id)}>
-          <Icon name="close" size={16} /> {t(strings.demolish)}
-        </Button>
-        <p className={styles.hint}>{t(strings.demolishHint)}</p>
       </div>
       {upgrades.length > 0 && <h3 className={styles.infoTitle}>{t(strings.title)}</h3>}
       {upgrades.map((upgrade, index) => {
@@ -187,6 +177,7 @@ export function UpgradePanel() {
           ([resourceId, amount]) => (game.stock[resourceId] ?? 0) < amount,
         )
         const isInstalled = structure.upgrades.includes(upgrade.id)
+        const isInstalling = jobs.some((j) => j.kind === 'upgrade' && j.upgradeId === upgrade.id)
         const missingIds = missing.map(
           ([resourceId]) => `missing-upgrade-${upgrade.id}-${resourceId}`,
         )
@@ -225,17 +216,53 @@ export function UpgradePanel() {
               })}
             <Button
               data-testid={`install-${upgrade.id}`}
-              disabled={isInstalled || missing.length > 0}
+              disabled={isInstalled || isInstalling || missing.length > 0}
               aria-describedby={missingIds.length > 0 ? missingIds.join(' ') : undefined}
               onClick={() => installUpgrade(structure.id, upgrade.id)}
             >
               <Icon name="wrench" size={16} />
-              {isInstalled ? t(strings.installed) : t(strings.install)}
+              {isInstalled
+                ? t(strings.installed)
+                : isInstalling
+                  ? t(strings.installing)
+                  : t(strings.install)}
             </Button>
           </Card>
         )
       })}
       {lastError && <p role="alert">{t(actionErrorMessages[lastError])}</p>}
+      {/* Demolish comes last, far from Resume / Repair / Clean, and asks before it acts: a
+          demolition cannot be undone and a double click must never reach it. */}
+      <div className={styles.structureActions} data-testid="panel-demolish">
+        {demolishing ? (
+          <p className={styles.hint}>{t(strings.demolishing)}</p>
+        ) : confirming ? (
+          <>
+            <p className={styles.hint} role="status">
+              {t(strings.confirmDemolish)} {t(strings.demolishHint)}
+            </p>
+            <Button variant="secondary" onClick={() => setConfirmFor(null)}>
+              {t(strings.keep)}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                setConfirmFor(null)
+                demolish(structure.id)
+              }}
+            >
+              <Icon name="close" size={16} /> {t(strings.yesDemolish)}
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className={styles.hint}>{t(strings.demolishHint)}</p>
+            <Button variant="danger" onClick={() => setConfirmFor(structure.id)}>
+              <Icon name="close" size={16} /> {t(strings.demolish)}
+            </Button>
+          </>
+        )}
+      </div>
     </section>
   )
 }
