@@ -140,14 +140,7 @@ export function BuildMenu() {
                           }}
                         >
                           <span className={[styles.preview, styles[`tier${level}`]].join(' ')}>
-                            {/* A picture of the real 3D model; the name below already says what it is. */}
-                            <img
-                              className={styles.structurePhoto}
-                              src={`/structures/${structure.id}.webp`}
-                              alt=""
-                              loading="lazy"
-                              draggable={false}
-                            />
+                            <Icon name="box" size={38} />
                             <span className={styles.plus}>
                               <Icon name="plus" size={16} />
                             </span>
